@@ -8,7 +8,7 @@
     <ProjectGuid>{CA75AB56-B74A-40E5-8097-C4DDDA1C5AD5}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Project1</RootNamespace>
+    <RootNamespace>ghetto</RootNamespace>
     <AssemblyName>GhettoSL</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
