@@ -1,0 +1,8 @@
+bin\Release\GhettoSL.exe
+bin\Release\GhettoSL.pdb
+bin\Release\libsecondlife.dll
+bin\Release\libsecondlife.pdb
+bin\Release\libsecondlife.xml
+obj\Release\ResolveAssemblyReference.cache
+obj\Release\GhettoSL.exe
+obj\Release\GhettoSL.pdb
