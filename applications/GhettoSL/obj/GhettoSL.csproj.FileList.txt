@@ -6,3 +6,11 @@ bin\Release\libsecondlife.xml
 obj\Release\ResolveAssemblyReference.cache
 obj\Release\GhettoSL.exe
 obj\Release\GhettoSL.pdb
+bin\Debug\libsecondlife.dll
+bin\Debug\libsecondlife.pdb
+bin\Debug\libsecondlife.xml
+obj\Debug\ResolveAssemblyReference.cache
+bin\Debug\Bot Revolution b0t123 ghetto d3a207e0-690c-4061-835e-088aa8ad1feb.exe
+bin\Debug\Bot Revolution b0t123 ghetto d3a207e0-690c-4061-835e-088aa8ad1feb.pdb
+obj\Debug\Bot Revolution b0t123 ghetto d3a207e0-690c-4061-835e-088aa8ad1feb.exe
+obj\Debug\Bot Revolution b0t123 ghetto d3a207e0-690c-4061-835e-088aa8ad1feb.pdb
