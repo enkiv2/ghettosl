@@ -269,7 +269,7 @@ namespace ghetto
         //END OF FRIEND REQUESTS ##############################################
 
 
-        //MONEY BALANCE UPDATE ################################################
+        //MONEY BALANCE STUFF #################################################
         void OnMoneyBalanceReplyEvent(Packet packet, Simulator simulator)
         {
             MoneyBalanceReplyPacket reply = (MoneyBalanceReplyPacket)packet;
@@ -285,7 +285,6 @@ namespace ghetto
             if (desc.Length > 1) Console.WriteLine("* " + desc);
             Console.WriteLine(TimeStamp()+"* Balance: L$" + currentBalance);
         }
-        //END OF MONEY BALANCE ################################################
 
         void AcknowledgePayment(string agentName, int amount)
         {
@@ -297,8 +296,10 @@ namespace ghetto
                 //Client.Self.Chat(av.Name+", "+av.ID+", "+amount, 8414263, MainAvatar.ChatType.Whisper);
                 return;
             }
-            Console.WriteLine("* RECEIVED UNIDENTIFIABLE PAYMENT FROM " + agentName + ": L$" + amount);            
+            Console.WriteLine("* RECEIVED UNIDENTIFIABLE PAYMENT FROM " + agentName + ": L$" + amount);
         }
+        //END OF MONEY BALANCE ################################################
+
 
         //AUTO-CAMP OBJECT-FINDING STUFF ######################################
         void OnObjectUpdateEvent(Packet packet, Simulator sim)
@@ -475,7 +476,10 @@ namespace ghetto
                         {
                             if (prim.ID != findID) continue;
                             LLVector3 targetPos = new LLVector3(prim.Position.X,prim.Position.Y,prim.Position.Z + 10);
-                            response = "FACING <" + targetPos + "> "+Helpers.RotBetween(Client.Self.Position, prim.Position);
+                            LLQuaternion between = Helpers.RotBetween(Client.Self.Position, prim.Position);
+                            response = "FACING <" + targetPos + "> "+between;
+                            //FIX ME!!!
+
                             break;
                         }
                         if (response == "") response = "NO OBJECT FOUND MATCHING " + findID;
