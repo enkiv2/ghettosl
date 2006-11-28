@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading;
 using System.Collections.Generic;
 using libsecondlife;
@@ -22,6 +23,7 @@ namespace ghetto
         public string passPhrase;
         public LLUUID masterID;
         LLUUID masterIMSessionID;
+        string[] Script = new string[0];
         string followName;
         uint controls = 0;
         int currentBalance;
@@ -40,10 +42,11 @@ namespace ghetto
             string[] commandLineArguments = args;
             if (args.Length < 5)
             {
-                Console.WriteLine("Usage: GhettoSL <firstName> <lastName> <password> <passPhrase> <masterID>");
+                Console.WriteLine("Usage: GhettoSL <firstName> <lastName> <password> <passPhrase> <masterID> [quiet] [scriptFile]");
                 return;
             }
             bool quiet = false;
+
             if (args.Length > 5 && args[5].ToLower() == "quiet") quiet = true;
             GhettoSL ghetto = new GhettoSL(args[0], args[1], args[2], args[3], new LLUUID(args[4]), quiet);
 
@@ -659,6 +662,11 @@ namespace ghetto
                         if (response == "") response = "NO OBJECT FOUND MATCHING " + findID;
                         break;
                     }
+                case "touchid":
+                    {
+                        Client.Self.Touch(uint.Parse(msg[1]));
+                        break;
+                    }
                 case "tp": //FIX ME!!!
                     {
                         //send me a tp when I ask for one
@@ -877,7 +885,6 @@ namespace ghetto
         string TimeStamp()
         {
             return "[" + (DateTime.Now.Hour % 12) + ":" + DateTime.Now.Minute + "] ";
-            
         }
 
         bool Follow(string name)
@@ -904,6 +911,17 @@ namespace ghetto
                 }
             }
             return false;
+        }
+
+        bool ReadScript(string scriptFile)
+        {
+            StreamReader read = File.OpenText(scriptFile);
+            Array.Clear(Script, 0, Script.Length);
+            string input;
+            for (int i = 0; (input = read.ReadLine()) != null; i++)
+                Script[i] = input;
+            read.Close();
+            return true;
         }
 
     }
