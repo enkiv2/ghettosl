@@ -46,16 +46,18 @@ namespace ghetto
                 return;
             }
             bool quiet = false;
+            string scriptFile = "";
 
             if (args.Length > 5 && args[5].ToLower() == "quiet") quiet = true;
-            GhettoSL ghetto = new GhettoSL(args[0], args[1], args[2], args[3], new LLUUID(args[4]), quiet);
+            if (args.Length > 6) scriptFile = args[6];
 
+            GhettoSL ghetto = new GhettoSL(args[0], args[1], args[2], args[3], new LLUUID(args[4]), quiet,scriptFile);
         }
         //END OF MAIN VOID ####################################################
 
 
         //GHETTOSL VOID ######################################################
-        public GhettoSL(string first, string last, string pass, string phrase, LLUUID master, bool quiet)
+        public GhettoSL(string first, string last, string pass, string phrase, LLUUID master, bool quiet,string scriptFile)
         {
             //RotBetween Test
             //LLVector3 a = new LLVector3(1, 0, 0);
@@ -63,6 +65,16 @@ namespace ghetto
             //Console.WriteLine("RotBetween: " + Helpers.RotBetween(Helpers.VecNorm(a), Helpers.VecNorm(b)));
             //Console.ReadLine();
             //return;
+
+            if (scriptFile != "")
+            {
+                if (!LoadScript(scriptFile))
+                {
+                    Console.WriteLine("Script not found: " + scriptFile);
+                    return;
+                }
+                Console.WriteLine("Loaded script: " + scriptFile);
+            }
 
             firstName = first;
             lastName = last;
@@ -405,7 +417,16 @@ namespace ghetto
 
             switch (command)
             {
-
+                case "button1":
+                    {
+                        Client.Self.Touch(9835045);
+                        break;
+                    }
+                case "button2":
+                    {
+                        Client.Self.Touch(9835044);
+                        break;
+                    }
                 case "anim":
                     {
                         SendAgentAnimation((LLUUID)details, true);
@@ -913,7 +934,7 @@ namespace ghetto
             return false;
         }
 
-        bool ReadScript(string scriptFile)
+        bool LoadScript(string scriptFile)
         {
             StreamReader read = File.OpenText(scriptFile);
             Array.Clear(Script, 0, Script.Length);
