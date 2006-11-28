@@ -1,3 +1,30 @@
+/*
+* Copyright (c) 2006, obsoleet industries
+* All rights reserved.
+* Redistribution and use in source and binary forms, with or without
+* modification, are permitted provided that the following conditions are met:
+*
+*     * Redistributions of source code must retain the above copyright
+*       notice, this list of conditions and the following disclaimer.
+*     * Redistributions in binary form must reproduce the above copyright
+*       notice, this list of conditions and the following disclaimer in the
+*       documentation and/or other materials provided with the distribution.
+*     * Neither the name of obsoleet industries nor the names of its
+*       contributors may be used to endorse or promote products derived from
+*       this software without specific prior written permission.
+*
+* THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS "AS IS" AND ANY
+* EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+* DISCLAIMED. IN NO EVENT SHALL THE REGENTS AND CONTRIBUTORS BE LIABLE FOR ANY
+* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 using System;
 using System.IO;
 using System.Threading;
@@ -23,7 +50,6 @@ namespace ghetto
         public string passPhrase;
         public LLUUID masterID;
         LLUUID masterIMSessionID;
-        string[] Script = new string[0];
         string followName;
         uint controls = 0;
         int currentBalance;
@@ -66,16 +92,6 @@ namespace ghetto
             //Console.ReadLine();
             //return;
 
-            if (scriptFile != "")
-            {
-                if (!LoadScript(scriptFile))
-                {
-                    Console.WriteLine("Script not found: " + scriptFile);
-                    return;
-                }
-                Console.WriteLine("Loaded script: " + scriptFile);
-            }
-
             firstName = first;
             lastName = last;
             password = pass;
@@ -89,7 +105,6 @@ namespace ghetto
             //Add callbacks for events
             Client.Network.OnConnected += new NetworkManager.ConnectedCallback(OnConnectedEvent);
             Client.Network.OnSimDisconnected += new NetworkManager.SimDisconnectCallback(OnSimDisconnectEvent);
-            //Client.Network.RegisterCallback(PacketType.AgentToNewRegion, new NetworkManager.PacketCallback(OnAgentToNewRegion));
             Client.Network.RegisterCallback(PacketType.MoneyBalanceReply, new NetworkManager.PacketCallback(OnMoneyBalanceReplyEvent));
             Client.Network.RegisterCallback(PacketType.RequestFriendship, new NetworkManager.PacketCallback(OnRequestFriendshipEvent));
             Client.Network.RegisterCallback(PacketType.AvatarAppearance, new NetworkManager.PacketCallback(OnAppearance));
@@ -106,6 +121,9 @@ namespace ghetto
 
             //Attempt to login, and exit if failed
             while (!Login()) Thread.Sleep(5000);
+
+            //Run script
+            if (scriptFile != "") LoadScript(scriptFile);
 
             //Accept commands
             do
@@ -635,6 +653,11 @@ namespace ghetto
                         Client.Self.Chat(details, 0, MainAvatar.ChatType.Normal);
                         break;
                     }
+                case "script":
+                    {
+                        if (msg.Length > 0) LoadScript(msg[1]+".script");
+                        break;
+                    }
                 case "shout":
                     {
                         Client.Self.Chat(details, 0, MainAvatar.ChatType.Shout);
@@ -799,7 +822,6 @@ namespace ghetto
             {
                 if (appearances.ContainsKey(av.ID))
                 {
-                    //Console.WriteLine("* Cloning "+av.Name+".");
                     AvatarAppearancePacket appearance = appearances[av.ID];
                     AgentSetAppearancePacket set = new AgentSetAppearancePacket();
 
@@ -818,7 +840,6 @@ namespace ghetto
                         i++;
                     }
 
-                    //set.WearableData = new AgentSetAppearancePacket.WearableDataBlock[appearance.
                     set.WearableData = new AgentSetAppearancePacket.WearableDataBlock[0];
 
                     Client.Network.SendPacket(set);
@@ -835,6 +856,7 @@ namespace ghetto
                 string name = avatars[avatar.LocalID].Name;
                 //if (avatars[avatar.LocalID].ID == Client.Network.AgentID)
                 //{
+                //this is a temp hack to update region corner X/Y any time any av moves (not just the follow target)
                 regionX = (int)(regionHandle >> 32);
                 regionY = (int)(regionHandle & 0xFFFFFFFF);
                 //}
@@ -865,12 +887,6 @@ namespace ghetto
                 appearances[appearance.Sender.ID] = appearance;
             }
         }
-        //void OnAgentToNewRegion(Packet packet, Simulator simulator)
-        //{
-        //    AgentToNewRegionPacket reply = (AgentToNewRegionPacket)packet;
-        //    AgentToNewRegionPacket.RegionDataBlock region = reply.RegionData;
-        //    Console.WriteLine("* NEW REGION: " + region.Handle);
-        //}
         void OnNewPrimEvent(Simulator simulator, PrimObject prim, ulong regionHandle, ushort timeDilation)
         {
             lock (prims)
@@ -936,14 +952,50 @@ namespace ghetto
 
         bool LoadScript(string scriptFile)
         {
-            StreamReader read = File.OpenText(scriptFile);
-            Array.Clear(Script, 0, Script.Length);
+            if (!File.Exists(scriptFile))
+            {
+                Console.WriteLine("File not found: "+scriptFile);
+                return false;
+            }
+            string[] script = { };
             string input;
+            int error = 0;
+            StreamReader read = File.OpenText(scriptFile);
             for (int i = 0; (input = read.ReadLine()) != null; i++)
-                Script[i] = input;
+            {
+                char[] splitChar = { ' ' };
+                string[] args = input.ToLower().Split(splitChar);
+                string[] commands = { "goto", "label", "sit", "stand", "touch", "touchid", "wait" };
+                if (Array.IndexOf(commands,  args[0]) > -1)
+                {
+                    Array.Resize(ref script, i + 1);
+                    script[i] = input;
+                }
+                else
+                {
+                    Console.WriteLine("Unknown command \"{0}\" on line {1} of {2}",args[0],i+1,scriptFile);
+                    error++;
+                }
+            }
             read.Close();
-            return true;
+            if (error > 0)
+            {
+                Console.WriteLine("* Error loading script \"{0}\"", scriptFile);
+                return false;
+            }
+            else
+            {
+                Console.WriteLine("* Running script \"{0}\"", scriptFile);
+                RunScript(script);
+                return true;
+            }
         }
+
+        void RunScript(string[] script)
+        {
+
+        }
+
 
     }
 }
