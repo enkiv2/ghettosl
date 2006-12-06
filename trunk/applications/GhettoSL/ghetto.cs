@@ -29,6 +29,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Collections.Generic;
+using System.Xml.Serialization;
 using libsecondlife;
 using libsecondlife.Packets;
 
@@ -41,6 +42,7 @@ namespace ghetto
         Dictionary<uint, Avatar> avatars;
         Dictionary<uint, PrimObject> prims;
         Dictionary<uint, Avatar> imWindows;
+        Dictionary<LLUUID, Avatar> Friends;
         Dictionary<LLUUID, AvatarAppearancePacket> appearances;
         AgentSetAppearancePacket lastAppearance = new AgentSetAppearancePacket();
         static bool logout = false;
@@ -98,25 +100,33 @@ namespace ghetto
             passPhrase = phrase;
             masterID = master;
             avatars = new Dictionary<uint, Avatar>();
+            Friends = new Dictionary<LLUUID, Avatar>();
             prims = new Dictionary<uint, PrimObject>();
             appearances = new Dictionary<LLUUID, AvatarAppearancePacket>();
             imWindows = new Dictionary<uint, Avatar>();
 
+            Client.Debug = false;
+
             //Add callbacks for events
+
+            Client.Network.RegisterCallback(PacketType.AvatarAppearance, new NetworkManager.PacketCallback(OnAppearance));
+            Client.Network.RegisterCallback(PacketType.FetchInventoryReply, new NetworkManager.PacketCallback(OnFetchInventoryReply));
+            Client.Network.RegisterCallback(PacketType.MoneyBalanceReply, new NetworkManager.PacketCallback(OnMoneyBalanceReply));
+            Client.Network.RegisterCallback(PacketType.ObjectUpdate, new NetworkManager.PacketCallback(OnObjectUpdateEvent));
+            Client.Network.RegisterCallback(PacketType.RequestFriendship, new NetworkManager.PacketCallback(OnRequestFriendship));
+            Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(OnTeleportFinish));
+            
             Client.Network.OnConnected += new NetworkManager.ConnectedCallback(OnConnectedEvent);
             Client.Network.OnSimDisconnected += new NetworkManager.SimDisconnectCallback(OnSimDisconnectEvent);
-            Client.Network.RegisterCallback(PacketType.MoneyBalanceReply, new NetworkManager.PacketCallback(OnMoneyBalanceReplyEvent));
-            Client.Network.RegisterCallback(PacketType.RequestFriendship, new NetworkManager.PacketCallback(OnRequestFriendshipEvent));
-            Client.Network.RegisterCallback(PacketType.AvatarAppearance, new NetworkManager.PacketCallback(OnAppearance));
-            Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(OnTeleportFinish));
-            Client.Network.RegisterCallback(PacketType.ObjectUpdate, new NetworkManager.PacketCallback(OnObjectUpdateEvent));
-            Client.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(OnNewPrimEvent);
-            Client.Objects.OnPrimMoved += new ObjectManager.PrimMovedCallback(OnPrimMovedEvent);
-            Client.Objects.OnObjectKilled += new ObjectManager.KillObjectCallback(OnObjectKilledEvent);
-            Client.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(OnNewAvatarEvent);
             Client.Objects.OnAvatarMoved += new ObjectManager.AvatarMovedCallback(OnAvatarMovedEvent);
+            Client.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(OnNewAvatarEvent);
+            Client.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(OnNewPrimEvent);
+            Client.Objects.OnObjectKilled += new ObjectManager.KillObjectCallback(OnObjectKilledEvent);
+            Client.Objects.OnPrimMoved += new ObjectManager.PrimMovedCallback(OnPrimMovedEvent);
+            Client.Avatars.OnFriendNotification += new AvatarManager.FriendNotificationCallback(OnFriendNotificationEvent);
             Client.Self.OnInstantMessage += new InstantMessageCallback(OnInstantMessageEvent);
             Client.Self.OnTeleport += new TeleportCallback(OnTeleportEvent);
+            
             if (!quiet) Client.Self.OnChat += new ChatCallback(OnChatEvent);
 
             //Attempt to login, and exit if failed
@@ -142,6 +152,8 @@ namespace ghetto
         {
             Console.WriteLine("* CONNECTED");
             //Retrieve offline IMs
+            Client.Grid.AddEstateSims();
+            //FIXME!!! - ADD Client.Self.RetrieveInstantMessages() TO CORE!
             RetrieveInstantMessagesPacket p = new RetrieveInstantMessagesPacket();
             p.AgentData.AgentID = Client.Network.AgentID;
             p.AgentData.SessionID = Client.Network.SessionID;
@@ -268,6 +280,75 @@ namespace ghetto
         //END OF IM WINDOW CREATION ###########################################
 
 
+        void OnFetchInventoryReply(Packet packet, Simulator sim)
+        {
+            //fetch inventory item data - FIXME!!!
+            FetchInventoryReplyPacket reply = (FetchInventoryReplyPacket)packet;
+            FetchInventoryReplyPacket.InventoryDataBlock obj = new FetchInventoryReplyPacket.InventoryDataBlock();
+
+            Console.WriteLine("Inventory info: " + obj.Name);
+
+            //rez object from inventory - FIXME!!!
+            RezObjectPacket p = new RezObjectPacket();
+            p.AgentData.AgentID = Client.Network.AgentID;
+            p.AgentData.SessionID = Client.Network.SessionID;
+            p.InventoryData.BaseMask = obj.BaseMask;
+            p.InventoryData.CRC = obj.CRC;
+            p.InventoryData.CreationDate = obj.CreationDate;
+            p.InventoryData.CreatorID = obj.CreatorID;
+            p.InventoryData.Description = obj.Description;
+            p.InventoryData.EveryoneMask = obj.EveryoneMask;
+            p.InventoryData.Flags = obj.Flags;
+            p.InventoryData.FolderID = obj.FolderID;
+            p.InventoryData.GroupID = obj.GroupID;
+            p.InventoryData.GroupMask = obj.GroupMask;
+            p.InventoryData.GroupOwned = obj.GroupOwned;
+            p.InventoryData.InvType = obj.InvType;
+            p.InventoryData.ItemID = obj.ItemID;
+            p.InventoryData.Name = obj.Name;
+            p.InventoryData.NextOwnerMask = obj.NextOwnerMask;
+            p.InventoryData.OwnerID = obj.OwnerID;
+            p.InventoryData.OwnerMask = obj.OwnerMask;
+            p.InventoryData.SalePrice = obj.SalePrice;
+            p.InventoryData.SaleType = obj.SaleType;
+            //p.InventoryData.TransactionID = ?
+            p.InventoryData.Type = obj.Type;
+
+            LLVector3 rezPos = Client.Self.Position;
+            rezPos.X++;
+            rezPos.Y++;
+            p.RezData.RayEnd = rezPos;
+            p.RezData.RayStart = Client.Self.Position;
+            p.RezData.RayEndIsIntersection = false;
+            p.RezData.RezSelected = false;
+            p.RezData.RemoveItem = false;
+            p.RezData.BypassRaycast = 1;
+
+            //Client.Network.SendPacket(p);
+
+        }
+
+        //ON FRIEND NOTIFICATION ###############################################
+        void OnFriendNotificationEvent(LLUUID friendID, bool online)
+        {
+            if (online) Console.WriteLine("* ONLINE: {0}", friendID);
+            else Console.WriteLine("* OFFLINE: {0}", friendID);
+            //FIXME!!!
+            Client.Avatars.BeginGetAvatarName(friendID, new AvatarManager.AgentNamesCallback(AgentNamesHandler));
+        }
+        void AgentNamesHandler(Dictionary <LLUUID,string> agentNames)
+        {
+            foreach (KeyValuePair<LLUUID, string> agent in agentNames)
+            {
+                //FIXME!!!
+                //Friends[agent.Key].Name = agent.Value;
+                //Friends[agent.Key].ID = agent.Key;
+                Console.WriteLine("agent: {0} {1}", agent.Key, agent.Value);
+            }
+        }
+        //END OF FRIEND NOTIFICATION ##########################################
+
+
         //ON TELEPORT FINISH ##################################################
         void OnTeleportEvent(string message, TeleportStatus status)
         {
@@ -285,8 +366,8 @@ namespace ghetto
         //END OF TELEPORT FINISH ##############################################
 
 
-        //FRIEND REQUESTS (FIX ME!!!) #########################################
-        void OnRequestFriendshipEvent(Packet packet, Simulator simulator)
+        //FRIEND REQUESTS (FIXME!!!) #########################################
+        void OnRequestFriendship(Packet packet, Simulator simulator)
         {
             RequestFriendshipPacket reply = (RequestFriendshipPacket)packet;
             if (reply.AgentData.AgentID != masterID) return;
@@ -303,7 +384,7 @@ namespace ghetto
 
 
         //MONEY BALANCE STUFF #################################################
-        void OnMoneyBalanceReplyEvent(Packet packet, Simulator simulator)
+        void OnMoneyBalanceReply(Packet packet, Simulator simulator)
         {
             MoneyBalanceReplyPacket reply = (MoneyBalanceReplyPacket)packet;
             string desc = Helpers.FieldToString(reply.MoneyData.Description);
@@ -340,7 +421,7 @@ namespace ghetto
             ObjectUpdatePacket p = (ObjectUpdatePacket)packet;
             foreach (ObjectUpdatePacket.ObjectDataBlock obj in p.ObjectData)
             {
-                //FIX ME!!!
+                //FIXME!!! Update prim text
                 //if (prims[obj.ID])
                 //    prims[obj.ID].Text = Helpers.FieldToString(obj.Text);
             }
@@ -520,7 +601,7 @@ namespace ghetto
                             LLVector3 targetPos = new LLVector3(prim.Position.X,prim.Position.Y,prim.Position.Z + 10);
                             LLQuaternion between = Helpers.RotBetween(Client.Self.Position, prim.Position);
                             response = "FACING <" + targetPos + "> "+between;
-                            //FIX ME!!!
+                            //FIXME!!!
 
                             break;
                         }
@@ -557,6 +638,20 @@ namespace ghetto
                         {
                             Client.Self.InstantMessage((LLUUID)msg[1], msg[2]);
                             response = "Message sent.";
+                        }
+                        break;
+                    }
+                case "inventory":
+                    {
+                        if (msg.Length > 2)
+                        {
+                            FetchInventoryPacket p = new FetchInventoryPacket();
+                            p.AgentData.AgentID = Client.Network.AgentID;
+                            p.AgentData.SessionID = Client.Network.SessionID;
+                            FetchInventoryPacket.InventoryDataBlock data = new FetchInventoryPacket.InventoryDataBlock();
+                            data.ItemID = (LLUUID)msg[1];
+                            data.OwnerID = Client.Network.AgentID;
+                            Client.Network.SendPacket(p);
                         }
                         break;
                     }
@@ -663,10 +758,19 @@ namespace ghetto
                         Client.Self.Chat(details, 0, MainAvatar.ChatType.Shout);
                         break;
                     }
-                case "sim":
+                case "teleport":
                     {
-                        response = "Teleporting to " + details;
-                        Client.Self.Teleport(details,new LLVector3(128,128,0));
+                        if (msg.Length < 5) return;
+                        string simName = String.Join(" ",msg,1,msg.Length - 4);
+                        if (console) Console.WriteLine("* Teleporting to " + simName + "...");
+                        else Client.Self.InstantMessage(fromAgentID,"Teleporting to " + simName + "...");
+                        float x = float.Parse(msg[msg.Length - 3]);
+                        float y = float.Parse(msg[msg.Length - 2]);
+                        float z = float.Parse(msg[msg.Length - 1]);
+                        LLVector3 tPos;
+                        if (x == 0 || y == 0 || z == 0) tPos = new LLVector3(128, 128, 0);
+                        else tPos = new LLVector3(x, y, z);
+                        Client.Self.Teleport(simName, tPos);
                         break;
                     }
                 case "sit":
@@ -711,7 +815,7 @@ namespace ghetto
                         Client.Self.Touch(uint.Parse(msg[1]));
                         break;
                     }
-                case "tp": //FIX ME!!!
+                case "tp": //FIXME!!!
                     {
                         //send me a tp when I ask for one
                         StartLurePacket p = new StartLurePacket();
@@ -844,6 +948,8 @@ namespace ghetto
 
                     Client.Network.SendPacket(set);
                     lastAppearance = set;
+
+                    //SavePacket("Appearance.xml", lastAppearance);
                 }
             }
         }
@@ -965,8 +1071,8 @@ namespace ghetto
             {
                 char[] splitChar = { ' ' };
                 string[] args = input.ToLower().Split(splitChar);
-                string[] commandsWithArgs = { "goto", "label", "say", "shout", "sit", "touch", "touchid", "wait", "whisper" };
-                string[] commandsWithoutArgs = { "quit", "relog", "sitg", "stand" };
+                string[] commandsWithArgs = { "camp", "goto", "label", "pay", "payme", "say", "shout", "sit", "teleport", "touch", "touchid", "wait", "whisper" };
+                string[] commandsWithoutArgs = { "fly", "land", "quit", "relog", "run", "sitg", "stand", "walk" };
                 if (Array.IndexOf(commandsWithArgs,  args[0]) > -1)
                 {
                     if (args.Length < 2)
@@ -1030,7 +1136,6 @@ namespace ghetto
                 ParseCommand(true, "/"+script[i], "", new LLUUID(), new LLUUID());
             }
         }
-
 
     }
 }
