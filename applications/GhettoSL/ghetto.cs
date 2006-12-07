@@ -115,6 +115,7 @@ namespace ghetto
             Client.Network.RegisterCallback(PacketType.ObjectUpdate, new NetworkManager.PacketCallback(OnObjectUpdateEvent));
             Client.Network.RegisterCallback(PacketType.RequestFriendship, new NetworkManager.PacketCallback(OnRequestFriendship));
             Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(OnTeleportFinish));
+            Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(OnAlertMessage));
             
             Client.Network.OnConnected += new NetworkManager.ConnectedCallback(OnConnectedEvent);
             Client.Network.OnSimDisconnected += new NetworkManager.SimDisconnectCallback(OnSimDisconnectEvent);
@@ -144,8 +145,16 @@ namespace ghetto
 
             Client.Network.Logout();
         }
-        //END OF GHETTOSL VOID ###############################################
+        //END OF GHETTOSL VOID ################################################
 
+        //ON ALERT MESSAGE ####################################################
+        void OnAlertMessage(Packet packet, Simulator sim)
+        {
+            AlertMessagePacket p = (AlertMessagePacket)packet;
+            Console.WriteLine(TimeStamp()+"* " + p.AlertData.Message);
+        }
+
+        //END OF ALERT MESSAGE ####################################################
 
         //ON SIM CONNECT ######################################################
         void OnConnectedEvent(object sender)
