@@ -473,27 +473,6 @@ namespace ghetto
         //END OF AGENT ANIMATION ##############################################
 
 
-        //AGENT SIT ###########################################################
-        void Sit(LLUUID targetID, LLVector3 offset)
-        {
-            AgentRequestSitPacket p = new AgentRequestSitPacket();
-            p.AgentData.AgentID = Client.Network.AgentID;
-            p.AgentData.SessionID = Client.Network.SessionID;
-            p.TargetObject.TargetID = targetID;
-            p.TargetObject.Offset = offset;
-            Client.Network.SendPacket(p);
-
-            AgentSitPacket sit = new AgentSitPacket();
-            sit.AgentData.AgentID = Client.Network.AgentID;
-            sit.AgentData.SessionID = Client.Network.SessionID;
-            Client.Network.SendPacket(sit);
-
-            controls = 0;
-            SendAgentUpdate();
-        }
-        //END OF AGENT SIT ####################################################
-
-
         //COMMAND PARSING #####################################################
         void ParseCommand(bool console, string message, string fromAgentName, LLUUID fromAgentID, LLUUID imSessionID)
         {
@@ -556,7 +535,10 @@ namespace ghetto
                         if (localID > 0)
                         {
                             response = "Match found. Camping...";
-                            Sit(prims[localID].ID, new LLVector3(0, 0, 0));
+                            Client.Self.RequestSit(prims[localID].ID, new LLVector3(0, 0, 0));
+                            Client.Self.Sit();
+                            controls = 0;
+                            SendAgentUpdate();
                         }
                         else response = "No matching objects found.";
                         break;
@@ -785,7 +767,10 @@ namespace ghetto
                 case "sit":
                     {
                         if (msg.Length < 2) return;
-                        Sit((LLUUID)details, new LLVector3());
+                        Client.Self.RequestSit((LLUUID)details, new LLVector3());
+                        Client.Self.Sit();
+                        controls = 0;
+                        SendAgentUpdate();
                         break;
                     }
                 case "sitg":
