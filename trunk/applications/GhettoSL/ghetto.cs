@@ -234,19 +234,27 @@ namespace ghetto
         }
         //END OF CHAT FROM SIMULATOR ##########################################
 
+        void OnObjectGrab(Packet packet, Simulator sim)
+        {
+            ObjectGrabPacket reply = (ObjectGrabPacket)packet;
+            if (reply.AgentData.AgentID == masterID)
+            {
+                Console.WriteLine("* Touched/grabbed object " + reply.ObjectData.LocalID);
+            }
+        }
 
         //INSTANT MESSAGE STUFF ###############################################
         void OnInstantMessageEvent(LLUUID fromAgentID, string fromAgentName, LLUUID toAgentID, uint parentEstateID, LLUUID regionID, LLVector3 position, byte dialog, bool groupIM, LLUUID imSessionID, DateTime timestamp, string message, byte offline, byte[] binaryBucket)
         {
             //Teleport requests (dialog set to 22)
-            if (dialog == 22 && (fromAgentID == masterID || message == passPhrase))
+            if (dialog == (int)InstantMessageDialog.RequestTeleport && (fromAgentID == masterID || message == passPhrase))
             {
                 Console.WriteLine("* Accepting teleport request from " + fromAgentName + " (" + message + ")");
                 Client.Self.TeleportLureRespond(fromAgentID, true);
                 return;
             }
             //Receive inventory
-            else if (dialog == 4)
+            else if (dialog == (int)InstantMessageDialog.GiveInventory)
             {
                 Console.WriteLine(TimeStamp()+"* " + fromAgentName + " gave you an object named \"" + message+"\"");
                 return;
@@ -365,6 +373,7 @@ namespace ghetto
         }
         void OnTeleportFinish(Packet packet, Simulator simulator)
         {
+            
             TeleportFinishPacket reply = (TeleportFinishPacket)packet;
             Console.WriteLine("* FINISHED TELEPORT TO REGION " + regionX+","+regionY);
             if (reply.Info.AgentID != Client.Network.AgentID) return;
@@ -766,6 +775,7 @@ namespace ghetto
                     }
                 case "sit":
                     {
+                        
                         if (msg.Length < 2) return;
                         Client.Self.RequestSit((LLUUID)details, new LLVector3());
                         Client.Self.Sit();
@@ -807,6 +817,15 @@ namespace ghetto
                 case "touchid":
                     {
                         Client.Self.Touch(uint.Parse(msg[1]));
+                        break;
+                    }
+                case "touchspy":
+                    {
+                        if (msg.Length < 2) return;
+                        else if (msg[1] == "on") Client.Network.RegisterCallback(PacketType.ObjectGrab, new NetworkManager.PacketCallback(OnObjectGrab));
+                        else if (msg[1] == "off") Client.Network.UnregisterCallback(PacketType.ObjectGrab, new NetworkManager.PacketCallback(OnObjectGrab));
+                        else return;
+                        response = "Touch/grab spying " + msg[0].ToUpper();
                         break;
                     }
                 case "tp": //FIXME!!!
