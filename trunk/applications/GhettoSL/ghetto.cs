@@ -53,7 +53,6 @@ namespace ghetto
         public LLUUID masterID;
         LLUUID masterIMSessionID;
         string followName;
-        uint controls = 0;
         int currentBalance;
         int regionX;
         int regionY;
@@ -107,8 +106,15 @@ namespace ghetto
 
             Client.Debug = false;
 
-            //Add callbacks for events
+            Client.Self.Status.Camera.Far = 96.0f;
+            Client.Self.Status.Camera.CameraAtAxis = new LLVector3(0, 0, 0);
+            Client.Self.Status.Camera.CameraCenter = new LLVector3(0, 0, 0);
+            Client.Self.Status.Camera.CameraLeftAxis = new LLVector3(0, 0, 0);
+            Client.Self.Status.Camera.CameraUpAxis = new LLVector3(0, 0, 0);
+            Client.Self.Status.Camera.HeadRotation = new LLQuaternion(0, 0, 0, 1);
+            Client.Self.Status.Camera.BodyRotation = new LLQuaternion(0, 0, 0, 1);
 
+            //Add callbacks for events
             Client.Network.RegisterCallback(PacketType.AvatarAppearance, new NetworkManager.PacketCallback(OnAppearance));
             Client.Network.RegisterCallback(PacketType.FetchInventoryReply, new NetworkManager.PacketCallback(OnFetchInventoryReply));
             Client.Network.RegisterCallback(PacketType.MoneyBalanceReply, new NetworkManager.PacketCallback(OnMoneyBalanceReply));
@@ -116,7 +122,7 @@ namespace ghetto
             Client.Network.RegisterCallback(PacketType.RequestFriendship, new NetworkManager.PacketCallback(OnRequestFriendship));
             Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(OnTeleportFinish));
             Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(OnAlertMessage));
-            
+           
             Client.Network.OnConnected += new NetworkManager.ConnectedCallback(OnConnectedEvent);
             Client.Network.OnSimDisconnected += new NetworkManager.SimDisconnectCallback(OnSimDisconnectEvent);
             Client.Objects.OnAvatarMoved += new ObjectManager.AvatarMovedCallback(OnAvatarMovedEvent);
@@ -207,11 +213,10 @@ namespace ghetto
 
             //We are in!
             Console.WriteLine(RPGWeather());
-            Console.WriteLine("Location: <" + Client.Self.Position + ">");
+            Console.WriteLine("Location: " + Client.Self.Position);
 
             //Fix the "bot squat" animation
-            controls = 0;
-            SendAgentUpdate();
+            Client.Self.Status.SendUpdate();
 
             return true;
         }
@@ -234,13 +239,13 @@ namespace ghetto
         }
         //END OF CHAT FROM SIMULATOR ##########################################
 
-        void OnObjectGrab(Packet packet, Simulator sim)
+        void OnObjectSelect(Packet packet, Simulator sim)
         {
-            ObjectGrabPacket reply = (ObjectGrabPacket)packet;
-            if (reply.AgentData.AgentID == masterID)
-            {
-                Console.WriteLine("* Touched/grabbed object " + reply.ObjectData.LocalID);
-            }
+            ObjectSelectPacket reply = (ObjectSelectPacket)packet;
+            //if (reply.AgentData.AgentID == masterID)
+            //{
+                Console.WriteLine("* Touched/grabbed object " + reply.ObjectData[0].ObjectLocalID);
+            //}
         }
 
         //INSTANT MESSAGE STUFF ###############################################
@@ -378,8 +383,7 @@ namespace ghetto
             Console.WriteLine("* FINISHED TELEPORT TO REGION " + regionX+","+regionY);
             if (reply.Info.AgentID != Client.Network.AgentID) return;
             if (lastAppearance.AgentData.SerialNum > 0) Client.Network.SendPacket(lastAppearance);
-            controls = 0;
-            SendAgentUpdate();
+            Client.Self.Status.SendUpdate();
         }
         //END OF TELEPORT FINISH ##############################################
 
@@ -445,25 +449,6 @@ namespace ghetto
             }
         }
         //END OF AUTO-CAMP STUFF ##############################################
-
-
-        //AGENT UPDATE ########################################################
-        void SendAgentUpdate()
-        {
-            AgentUpdatePacket p = new AgentUpdatePacket();
-            p.AgentData.Far = 96.0f;
-            p.AgentData.CameraAtAxis = new LLVector3(0,0,0);
-            p.AgentData.CameraCenter = new LLVector3(0,0,0);
-            p.AgentData.CameraLeftAxis = new LLVector3(0,0,0);
-            p.AgentData.CameraUpAxis = new LLVector3(0,0,0);
-            p.AgentData.HeadRotation = new LLQuaternion(0, 0, 0, 1); ;
-            p.AgentData.BodyRotation = new LLQuaternion(0, 0, 0, 1); ;
-            p.AgentData.AgentID = Client.Network.AgentID;
-            p.AgentData.SessionID = Client.Network.SessionID;
-            p.AgentData.ControlFlags = controls;
-            Client.Network.SendPacket(p);
-        }
-        //END OF AGENT UPDATE #################################################
 
 
         //AGENT ANIMATION #####################################################
@@ -546,8 +531,10 @@ namespace ghetto
                             response = "Match found. Camping...";
                             Client.Self.RequestSit(prims[localID].ID, new LLVector3(0, 0, 0));
                             Client.Self.Sit();
-                            controls = 0;
-                            SendAgentUpdate();
+                            Client.Self.Status.Controls.FinishAnim = false;
+                            Client.Self.Status.Controls.Fly = false;
+                            Client.Self.Status.Controls.StandUp = false;
+                            Client.Self.Status.SendUpdate();
                         }
                         else response = "No matching objects found.";
                         break;
@@ -586,7 +573,7 @@ namespace ghetto
                             Client.Self.Grab(prim.LocalID);
                             Client.Self.GrabUpdate(prim.ID, targetPos);
                             Client.Self.DeGrab(prim.LocalID);
-                            response = "DRAGGED OBJECT " + prim.LocalID + " TO <" + targetPos + ">";
+                            response = "DRAGGED OBJECT " + prim.LocalID + " TO " + targetPos;
                             break;
                         }
                         if (response == "") response = "NO OBJECT FOUND MATCHING " + findID;
@@ -600,7 +587,7 @@ namespace ghetto
                             if (prim.ID != findID) continue;
                             LLVector3 targetPos = new LLVector3(prim.Position.X,prim.Position.Y,prim.Position.Z + 10);
                             LLQuaternion between = Helpers.RotBetween(Client.Self.Position, prim.Position);
-                            response = "FACING <" + targetPos + "> "+between;
+                            response = "FACING " + targetPos + " " + between;
                             //FIXME!!!
 
                             break;
@@ -628,8 +615,8 @@ namespace ghetto
                     break;
                 case "fly":
                     {
-                        controls = controls | (uint)Avatar.AgentUpdateFlags.AGENT_CONTROL_FLY;
-                        SendAgentUpdate(); //AGENT_CONTROL_FLY
+                        Client.Self.Status.Controls.Fly = true;
+                        Client.Self.Status.SendUpdate();
                         break;
                     }
                 case "im":
@@ -657,9 +644,8 @@ namespace ghetto
                     }
                 case "land":
                     {
-                        //controls = controls | ~(uint)Avatar.AgentUpdateFlags.AGENT_CONTROL_FLY; //WRONG
-                        controls = 0; //still not right
-                        SendAgentUpdate();
+                        Client.Self.Status.Controls.Fly = false;
+                        Client.Self.Status.SendUpdate();
                         break;
                     }
                 case "listen":
@@ -779,20 +765,23 @@ namespace ghetto
                         if (msg.Length < 2) return;
                         Client.Self.RequestSit((LLUUID)details, new LLVector3());
                         Client.Self.Sit();
-                        controls = 0;
-                        SendAgentUpdate();
+                        Client.Self.Status.Controls.FinishAnim = false;
+                        Client.Self.Status.Controls.Fly = false;
+                        Client.Self.Status.Controls.SitOnGround = false;
+                        Client.Self.Status.Controls.StandUp = false;
+                        Client.Self.Status.SendUpdate();
                         break;
                     }
                 case "sitg":
                     {
-                        controls = (uint)Avatar.AgentUpdateFlags.AGENT_CONTROL_SIT_ON_GROUND;
-                        SendAgentUpdate();
+                        Client.Self.Status.Controls.SitOnGround = true;
+                        Client.Self.Status.SendUpdate();
                         break;
                     }
                 case "stand":
                     {
-                        controls = (uint)Avatar.AgentUpdateFlags.AGENT_CONTROL_STAND_UP;
-                        SendAgentUpdate();
+                        Client.Self.Status.Controls.StandUp = true;
+                        Client.Self.Status.SendUpdate();
                         //SendAgentAnimation((LLUUID)"2408fe9e-df1d-1d7d-f4ff-1384fa7b350f", true); //stand
                         break;
                     }
@@ -822,10 +811,10 @@ namespace ghetto
                 case "touchspy":
                     {
                         if (msg.Length < 2) return;
-                        else if (msg[1] == "on") Client.Network.RegisterCallback(PacketType.ObjectGrab, new NetworkManager.PacketCallback(OnObjectGrab));
-                        else if (msg[1] == "off") Client.Network.UnregisterCallback(PacketType.ObjectGrab, new NetworkManager.PacketCallback(OnObjectGrab));
+                        else if (msg[1] == "on") Client.Network.RegisterCallback(PacketType.ObjectSelect, new NetworkManager.PacketCallback(OnObjectSelect));
+                        else if (msg[1] == "off") Client.Network.UnregisterCallback(PacketType.ObjectSelect, new NetworkManager.PacketCallback(OnObjectSelect));
                         else return;
-                        response = "Touch/grab spying " + msg[0].ToUpper();
+                        response = "Selection spying " + msg[1].ToUpper();
                         break;
                     }
                 case "tp": //FIXME!!!
@@ -985,8 +974,7 @@ namespace ghetto
                     avatars[avatar.LocalID].Rotation = avatar.Rotation;
                     if (!Follow(name))
                     {
-                        controls = 0;
-                        SendAgentUpdate();
+                        Client.Self.Status.SendUpdate();
                     }
                 }
             }
@@ -1055,13 +1043,11 @@ namespace ghetto
                         //GridRegion region = Client.Network.CurrentSim.Region.GridRegionData;
                         Client.Self.AutoPilot((ulong)(av.Position.X + regionX), (ulong)(av.Position.Y + regionY), av.Position.Z);
                         Thread.Sleep(100);
-                        controls = 0;
-                        SendAgentUpdate();
+                        Client.Self.Status.SendUpdate();
                     }
                     else
                     {
-                        controls = 0;
-                        SendAgentUpdate();
+                        Client.Self.Status.SendUpdate();
                     }
                     return true;
                 }
