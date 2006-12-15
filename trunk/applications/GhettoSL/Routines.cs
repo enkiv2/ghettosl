@@ -27,6 +27,7 @@
 
 
 using libsecondlife;
+using libsecondlife.Packets;
 using System;
 using System.Collections.Generic;
 using System.Text;
