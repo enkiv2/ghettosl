@@ -30,14 +30,12 @@ using System.IO;
 using System.Threading;
 using System.Collections.Generic;
 using System.Text;
-using System.Xml;
-using System.Xml.Serialization;
 using libsecondlife;
 using libsecondlife.Packets;
 
 namespace ghetto
 {
-    class GhettoSL
+    partial class GhettoSL
     {
         //GLOBAL VARIABLES ####################################################
         SecondLife Client = new SecondLife();
@@ -58,9 +56,8 @@ namespace ghetto
         int currentBalance;
         int regionX;
         int regionY;
-
-        //Variables used by Auto-Camp
         string campChairTextMatch;
+
         //END OF GLOBAL VARIABLES #############################################
 
 
@@ -117,24 +114,7 @@ namespace ghetto
             Client.Self.Status.Camera.BodyRotation = new LLQuaternion(0, 0, 0, 1);
 
             //Add callbacks for events
-            Client.Network.RegisterCallback(PacketType.AvatarAppearance, new NetworkManager.PacketCallback(OnAppearance));
-            Client.Network.RegisterCallback(PacketType.FetchInventoryReply, new NetworkManager.PacketCallback(OnFetchInventoryReply));
-            Client.Network.RegisterCallback(PacketType.MoneyBalanceReply, new NetworkManager.PacketCallback(OnMoneyBalanceReply));
-            Client.Network.RegisterCallback(PacketType.ObjectUpdate, new NetworkManager.PacketCallback(OnObjectUpdateEvent));
-            Client.Network.RegisterCallback(PacketType.RequestFriendship, new NetworkManager.PacketCallback(OnRequestFriendship));
-            Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(OnTeleportFinish));
-            Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(OnAlertMessage));
-           
-            Client.Network.OnConnected += new NetworkManager.ConnectedCallback(OnConnectedEvent);
-            Client.Network.OnSimDisconnected += new NetworkManager.SimDisconnectCallback(OnSimDisconnectEvent);
-            Client.Objects.OnAvatarMoved += new ObjectManager.AvatarMovedCallback(OnAvatarMovedEvent);
-            Client.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(OnNewAvatarEvent);
-            Client.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(OnNewPrimEvent);
-            Client.Objects.OnObjectKilled += new ObjectManager.KillObjectCallback(OnObjectKilledEvent);
-            Client.Objects.OnPrimMoved += new ObjectManager.PrimMovedCallback(OnPrimMovedEvent);
-            Client.Avatars.OnFriendNotification += new AvatarManager.FriendNotificationCallback(OnFriendNotificationEvent);
-            Client.Self.OnInstantMessage += new InstantMessageCallback(OnInstantMessageEvent);
-            Client.Self.OnTeleport += new TeleportCallback(OnTeleportEvent);
+            InitializeCallbacks();
             
             if (!quiet) Client.Self.OnChat += new ChatCallback(OnChatEvent);
 
@@ -154,41 +134,6 @@ namespace ghetto
             Client.Network.Logout();
         }
         //END OF GHETTOSL VOID ################################################
-
-        //ON ALERT MESSAGE ####################################################
-        void OnAlertMessage(Packet packet, Simulator sim)
-        {
-            AlertMessagePacket p = (AlertMessagePacket)packet;
-            Console.WriteLine(TimeStamp()+"* " + Helpers.FieldToString(p.AlertData.Message));
-        }
-
-        //END OF ALERT MESSAGE ####################################################
-
-        //ON SIM CONNECT ######################################################
-        void OnConnectedEvent(object sender)
-        {
-            Console.WriteLine("* CONNECTED");
-            //Retrieve offline IMs
-            Client.Grid.AddEstateSims();
-            //FIXME!!! - ADD Client.Self.RetrieveInstantMessages() TO CORE!
-            RetrieveInstantMessagesPacket p = new RetrieveInstantMessagesPacket();
-            p.AgentData.AgentID = Client.Network.AgentID;
-            p.AgentData.SessionID = Client.Network.SessionID;
-            Client.Network.SendPacket(p);
-        }
-        //END OF ON CONNECT ###################################################
-
-
-        //ON SIM DISCONNECT ###################################################
-        void OnSimDisconnectEvent(Simulator sim, NetworkManager.DisconnectType type)
-        {
-            Console.WriteLine("* DISCONNECTED FROM SIM: " + type.ToString());
-            if (logout || sim.IPEndPoint != Client.Network.CurrentSim.IPEndPoint) return;
-            Client.Network.Logout();
-            do Thread.Sleep(5000);
-            while (!Login());
-        }
-        //END OF SIM DISCONNECT ###############################################
 
 
         //LOGIN SEQUENCE ######################################################
@@ -226,22 +171,6 @@ namespace ghetto
         //END OF LOGIN ########################################################
 
 
-        //CHAT FROM SIMULATOR (USERS AND OBJECTS) #############################
-        void OnChatEvent(string message, byte audible, byte chatType, byte sourceType, string name, LLUUID fromAgentID, LLUUID ownerID, LLVector3 position)
-        {
-            if (chatType > 3 || audible < 1) return;
-            char[] splitChar = { ' ' };
-            string[] msg = message.Split(splitChar);
-            if (msg[0].ToLower() != "/me")
-                Console.WriteLine(TimeStamp() + "(type " + chatType + ") " + name + ": " + message);
-            else
-            {
-                message = String.Join(" ", msg, 1, msg.Length - 1);
-                Console.WriteLine(TimeStamp() + "(type " + chatType + ") * " + name + " " + message);
-            }
-        }
-        //END OF CHAT FROM SIMULATOR ##########################################
-
         void OnObjectSelect(Packet packet, Simulator sim)
         {
             ObjectSelectPacket reply = (ObjectSelectPacket)packet;
@@ -251,37 +180,18 @@ namespace ghetto
             //}
         }
 
-        //INSTANT MESSAGE STUFF ###############################################
-        void OnInstantMessageEvent(LLUUID fromAgentID, string fromAgentName, LLUUID toAgentID, uint parentEstateID, LLUUID regionID, LLVector3 position, byte dialog, bool groupIM, LLUUID imSessionID, DateTime timestamp, string message, byte offline, byte[] binaryBucket)
+        void AcknowledgePayment(string agentName, int amount)
         {
-            //Teleport requests (dialog set to 22)
-            if (dialog == (int)InstantMessageDialog.RequestTeleport && (fromAgentID == masterID || message == passPhrase))
+            foreach (Avatar av in avatars.Values)
             {
-                Console.WriteLine("* Accepting teleport request from " + fromAgentName + " (" + message + ")");
-                Client.Self.TeleportLureRespond(fromAgentID, true);
+                if (av.Name != agentName) continue;
+                Console.WriteLine("* RECEIVED PAYMENT FROM " + av.ID);
+                //uncomment to whisper payment info on a secret channel
+                //Client.Self.Chat(av.Name+", "+av.ID+", "+amount, 8414263, MainAvatar.ChatType.Whisper);
                 return;
             }
-            //Receive inventory
-            else if (dialog == (int)InstantMessageDialog.GiveInventory)
-            {
-                Console.WriteLine(TimeStamp()+"* " + fromAgentName + " gave you an object named \"" + message+"\"");
-                return;
-            }
-
-            CreateMessageWindow(fromAgentID, fromAgentName, dialog, imSessionID);
-
-            //Display IM in console
-            Console.WriteLine(TimeStamp()+"(dialog " + dialog + ") <" + fromAgentName + ">: " + message);
-
-            //Parse commands from masterID only
-            if (offline  > 0 || fromAgentID != masterID) return;
-
-            //Remember IM session
-            masterIMSessionID = imSessionID;
-            ParseCommand(false,message, fromAgentName, fromAgentID, imSessionID);
+            Console.WriteLine("* RECEIVED UNIDENTIFIABLE PAYMENT FROM " + agentName + ": L$" + amount);
         }
-        //END OF INSTANT MESSAGE STUFF ########################################
-
 
         //IM WINDOW CREATION ##################################################
         void CreateMessageWindow(LLUUID fromAgentID, string fromAgentName, byte dialog, LLUUID imSessionID)
@@ -353,44 +263,6 @@ namespace ghetto
 
         }
 
-        //ON FRIEND NOTIFICATION ###############################################
-        void OnFriendNotificationEvent(LLUUID friendID, bool online)
-        {
-            if (online) Console.WriteLine("* ONLINE: {0}", friendID);
-            else Console.WriteLine("* OFFLINE: {0}", friendID);
-            //FIXME!!!
-            Client.Avatars.BeginGetAvatarName(friendID, new AvatarManager.AgentNamesCallback(AgentNamesHandler));
-        }
-        void AgentNamesHandler(Dictionary <LLUUID,string> agentNames)
-        {
-            foreach (KeyValuePair<LLUUID, string> agent in agentNames)
-            {
-                //FIXME!!!
-                //Friends[agent.Key].Name = agent.Value;
-                //Friends[agent.Key].ID = agent.Key;
-                Console.WriteLine("agent: {0} {1}", agent.Key, agent.Value);
-            }
-        }
-        //END OF FRIEND NOTIFICATION ##########################################
-
-
-        //ON TELEPORT FINISH ##################################################
-        void OnTeleportEvent(Simulator sim, string message, TeleportStatus status)
-        {
-            Console.WriteLine("* TELEPORT ("+status.ToString()+"): " + message);
-        }
-        void OnTeleportFinish(Packet packet, Simulator simulator)
-        {
-            
-            TeleportFinishPacket reply = (TeleportFinishPacket)packet;
-            Console.WriteLine("* FINISHED TELEPORT TO REGION " + regionX+","+regionY);
-            if (reply.Info.AgentID != Client.Network.AgentID) return;
-            if (lastAppearance.AgentData.SerialNum > 0) Client.Network.SendPacket(lastAppearance);
-            Client.Self.Status.SendUpdate();
-        }
-        //END OF TELEPORT FINISH ##############################################
-
-
         //FRIEND REQUESTS (FIXME!!!) #########################################
         void OnRequestFriendship(Packet packet, Simulator simulator)
         {
@@ -406,38 +278,6 @@ namespace ghetto
             Client.Network.SendPacket(p);
         }
         //END OF FRIEND REQUESTS ##############################################
-
-
-        //MONEY BALANCE STUFF #################################################
-        void OnMoneyBalanceReply(Packet packet, Simulator simulator)
-        {
-            MoneyBalanceReplyPacket reply = (MoneyBalanceReplyPacket)packet;
-            string desc = Helpers.FieldToString(reply.MoneyData.Description);
-            int changeAmount = reply.MoneyData.MoneyBalance - currentBalance;
-            currentBalance = reply.MoneyData.MoneyBalance;
-
-            char[] splitChar = { ' ' };
-            string[] msg = desc.Split(splitChar);
-            if (msg.Length > 3 && msg[2] + " " + msg[3] == "paid you")
-                AcknowledgePayment(msg[0] + " " + msg[1], changeAmount);
-
-            if (desc.Length > 1) Console.WriteLine("* " + desc);
-            Console.WriteLine(TimeStamp()+"* Balance: L$" + currentBalance);
-        }
-
-        void AcknowledgePayment(string agentName, int amount)
-        {
-            foreach (Avatar av in avatars.Values)
-            {
-                if (av.Name != agentName) continue;
-                Console.WriteLine("* RECEIVED PAYMENT FROM " + av.ID);
-                //uncomment to whisper payment info on a secret channel
-                //Client.Self.Chat(av.Name+", "+av.ID+", "+amount, 8414263, MainAvatar.ChatType.Whisper);
-                return;
-            }
-            Console.WriteLine("* RECEIVED UNIDENTIFIABLE PAYMENT FROM " + agentName + ": L$" + amount);
-        }
-        //END OF MONEY BALANCE ################################################
 
 
         //AUTO-CAMP OBJECT-FINDING STUFF ######################################
@@ -468,405 +308,6 @@ namespace ghetto
             Client.Network.SendPacket(p);
         }
         //END OF AGENT ANIMATION ##############################################
-
-
-        //COMMAND PARSING #####################################################
-        void ParseCommand(bool console, string message, string fromAgentName, LLUUID fromAgentID, LLUUID imSessionID)
-        {
-            if (message.Length == 0) return;
-            char[] splitChar = { ' ' };
-            string[] msg = message.Split(splitChar);
-            if (msg[0] == null || msg[0] == "") return;
-
-            string command = msg[0].ToLower();
-            if (command.Substring(0, 1) == "/") command = command.Substring(1);
-            else if (console)
-            {
-                Client.Self.Chat(message, 0, MainAvatar.ChatType.Normal);
-                return;
-            }
-
-            string response = "";
-
-            //Store command arguments in "details" variable
-            string details = null;
-            int i = 1;
-            if (command == "re" || command == "im") i++;
-            while (i < msg.Length)
-            {
-                details += msg[i];
-                if (i + 1 < msg.Length) details += " ";
-                i++;
-            }
-
-            switch (command)
-            {
-                case "button1":
-                    {
-                        Client.Self.Touch(9835045);
-                        break;
-                    }
-                case "button2":
-                    {
-                        Client.Self.Touch(9835044);
-                        break;
-                    }
-                case "anim":
-                    {
-                        SendAgentAnimation((LLUUID)details, true);
-                        break;
-                    }
-                case "stopanim":
-                    {
-                        SendAgentAnimation((LLUUID)details, false);
-                        break;
-                    }
-                case "backflip":
-                    {
-                        SendAgentAnimation((LLUUID)"c4ca6188-9127-4f31-0158-23c4e2f93304", true); //backflip
-                        break;
-                    }
-                case "camp":
-                    {
-                        uint localID = FindObjectByText(details.ToLower());
-                        if (localID > 0)
-                        {
-                            response = "Match found. Camping...";
-                            Client.Self.RequestSit(prims[localID].ID, new LLVector3(0, 0, 0));
-                            Client.Self.Sit();
-                            Client.Self.Status.Controls.FinishAnim = false;
-                            Client.Self.Status.Controls.Fly = false;
-                            Client.Self.Status.Controls.StandUp = false;
-                            Client.Self.Status.SendUpdate();
-                        }
-                        else response = "No matching objects found.";
-                        break;
-                    }
-                case "clear":
-                    {
-                        Console.Clear();
-                        break;
-                    }
-                case "clone":
-                    {
-                        if (msg.Length != 3) return;
-                        if (Clone(msg[1], msg[2])) response = "Cloning...";
-                        else response = "Error: Avatar not found";
-                        break;
-                    }
-                case "die":
-                    {
-                        logout = true;
-                        response = "Shutting down...";
-                        break;
-                    }
-                case "quit":
-                    {
-                        logout = true;
-                        response = "Shutting down...";
-                        break;
-                    }
-                case "drag":
-                    {
-                        LLUUID findID = (LLUUID)msg[1];
-                        foreach (PrimObject prim in prims.Values)
-                        {
-                            if (prim.ID != findID) continue;
-                            LLVector3 targetPos = new LLVector3(prim.Position.X,prim.Position.Y,prim.Position.Z + 10);
-                            Client.Self.Grab(prim.LocalID);
-                            Client.Self.GrabUpdate(prim.ID, targetPos);
-                            Client.Self.DeGrab(prim.LocalID);
-                            response = "DRAGGED OBJECT " + prim.LocalID + " TO " + targetPos;
-                            break;
-                        }
-                        if (response == "") response = "NO OBJECT FOUND MATCHING " + findID;
-                        break;
-                    }
-                case "face":
-                    {
-                        LLUUID findID = (LLUUID)msg[1];
-                        foreach (PrimObject prim in prims.Values)
-                        {
-                            if (prim.ID != findID) continue;
-                            LLVector3 targetPos = new LLVector3(prim.Position.X,prim.Position.Y,prim.Position.Z + 10);
-                            LLQuaternion between = Helpers.RotBetween(Client.Self.Position, prim.Position);
-                            response = "FACING " + targetPos + " " + between;
-                            //FIXME!!!
-
-                            break;
-                        }
-                        if (response == "") response = "NO OBJECT FOUND MATCHING " + findID;
-                        break;
-                    }
-                case "follow":
-                    {
-                        if (msg.Length == 2 && msg[1].ToLower() == "off")
-                        {
-                            followName = null;
-                            response = "Stopped following";
-                        }
-                        else if (msg.Length == 3)
-                        {
-                            if (Follow(msg[1] + " " + msg[2])) response = "Following " + followName + "...";
-                            else
-                            {
-                                response = "Error: Avatar not found";
-                                followName = null;
-                            }
-                        }                    
-                    }
-                    break;
-                case "fly":
-                    {
-                        Client.Self.Status.Controls.Fly = true;
-                        Client.Self.Status.SendUpdate();
-                        break;
-                    }
-                case "im":
-                    {
-                        if (msg.Length > 2)
-                        {
-                            Client.Self.InstantMessage((LLUUID)msg[1], msg[2]);
-                            response = "Message sent.";
-                        }
-                        break;
-                    }
-                case "inventory":
-                    {
-                        if (msg.Length > 2)
-                        {
-                            FetchInventoryPacket p = new FetchInventoryPacket();
-                            p.AgentData.AgentID = Client.Network.AgentID;
-                            p.AgentData.SessionID = Client.Network.SessionID;
-                            FetchInventoryPacket.InventoryDataBlock data = new FetchInventoryPacket.InventoryDataBlock();
-                            data.ItemID = (LLUUID)msg[1];
-                            data.OwnerID = Client.Network.AgentID;
-                            Client.Network.SendPacket(p);
-                        }
-                        break;
-                    }
-                case "land":
-                    {
-                        Client.Self.Status.Controls.Fly = false;
-                        Client.Self.Status.SendUpdate();
-                        break;
-                    }
-                case "listen":
-                    {
-                        Client.Self.OnChat += new ChatCallback(OnChatEvent);
-                        response = "Displaying object/avatar chat.";
-                        break;
-                    }
-                case "me":
-                    {
-                        Client.Self.Chat("/me "+details, 0, MainAvatar.ChatType.Normal);
-                        break;
-                    }
-                case "pay":
-                    {
-                        Client.Self.GiveMoney((LLUUID)msg[2], int.Parse(msg[1]), "");
-                        response = "Payment sent to "+msg[2]+".";
-                        break;
-                    }
-                case "payme":
-                    {
-                        if (console) Client.Self.GiveMoney(masterID, int.Parse(msg[1]), "");
-                        else Client.Self.GiveMoney(fromAgentID, int.Parse(msg[1]), "");
-                        response = "Payment sent.";
-                        break;
-                    }
-                case "ping":
-                    {
-                        Client.Self.InstantMessage(fromAgentID, "pong", imSessionID);
-                        break;
-                    }
-                case "quiet":
-                    {
-                        response = "Stopped listening to chat.";
-                        Client.Self.OnChat -= new ChatCallback(OnChatEvent);
-                        break;
-                    }
-                case "re":
-                    {
-                        if (msg.Length == 1)
-                        {
-                            int count = imWindows.Count;
-                            response = count + " active IM session";
-                            if (count != 1) response += "s";
-                            foreach (Avatar av in imWindows.Values)
-                            {
-                                response += "\n"+av.LocalID+". "+av.Name;
-                            }
-                        }
-                        else if (msg.Length == 2)
-                        {
-                            int isNumeric;
-                            if (!int.TryParse(msg[1], out isNumeric))
-                            {
-                                response = "Invalid IM window number";
-                            }
-                            else
-                            {
-                                uint index = (uint)(-1 + int.Parse(msg[1]));
-                                if (index < 0 || index >= imWindows.Count) response = "Invalid IM window number";
-                                else
-                                {
-                                    Client.Self.InstantMessage(imWindows[index].ID, details, imWindows[index].PartnerID);
-                                    response = "Message sent.";
-                                }
-                            }
-                        }
-                        break;
-                    }
-                case "relog":
-                    {
-                        response = "Relogging...";
-                        Client.Network.Logout();
-                        Thread.Sleep(1000);
-                        while (!Login()) Thread.Sleep(5000);
-                        break;
-                    }
-                case "ride":
-                    {
-                        if (!RideWith(details)) Console.WriteLine("* No avatars found matching \"{0}\".", details);
-                        break;
-                    }
-                case "run":
-                    {
-                        Client.Self.SetAlwaysRun(true);
-                        response = "Running enabled";
-                        break;
-                    }
-                case "say":
-                    {
-                        Client.Self.Chat(details, 0, MainAvatar.ChatType.Normal);
-                        break;
-                    }
-                case "script":
-                    {
-                        if (msg.Length > 0) LoadScript(msg[1]+".script");
-                        break;
-                    }
-                case "shout":
-                    {
-                        Client.Self.Chat(details, 0, MainAvatar.ChatType.Shout);
-                        break;
-                    }
-                case "teleport":
-                    {
-                        if (msg.Length < 5) return;
-                        string simName = String.Join(" ",msg,1,msg.Length - 4);
-                        if (console) Console.WriteLine("* Teleporting to {0}...", simName);
-                        else Client.Self.InstantMessage(fromAgentID,"Teleporting to {0}...", simName);
-                        float x = float.Parse(msg[msg.Length - 3]);
-                        float y = float.Parse(msg[msg.Length - 2]);
-                        float z = float.Parse(msg[msg.Length - 1]);
-                        LLVector3 tPos;
-                        if (x == 0 || y == 0 || z == 0) tPos = new LLVector3(128, 128, 0);
-                        else tPos = new LLVector3(x, y, z);
-                        Client.Self.Teleport(simName, tPos);
-                        break;
-                    }
-                case "sit":
-                    {
-                        
-                        if (msg.Length < 2) return;
-                        Client.Self.RequestSit((LLUUID)details, new LLVector3());
-                        Client.Self.Sit();
-                        Client.Self.Status.Controls.FinishAnim = false;
-                        Client.Self.Status.Controls.Fly = false;
-                        Client.Self.Status.Controls.SitOnGround = false;
-                        Client.Self.Status.Controls.StandUp = false;
-                        Client.Self.Status.SendUpdate();
-                        break;
-                    }
-                case "sitg":
-                    {
-                        Client.Self.Status.Controls.StandUp = false;
-                        Client.Self.Status.Controls.SitOnGround = true;
-                        Client.Self.Status.SendUpdate();
-                        break;
-                    }
-                case "stand":
-                    {
-                        Client.Self.Status.Controls.SitOnGround = false;
-                        Client.Self.Status.Controls.StandUp = true;
-                        Client.Self.Status.SendUpdate();
-                        Client.Self.Status.Controls.StandUp = false;
-                        Client.Self.Status.SendUpdate();
-                        Client.Self.Status.SendUpdate();
-                        //SendAgentAnimation((LLUUID)"2408fe9e-df1d-1d7d-f4ff-1384fa7b350f", true); //stand
-                        break;
-                    }
-                case "time":
-                    {
-                        response = RPGWeather();
-                        break;
-                    }
-                case "touch":
-                    {
-                        LLUUID findID = (LLUUID)msg[1];
-                        foreach (PrimObject prim in prims.Values)
-                        {
-                            if (prim.ID != findID) continue;
-                            Client.Self.Touch(prim.LocalID);
-                            response = "TOUCHED OBJECT " + prim.LocalID;
-                            break;
-                        }
-                        if (response == "") response = "NO OBJECT FOUND MATCHING " + findID;
-                        break;
-                    }
-                case "touchid":
-                    {
-                        Client.Self.Touch(uint.Parse(msg[1]));
-                        break;
-                    }
-                case "touchspy":
-                    {
-                        if (msg.Length < 2) return;
-                        else if (msg[1] == "on") Client.Network.RegisterCallback(PacketType.ObjectSelect, new NetworkManager.PacketCallback(OnObjectSelect));
-                        else if (msg[1] == "off") Client.Network.UnregisterCallback(PacketType.ObjectSelect, new NetworkManager.PacketCallback(OnObjectSelect));
-                        else return;
-                        response = "Selection spying " + msg[1].ToUpper();
-                        break;
-                    }
-                case "tp": //FIXME!!!
-                    {
-                        //send me a tp when I ask for one
-                        StartLurePacket p = new StartLurePacket();
-                        p.AgentData.AgentID = Client.Network.AgentID;
-                        p.AgentData.SessionID = Client.Network.SessionID;
-                        string invite = "Join me in " + Client.Network.CurrentSim.Region.Name + "!";
-                        p.Info.Message = Helpers.StringToField(invite);
-                        p.TargetData[0].TargetID = fromAgentID;
-                        p.Info.LureType = 4;
-                        Client.Network.SendPacket(p);
-                        break;
-                    }
-                case "walk":
-                    {
-                        Client.Self.SetAlwaysRun(false);
-                        response = "Running disabled";
-                        break;
-                    }
-                case "whisper":
-                    {
-                        Client.Self.Chat(details, 0, MainAvatar.ChatType.Whisper);
-                        break;
-                    }
-                case "who":
-                    {
-                        if (avatars.Count == 1) response = "1 person is nearby.";
-                        else response = avatars.Count + " people are nearby.";
-                        foreach(Avatar a in avatars.Values) response += "\n"+a.Name+" ("+(int)Helpers.VecDist(Client.Self.Position,a.Position)+"m) : "+a.ID;
-                        break;
-                    }
-            }
-            if (response == "") return;
-            else if (console) Console.WriteLine(TimeStamp()+"* " + response);
-            else Client.Self.InstantMessage(fromAgentID, response, imSessionID);
-        }
-        //END OF COMMAND PARSING ##############################################
 
 
         //RPG-STYLE SUN DESCRIPTION ###########################################
@@ -918,127 +359,7 @@ namespace ghetto
             return localID;
         }
 
-
-        bool Clone(string firstName, string lastName)
-        {
-            lock (avatars)
-            {
-                string testName = firstName.ToLower() + " " + lastName.ToLower();
-                foreach (Avatar av in avatars.Values)
-                {
-                    if (av.Name.ToLower() == testName)
-                    {
-                        CopyAppearance(av);
-                        SaveAppearance("default.appearance", lastAppearance);
-                        return true;
-                    }
-                }
-                return false;
-            }
-        }
-        void CopyAppearance(Avatar av)
-        {
-            lock (appearances)
-            {
-                if (appearances.ContainsKey(av.ID))
-                {
-                    AvatarAppearancePacket appearance = appearances[av.ID];
-                    AgentSetAppearancePacket set = new AgentSetAppearancePacket();
-
-                    set.AgentData.AgentID = Client.Network.AgentID;
-                    set.AgentData.SessionID = Client.Network.SessionID;
-                    set.AgentData.SerialNum = 1;
-                    set.AgentData.Size = new LLVector3(0.45f, 0.6f, 1.986565f);
-                    set.ObjectData.TextureEntry = appearance.ObjectData.TextureEntry;
-                    set.VisualParam = new AgentSetAppearancePacket.VisualParamBlock[appearance.VisualParam.Length];
-
-                    int i = 0;
-                    foreach (AvatarAppearancePacket.VisualParamBlock block in appearance.VisualParam)
-                    {
-                        set.VisualParam[i] = new AgentSetAppearancePacket.VisualParamBlock();
-                        set.VisualParam[i].ParamValue = block.ParamValue;
-                        i++;
-                    }
-
-                    set.WearableData = new AgentSetAppearancePacket.WearableDataBlock[0];
-
-                    Client.Network.SendPacket(set);
-                    lastAppearance = set;
-
-                }
-            }
-        }
-        void OnAvatarMovedEvent(Simulator simulator, AvatarUpdate avatar, ulong regionHandle, ushort timeDilation)
-        {
-            Avatar test;
-            if (!avatars.TryGetValue(avatar.LocalID, out test)) return;
-            lock (avatars)
-            {
-                string name = avatars[avatar.LocalID].Name;
-                //if (avatars[avatar.LocalID].ID == Client.Network.AgentID)
-                //{
-                //this is a temp hack to update region corner X/Y any time any av moves (not just the follow target)
-                regionX = (int)(regionHandle >> 32);
-                regionY = (int)(regionHandle & 0xFFFFFFFF);
-                //}
-                if (avatars[avatar.LocalID].Name == followName)
-                {
-                    avatars[avatar.LocalID].Position = avatar.Position;
-                    avatars[avatar.LocalID].Rotation = avatar.Rotation;
-                    if (!Follow(name))
-                    {
-                        Client.Self.Status.SendUpdate();
-                    }
-                }
-            }
-        }
-        void OnNewAvatarEvent(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
-        {
-            lock (avatars)
-            {
-                avatars[avatar.LocalID] = avatar;
-            }
-        }
-        void OnAppearance(Packet packet, Simulator simulator)
-        {
-            AvatarAppearancePacket appearance = (AvatarAppearancePacket)packet;
-            lock (appearances)
-            {
-                appearances[appearance.Sender.ID] = appearance;
-            }
-        }
-        void OnNewPrimEvent(Simulator simulator, PrimObject prim, ulong regionHandle, ushort timeDilation)
-        {
-            lock (prims)
-            {
-                prims[prim.LocalID] = prim;
-            }
-        }
-        void OnObjectKilledEvent(Simulator simulator, uint objectID)
-        {
-            lock (prims)
-            {
-                if (prims.ContainsKey(objectID))
-                    prims.Remove(objectID);
-            }
-            lock (avatars)
-            {
-                if (avatars.ContainsKey(objectID))
-                    avatars.Remove(objectID);
-            }
-        }
-        void OnPrimMovedEvent(Simulator simulator, PrimUpdate prim, ulong regionHandle, ushort timeDilation)
-        {
-            lock (prims)
-            {
-                if (prims.ContainsKey(prim.LocalID))
-                {
-                    prims[prim.LocalID].Position = prim.Position;
-                    prims[prim.LocalID].Rotation = prim.Rotation;
-                }
-            }
-        }
-        
+    
         string TimeStamp()
         {
             return "[" + (DateTime.Now.Hour % 12) + ":" + DateTime.Now.Minute + "] ";
@@ -1091,108 +412,6 @@ namespace ghetto
                 }
             }
             return false;
-        }
-
-        bool LoadScript(string scriptFile)
-        {
-            if (!File.Exists(scriptFile))
-            {
-                Console.WriteLine("File not found: "+scriptFile);
-                return false;
-            }
-            string[] script = { };
-            string input;
-            int error = 0;
-            StreamReader read = File.OpenText(scriptFile);
-            for (int i = 0; (input = read.ReadLine()) != null; i++)
-            {
-                char[] splitChar = { ' ' };
-                string[] args = input.ToLower().Split(splitChar);
-                string[] commandsWithArgs = { "camp", "goto", "label", "pay", "payme", "say", "shout", "sit", "teleport", "touch", "touchid", "wait", "whisper" };
-                string[] commandsWithoutArgs = { "fly", "land", "quit", "relog", "run", "sitg", "stand", "walk" };
-                if (Array.IndexOf(commandsWithArgs,  args[0]) > -1)
-                {
-                    if (args.Length < 2)
-                    {
-                        Console.WriteLine("Missing argument(s) for command \"{0}\" on line {1} of {2}",args[0],i+1,scriptFile);
-                        error++;
-                    }
-                    else
-                    {
-                        Array.Resize(ref script, i + 1);
-                        script[i] = input;
-                    }
-                }
-                else if (Array.IndexOf(commandsWithoutArgs, args[0]) < 0)
-                {
-                    Console.WriteLine("Unknown command \"{0}\" on line {1} of {2}",args[0],i+1,scriptFile);
-                    error++;
-                }
-            }
-            read.Close();
-            if (error > 0)
-            {
-                Console.WriteLine("* Error loading script \"{0}\"", scriptFile);
-                return false;
-            }
-            else
-            {
-                Console.WriteLine("* Running script \"{0}\"", scriptFile);
-                RunScript(script);
-                return true;
-            }
-        }
-
-        void SaveAppearance(string fileName, AgentSetAppearancePacket appearance)
-        {
-            XmlSerializer s = new XmlSerializer(typeof(AgentSetAppearancePacket));
-            TextWriter w = new StreamWriter(@fileName);
-            s.Serialize(w, appearance);
-            w.Close();
-            Console.WriteLine("* Saved "+fileName);
-        }
-        void LoadAppearance(string fileName)
-        {
-            XmlSerializer s = new XmlSerializer(typeof(AgentSetAppearancePacket));
-            TextReader r = new StreamReader(fileName);
-            AgentSetAppearancePacket appearance = (AgentSetAppearancePacket)s.Deserialize(r);
-            r.Close();
-            appearance.AgentData.AgentID = Client.Network.AgentID;
-            appearance.AgentData.SessionID = Client.Network.SessionID;
-            Client.Network.SendPacket(appearance);
-            Console.WriteLine("* Loaded " + fileName);
-            lastAppearance = appearance;
-        }
-
-        void RunScript(string[] script)
-        {
-            for (int i = 0; i < script.Length; i++)
-            {
-                char[] splitChar = { ' ' };
-                string[] cmd = script[i].Split(splitChar);
-                switch (cmd[0])
-                {
-                    case "wait":
-                        {
-                            Console.WriteLine("* Sleeping {0} seconds...", cmd[1]);
-                            Thread.Sleep(int.Parse(cmd[1]) * 1000);
-                            continue;
-                        }
-                    case "goto":
-                        {
-                            int findLabel = Array.IndexOf(script, "label " + cmd[1]);
-                            if (findLabel > -1) i = findLabel;
-                            else Console.WriteLine("* Label \"{0}\" not found on line {1}", cmd[1], i+1);
-                            continue;
-                        }
-                    case "label":
-                        {
-                            continue;
-                        }
-                }
-                Console.WriteLine("* SCRIPTED COMMAND: "+script[i]);
-                ParseCommand(true, "/"+script[i], "", new LLUUID(), new LLUUID());
-            }
         }
 
     }
