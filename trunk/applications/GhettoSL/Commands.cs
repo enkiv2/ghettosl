@@ -321,16 +321,24 @@ namespace ghetto
                     }
                 case "teleport":
                     {
-                        if (msg.Length < 5) return;
-                        string simName = String.Join(" ", msg, 1, msg.Length - 4);
+                        if (msg.Length < 2) return;
+                        string simName;
+                        LLVector3 tPos;
+                        if (msg.Length >= 5)
+                        {
+                            simName = String.Join(" ", msg, 1, msg.Length - 4);
+                            float x = float.Parse(msg[msg.Length - 3]);
+                            float y = float.Parse(msg[msg.Length - 2]);
+                            float z = float.Parse(msg[msg.Length - 1]);
+                            tPos = new LLVector3(x, y, z);
+                        }
+                        else
+                        {
+                            simName = details;
+                            tPos = new LLVector3(128, 128, 0);
+                        }
                         if (console) Console.WriteLine("* Teleporting to {0}...", simName);
                         else Client.Self.InstantMessage(fromAgentID, "Teleporting to {0}...", simName);
-                        float x = float.Parse(msg[msg.Length - 3]);
-                        float y = float.Parse(msg[msg.Length - 2]);
-                        float z = float.Parse(msg[msg.Length - 1]);
-                        LLVector3 tPos;
-                        if (x == 0 || y == 0 || z == 0) tPos = new LLVector3(128, 128, 0);
-                        else tPos = new LLVector3(x, y, z);
                         Client.Self.Teleport(simName, tPos);
                         break;
                     }
