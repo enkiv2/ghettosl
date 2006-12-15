@@ -289,7 +289,7 @@ namespace ghetto
                     {
                         response = "Relogging...";
                         Client.Network.Logout();
-                        Thread.Sleep(1000);
+                        Thread.Sleep(3000);
                         while (!Login()) Thread.Sleep(5000);
                         break;
                     }
