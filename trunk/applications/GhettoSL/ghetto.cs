@@ -203,9 +203,6 @@ namespace ghetto
                 return false;
             }
 
-            //Load appearance
-            if (File.Exists("appearnce.xml")) LoadAppearance("appearance.xml");
-
             //Succeeded - Wait for simulator name or disconnection
             Simulator sim = Client.Network.CurrentSim;
             while (Client.Network.Connected && (!sim.Connected || sim.Region.Name == "" || Client.Grid.SunDirection.X == 0))
@@ -217,6 +214,7 @@ namespace ghetto
             if (!Client.Network.Connected) return false;
 
             //We are in!
+            if (File.Exists("default.appearance")) LoadAppearance("default.appearance");
             Console.WriteLine(RPGWeather());
             Console.WriteLine("Location: " + Client.Self.Position);
 
@@ -728,6 +726,11 @@ namespace ghetto
                         while (!Login()) Thread.Sleep(5000);
                         break;
                     }
+                case "ride":
+                    {
+                        if (!RideWith(details)) Console.WriteLine("* No avatars found matching \"{0}\".", details);
+                        break;
+                    }
                 case "run":
                     {
                         Client.Self.SetAlwaysRun(true);
@@ -753,8 +756,8 @@ namespace ghetto
                     {
                         if (msg.Length < 5) return;
                         string simName = String.Join(" ",msg,1,msg.Length - 4);
-                        if (console) Console.WriteLine("* Teleporting to " + simName + "...");
-                        else Client.Self.InstantMessage(fromAgentID,"Teleporting to " + simName + "...");
+                        if (console) Console.WriteLine("* Teleporting to {0}...", simName);
+                        else Client.Self.InstantMessage(fromAgentID,"Teleporting to {0}...", simName);
                         float x = float.Parse(msg[msg.Length - 3]);
                         float y = float.Parse(msg[msg.Length - 2]);
                         float z = float.Parse(msg[msg.Length - 1]);
@@ -779,13 +782,18 @@ namespace ghetto
                     }
                 case "sitg":
                     {
+                        Client.Self.Status.Controls.StandUp = false;
                         Client.Self.Status.Controls.SitOnGround = true;
                         Client.Self.Status.SendUpdate();
                         break;
                     }
                 case "stand":
                     {
+                        Client.Self.Status.Controls.SitOnGround = false;
                         Client.Self.Status.Controls.StandUp = true;
+                        Client.Self.Status.SendUpdate();
+                        Client.Self.Status.Controls.StandUp = false;
+                        Client.Self.Status.SendUpdate();
                         Client.Self.Status.SendUpdate();
                         //SendAgentAnimation((LLUUID)"2408fe9e-df1d-1d7d-f4ff-1384fa7b350f", true); //stand
                         break;
@@ -921,7 +929,7 @@ namespace ghetto
                     if (av.Name.ToLower() == testName)
                     {
                         CopyAppearance(av);
-                        SaveAppearance("appearance.xml", lastAppearance);
+                        SaveAppearance("default.appearance", lastAppearance);
                         return true;
                     }
                 }
@@ -957,7 +965,6 @@ namespace ghetto
                     Client.Network.SendPacket(set);
                     lastAppearance = set;
 
-                    //SavePacket("Appearance.xml", lastAppearance);
                 }
             }
         }
@@ -1056,6 +1063,31 @@ namespace ghetto
                         Client.Self.Status.SendUpdate();
                     }
                     return true;
+                }
+            }
+            return false;
+        }
+
+        bool RideWith(string name)
+        {
+            string findName = name.ToLower();
+            foreach (Avatar av in avatars.Values)
+            {
+
+                if (av.Name.ToLower().Substring(0, findName.Length) == findName)
+                {
+                    if (av.SittingOn > 0)
+                    {
+                        Console.WriteLine("* Riding with " + av.Name + ".");
+                        Client.Self.RequestSit(prims[av.SittingOn].ID, new LLVector3(0, 0, 0));
+                        Client.Self.Sit();
+                        return true;
+                    }
+                    else
+                    {
+                        Console.WriteLine("* " + av.Name + " is not sitting.");
+                        return false;
+                    }
                 }
             }
             return false;
