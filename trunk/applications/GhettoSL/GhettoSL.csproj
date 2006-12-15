@@ -37,6 +37,10 @@
   </Target>
   -->
   <ItemGroup>
+    <Compile Include="Appearance.cs" />
+    <Compile Include="Scripts.cs" />
+    <Compile Include="Commands.cs" />
+    <Compile Include="Events.cs" />
     <Compile Include="ghetto.cs" />
   </ItemGroup>
   <ItemGroup>
