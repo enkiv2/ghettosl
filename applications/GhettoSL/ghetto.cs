@@ -29,6 +29,8 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Collections.Generic;
+using System.Text;
+using System.Xml;
 using System.Xml.Serialization;
 using libsecondlife;
 using libsecondlife.Packets;
@@ -157,7 +159,7 @@ namespace ghetto
         void OnAlertMessage(Packet packet, Simulator sim)
         {
             AlertMessagePacket p = (AlertMessagePacket)packet;
-            Console.WriteLine(TimeStamp()+"* " + p.AlertData.Message);
+            Console.WriteLine(TimeStamp()+"* " + Helpers.FieldToString(p.AlertData.Message));
         }
 
         //END OF ALERT MESSAGE ####################################################
@@ -200,6 +202,9 @@ namespace ghetto
                 Console.WriteLine("Login failed.");
                 return false;
             }
+
+            //Load appearance
+            if (File.Exists("appearnce.xml")) LoadAppearance("appearance.xml");
 
             //Succeeded - Wait for simulator name or disconnection
             Simulator sim = Client.Network.CurrentSim;
@@ -372,7 +377,7 @@ namespace ghetto
 
 
         //ON TELEPORT FINISH ##################################################
-        void OnTeleportEvent(string message, TeleportStatus status)
+        void OnTeleportEvent(Simulator sim, string message, TeleportStatus status)
         {
             Console.WriteLine("* TELEPORT ("+status.ToString()+"): " + message);
         }
@@ -825,7 +830,7 @@ namespace ghetto
                         p.AgentData.SessionID = Client.Network.SessionID;
                         string invite = "Join me in " + Client.Network.CurrentSim.Region.Name + "!";
                         p.Info.Message = Helpers.StringToField(invite);
-                        p.Info.TargetID = fromAgentID;
+                        p.TargetData[0].TargetID = fromAgentID;
                         p.Info.LureType = 4;
                         Client.Network.SendPacket(p);
                         break;
@@ -916,6 +921,7 @@ namespace ghetto
                     if (av.Name.ToLower() == testName)
                     {
                         CopyAppearance(av);
+                        SaveAppearance("appearance.xml", lastAppearance);
                         return true;
                     }
                 }
@@ -1103,6 +1109,27 @@ namespace ghetto
                 RunScript(script);
                 return true;
             }
+        }
+
+        void SaveAppearance(string fileName, AgentSetAppearancePacket appearance)
+        {
+            XmlSerializer s = new XmlSerializer(typeof(AgentSetAppearancePacket));
+            TextWriter w = new StreamWriter(@fileName);
+            s.Serialize(w, appearance);
+            w.Close();
+            Console.WriteLine("* Saved "+fileName);
+        }
+        void LoadAppearance(string fileName)
+        {
+            XmlSerializer s = new XmlSerializer(typeof(AgentSetAppearancePacket));
+            TextReader r = new StreamReader(fileName);
+            AgentSetAppearancePacket appearance = (AgentSetAppearancePacket)s.Deserialize(r);
+            r.Close();
+            appearance.AgentData.AgentID = Client.Network.AgentID;
+            appearance.AgentData.SessionID = Client.Network.SessionID;
+            Client.Network.SendPacket(appearance);
+            Console.WriteLine("* Loaded " + fileName);
+            lastAppearance = appearance;
         }
 
         void RunScript(string[] script)
