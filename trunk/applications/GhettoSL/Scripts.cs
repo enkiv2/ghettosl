@@ -53,7 +53,7 @@ namespace ghetto
             {
                 char[] splitChar = { ' ' };
                 string[] args = input.ToLower().Split(splitChar);
-                string[] commandsWithArgs = { "camp", "goto", "label", "pay", "payme", "say", "shout", "sit", "teleport", "touch", "touchid", "wait", "whisper" };
+                string[] commandsWithArgs = { "camp", "goto", "if", "label", "pay", "payme", "say", "shout", "sit", "teleport", "touch", "touchid", "wait", "whisper" };
                 string[] commandsWithoutArgs = { "fly", "land", "quit", "relog", "run", "sitg", "stand", "walk" };
                 if (Array.IndexOf(commandsWithArgs, args[0]) > -1)
                 {
@@ -93,8 +93,44 @@ namespace ghetto
         {
             for (int i = 0; i < script.Length; i++)
             {
+
+                //split command string into array
                 char[] splitChar = { ' ' };
                 string[] cmd = script[i].Split(splitChar);
+
+
+                //check conditional statement
+                bool fail = false; //FIXME - works, but can this go inside the "if" condition?
+                if (cmd[0] == "if")
+                {
+                    switch (cmd[1])
+                    {
+                        case "standing":
+                            {
+                                if (Client.Self.SittingOn > 0 || Client.Self.Status.Controls.Fly) fail = true;
+                                break;
+                            }
+                        case "sitting":
+                            {
+                                if (Client.Self.SittingOn == 0) fail = true;
+                                break;
+                            }
+                        case "flying":
+                            {
+                                if (!Client.Self.Status.Controls.Fly) fail = true;
+                                break;
+                            }
+                    }
+                    //strip conditional statement from command array - FIXME (works, but inefficient)
+                    string[] temp = new string[cmd.Length - 2];
+                    for (int t = 2, s = 0; t < cmd.Length; t++, s++) temp[s] = cmd[t];
+                    cmd = temp;
+                }
+
+                //if condition failed, skip to next loop iteration - FIXME same as above
+                if (fail) continue;
+                
+                //process command
                 switch (cmd[0])
                 {
                     case "wait":
