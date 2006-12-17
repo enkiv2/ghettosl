@@ -91,6 +91,8 @@ namespace ghetto
                 case "backflip":
                     {
                         SendAgentAnimation((LLUUID)"c4ca6188-9127-4f31-0158-23c4e2f93304", true); //backflip
+                        Thread.Sleep(500);
+                        Client.Self.Status.SendUpdate();
                         break;
                     }
                 case "camp":
@@ -187,6 +189,11 @@ namespace ghetto
                     {
                         Client.Self.Status.Controls.Fly = true;
                         Client.Self.Status.SendUpdate();
+                        break;
+                    }
+                case "help":
+                    {
+                        Help(details);
                         break;
                     }
                 case "im":
@@ -375,7 +382,7 @@ namespace ghetto
                     }
                 case "time":
                     {
-                        response = RPGWeather();
+                        response = TimeStamp() + RPGWeather();
                         break;
                     }
                 case "touch":
