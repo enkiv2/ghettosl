@@ -55,23 +55,20 @@ namespace ghetto
                 string[] args = input.ToLower().Split(splitChar);
                 string[] commandsWithArgs = { "camp", "goto", "if", "label", "pay", "payme", "say", "shout", "sit", "teleport", "touch", "touchid", "wait", "whisper" };
                 string[] commandsWithoutArgs = { "fly", "land", "quit", "relog", "run", "sitg", "stand", "walk" };
-                if (Array.IndexOf(commandsWithArgs, args[0]) > -1)
+                if (Array.IndexOf(commandsWithArgs, args[0]) > -1 && args.Length < 2)
                 {
-                    if (args.Length < 2)
-                    {
-                        Console.WriteLine("Missing argument(s) for command \"{0}\" on line {1} of {2}", args[0], i + 1, scriptFile);
-                        error++;
-                    }
-                    else
-                    {
-                        Array.Resize(ref script, i + 1);
-                        script[i] = input;
-                    }
+                    Console.WriteLine("Missing argument(s) for command \"{0}\" on line {1} of {2}", args[0], i + 1, scriptFile);
+                    error++;
                 }
-                else if (Array.IndexOf(commandsWithoutArgs, args[0]) < 0)
+                else if (Array.IndexOf(commandsWithArgs, args[0]) < 0 && Array.IndexOf(commandsWithoutArgs, args[0]) < 0)
                 {
                     Console.WriteLine("Unknown command \"{0}\" on line {1} of {2}", args[0], i + 1, scriptFile);
                     error++;
+                }
+                else
+                {
+                    Array.Resize(ref script, i + 1);
+                    script[i] = input;
                 }
             }
             read.Close();

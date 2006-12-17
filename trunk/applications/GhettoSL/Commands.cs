@@ -92,6 +92,10 @@ namespace ghetto
                     {
                         SendAgentAnimation((LLUUID)"c4ca6188-9127-4f31-0158-23c4e2f93304", true); //backflip
                         Thread.Sleep(500);
+                        Client.Self.Status.Controls.FinishAnim = true;
+                        Client.Self.Status.SendUpdate();
+                        Thread.Sleep(500);
+                        Client.Self.Status.Controls.FinishAnim = false;
                         Client.Self.Status.SendUpdate();
                         break;
                     }
@@ -193,7 +197,8 @@ namespace ghetto
                     }
                 case "help":
                     {
-                        Help(details);
+                        if (!console) response = "Help is only available from the console.";
+                        else Help(details);
                         break;
                     }
                 case "im":
@@ -375,7 +380,6 @@ namespace ghetto
                         Client.Self.Status.Controls.StandUp = true;
                         Client.Self.Status.SendUpdate();
                         Client.Self.Status.Controls.StandUp = false;
-                        Client.Self.Status.SendUpdate();
                         Client.Self.Status.SendUpdate();
                         //SendAgentAnimation((LLUUID)"2408fe9e-df1d-1d7d-f4ff-1384fa7b350f", true); //stand
                         break;
