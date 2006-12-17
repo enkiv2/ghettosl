@@ -28,6 +28,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading;
 using libsecondlife;
@@ -63,9 +64,13 @@ namespace ghetto
         void OnConnectedEvent(object sender)
         {
             Console.WriteLine("* CONNECTED");
-            //Retrieve offline IMs
+
+            if (File.Exists("default.appearance")) LoadAppearance("default.appearance");
+           
             Client.Grid.AddEstateSims();
+
             //FIXME!!! - ADD Client.Self.RetrieveInstantMessages() TO CORE!
+            //Retrieve offline IMs
             RetrieveInstantMessagesPacket p = new RetrieveInstantMessagesPacket();
             p.AgentData.AgentID = Client.Network.AgentID;
             p.AgentData.SessionID = Client.Network.SessionID;
@@ -77,6 +82,7 @@ namespace ghetto
         void OnSimDisconnectEvent(Simulator sim, NetworkManager.DisconnectType type)
         {
             Console.WriteLine("* DISCONNECTED FROM SIM: " + type.ToString());
+            //FIXME - IPEndPoint is not a valid comparison and causes an error
             if (logout || sim.IPEndPoint != Client.Network.CurrentSim.IPEndPoint) return;
             Client.Network.Logout();
             do Thread.Sleep(5000);

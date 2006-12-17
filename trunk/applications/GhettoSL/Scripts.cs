@@ -121,10 +121,12 @@ namespace ghetto
                                 break;
                             }
                     }
-                    //strip conditional statement from command array - FIXME (works, but inefficient)
-                    string[] temp = new string[cmd.Length - 2];
-                    for (int t = 2, s = 0; t < cmd.Length; t++, s++) temp[s] = cmd[t];
-                    cmd = temp;
+                    //strip conditional statement from command array
+                    //string[] temp = new string[cmd.Length - 2];
+                    //for (int t = 2, s = 0; t < cmd.Length; t++, s++) temp[s] = cmd[t];
+                    //cmd = temp;
+                    Array.Copy(cmd, 2, cmd, 0, cmd.Length - 2); //More efficient
+
                 }
 
                 //if condition failed, skip to next loop iteration - FIXME same as above

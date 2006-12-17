@@ -27,7 +27,6 @@
 
 
 using System;
-using System.IO;
 using System.Threading;
 using System.Collections.Generic;
 using System.Text;
@@ -67,15 +66,18 @@ namespace ghetto
         {
             //Make sure command line arguments are valid
             string[] commandLineArguments = args;
-            if (args.Length < 5)
+            if (args.Length < 3)
             {
-                Console.WriteLine("Usage: GhettoSL <firstName> <lastName> <password> <passPhrase> <masterID> [quiet] [scriptFile]");
+                Console.WriteLine("Usage: GhettoSL <firstName> <lastName> <password> [passPhrase] [masterID] [quiet] [scriptFile]");
                 return;
             }
             bool quiet = false;
+            string passPhrase = "";
             string scriptFile = "";
-
-            if (args.Length > 5 && args[5].ToLower() == "quiet") quiet = true;
+            LLUUID masterID = new LLUUID();
+            if (args.Length > 3) passPhrase = args[3];
+            if (args.Length > 4) masterID = (LLUUID)args[4];
+            if (args.Length > 5 && (args[5].ToLower() == "quiet" || args[5].ToLower() == "true")) quiet = true;
             if (args.Length > 6) scriptFile = args[6];
 
             GhettoSL ghetto = new GhettoSL(args[0], args[1], args[2], args[3], new LLUUID(args[4]), quiet,scriptFile);
@@ -160,7 +162,6 @@ namespace ghetto
             if (!Client.Network.Connected) return false;
 
             //We are in!
-            if (File.Exists("default.appearance")) LoadAppearance("default.appearance");
             Console.WriteLine(RPGWeather());
             Console.WriteLine("Location: " + Client.Self.Position);
 
