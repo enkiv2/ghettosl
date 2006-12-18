@@ -178,9 +178,9 @@ namespace ghetto
                             followName = null;
                             response = "Stopped following";
                         }
-                        else if (msg.Length == 3)
+                        else if (msg.Length > 1)
                         {
-                            if (Follow(msg[1] + " " + msg[2])) response = "Following " + followName + "...";
+                            if (Follow(details)) response = "Following " + followName + "...";
                             else
                             {
                                 response = "Error: Avatar not found";
@@ -193,6 +193,30 @@ namespace ghetto
                     {
                         Client.Self.Status.Controls.Fly = true;
                         Client.Self.Status.SendUpdate();
+                        break;
+                    }
+                case "fwd":
+                    {
+                        if (details == null) response = "Usage: /fwd <seconds>";
+                        else MoveAvatar((int)(1000 * float.Parse("0"+details)),true,false,false,false,false,false);
+                        break;
+                    }
+                case "back":
+                    {
+                        if (details == null) response = "Usage: /back <seconds>";
+                        else MoveAvatar((int)(1000 * float.Parse("0" + details)), false, true, false, false, false, false);
+                        break;
+                    }
+                case "left":
+                    {
+                        if (details == null) response = "Usage: /left <seconds>";
+                        else MoveAvatar((int)(1000 * float.Parse("0" + details)), false, false, true, false, false, false);
+                        break;
+                    }
+                case "right":
+                    {
+                        if (details == null) response = "Usage: /right <seconds>";
+                        else MoveAvatar((int)(1000 * float.Parse("0" + details)), false, false, false, true, false, false);
                         break;
                     }
                 case "help":
