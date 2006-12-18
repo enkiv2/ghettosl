@@ -38,11 +38,6 @@ namespace ghetto
     partial class GhettoSL
     {
 
-        void SetConsoleColor(ConsoleColor color)
-        {
-            if (platform == "Win32NT") WinConsole.Color = color;
-        }
-
         void AcknowledgePayment(string agentName, int amount)
         {
             foreach (Avatar av in avatars.Values)

@@ -98,8 +98,8 @@ namespace ghetto
             //return;
 
             platform = System.Convert.ToString(Environment.OSVersion.Platform);
-            if (platform == "Win32NT") WinConsole.Initialize();
-            else Console.WriteLine("Running on platform " + platform + ". Colors will not be displayed.");
+
+            Console.WriteLine("Running on platform " + platform + ".");
 
             firstName = first;
             lastName = last;
@@ -171,9 +171,9 @@ namespace ghetto
             if (!Client.Network.Connected) return false;
 
             //We are in!
-            SetConsoleColor(ConsoleColor.Blue | ConsoleColor.Intensified);
+            Console.ForegroundColor = System.ConsoleColor.Blue;
             Console.WriteLine(RPGWeather());
-            SetConsoleColor(ConsoleColor.White);
+            Console.ForegroundColor = System.ConsoleColor.Gray;
 
             Console.WriteLine("Location: " + Client.Self.Position);
 

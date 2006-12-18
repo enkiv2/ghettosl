@@ -83,9 +83,9 @@ namespace ghetto
 
         void OnSimDisconnectEvent(Simulator sim, NetworkManager.DisconnectType type)
         {
-            SetConsoleColor(ConsoleColor.Red | ConsoleColor.Intensified);
+            Console.ForegroundColor = System.ConsoleColor.Red;
             Console.WriteLine("* DISCONNECTED FROM SIM: " + type.ToString());
-            SetConsoleColor(ConsoleColor.White);
+            Console.ForegroundColor = System.ConsoleColor.Gray;
             //FIXME - IPEndPoint is not a valid comparison and causes an error
             if (logout || sim.IPEndPoint != Client.Network.CurrentSim.IPEndPoint) return;
             Client.Network.Logout();
@@ -109,8 +109,8 @@ namespace ghetto
             char[] splitChar = { ' ' };
             string[] msg = message.Split(splitChar);
 
-            if (sourceType == 1) SetConsoleColor(ConsoleColor.White | ConsoleColor.Intensified);
-            else SetConsoleColor(ConsoleColor.Cyan);
+            if (sourceType == 1) Console.ForegroundColor = System.ConsoleColor.White;
+            Console.ForegroundColor = System.ConsoleColor.DarkCyan;
 
             if (msg[0].ToLower() != "/me")
                 Console.WriteLine(TimeStamp() + "(ct=" + chatType + "|st=" + sourceType + ") " + name + ": " + message);
@@ -119,7 +119,7 @@ namespace ghetto
                 message = String.Join(" ", msg, 1, msg.Length - 1);
                 Console.WriteLine(TimeStamp() + "(ct=" + chatType + "|st=" + sourceType + ") * " + name + " " + message);
             }
-            SetConsoleColor(ConsoleColor.White);
+            Console.ForegroundColor = System.ConsoleColor.Gray;
         }
 
 
@@ -129,35 +129,35 @@ namespace ghetto
             //Teleport requests (dialog set to 22)
             if (dialog == (int)InstantMessageDialog.RequestTeleport && (fromAgentID == masterID || message == passPhrase))
             {
-                SetConsoleColor(ConsoleColor.Violet | ConsoleColor.Intensified);
+                Console.ForegroundColor = System.ConsoleColor.Magenta;
                 Console.WriteLine("* Accepting teleport request from " + fromAgentName + " (" + message + ")");
-                SetConsoleColor(ConsoleColor.White);
+                Console.ForegroundColor = System.ConsoleColor.Gray;
                 Client.Self.TeleportLureRespond(fromAgentID, true);
                 return;
             }
             //Receive object
             else if (dialog == (int)InstantMessageDialog.GiveInventory)
             {
-                SetConsoleColor(ConsoleColor.Cyan | ConsoleColor.Intensified);
+                Console.ForegroundColor = System.ConsoleColor.Cyan;
                 Console.WriteLine(TimeStamp() + "* " + fromAgentName + " gave you an object named \"" + message + "\"");
-                SetConsoleColor(ConsoleColor.White);
+                Console.ForegroundColor = System.ConsoleColor.Gray;
                 return;
             }
             //Receive object
             else if (dialog == (int)InstantMessageDialog.GiveNotecard)
             {
-                SetConsoleColor(ConsoleColor.Cyan | ConsoleColor.Intensified);
+                Console.ForegroundColor = System.ConsoleColor.Cyan;
                 Console.WriteLine(TimeStamp() + "* " + fromAgentName + " gave you a notecard named \"" + message + "\"");
-                SetConsoleColor(ConsoleColor.White);
+                Console.ForegroundColor = System.ConsoleColor.Gray;
                 return;
             }
 
             CreateMessageWindow(fromAgentID, fromAgentName, dialog, imSessionID);
 
             //Display IM in console
-            SetConsoleColor(ConsoleColor.Cyan | ConsoleColor.Intensified);
+            Console.ForegroundColor = System.ConsoleColor.Cyan;
             Console.WriteLine(TimeStamp() + "(dialog " + dialog + ") <" + fromAgentName + ">: " + message);
-            SetConsoleColor(ConsoleColor.White);
+            Console.ForegroundColor = System.ConsoleColor.Gray;
 
             //Parse commands from masterID only
             if (offline > 0 || fromAgentID != masterID) return;
@@ -170,10 +170,11 @@ namespace ghetto
 
         void OnFriendNotificationEvent(LLUUID friendID, bool online)
         {
-            SetConsoleColor(ConsoleColor.White | ConsoleColor.BlueBG);
+            Console.ForegroundColor = System.ConsoleColor.Gray;
+            Console.BackgroundColor = System.ConsoleColor.DarkBlue;
             if (online) Console.WriteLine(" {0} is online ", friendID);
             else Console.WriteLine(" {0} is offline ", friendID);
-            SetConsoleColor(ConsoleColor.White);
+            Console.BackgroundColor = System.ConsoleColor.Black;
             //FIXME!!!
             //Client.Avatars.BeginGetAvatarName(friendID, new AvatarManager.AgentNamesCallback(AgentNamesHandler));
         }
@@ -202,9 +203,9 @@ namespace ghetto
             if (msg.Length > 3 && msg[2] + " " + msg[3] == "paid you")
                 AcknowledgePayment(msg[0] + " " + msg[1], changeAmount);
             if (desc.Length > 1) Console.WriteLine("* " + desc);
-            SetConsoleColor(ConsoleColor.Green | ConsoleColor.Intensified);
+            Console.ForegroundColor = System.ConsoleColor.Green;
             Console.WriteLine(TimeStamp() + "* Balance: L$" + currentBalance);
-            SetConsoleColor(ConsoleColor.White);
+            Console.ForegroundColor = System.ConsoleColor.Gray;
         }
 
 
