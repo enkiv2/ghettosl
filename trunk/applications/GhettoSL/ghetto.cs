@@ -81,7 +81,7 @@ namespace ghetto
             if (args.Length > 5 && (args[5].ToLower() == "quiet" || args[5].ToLower() == "true")) quiet = true;
             if (args.Length > 6) scriptFile = args[6];
 
-            GhettoSL ghetto = new GhettoSL(args[0], args[1], args[2], args[3], new LLUUID(args[4]), quiet,scriptFile);
+            GhettoSL ghetto = new GhettoSL(args[0], args[1], args[2], args[3], masterID, quiet,scriptFile);
         }
 
         //END OF MAIN VOID ####################################################
