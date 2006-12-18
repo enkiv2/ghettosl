@@ -473,7 +473,11 @@ namespace ghetto
                     }
             }
             if (response == "") return;
-            else if (console) Console.WriteLine(TimeStamp() + "* " + response);
+            else if (console)
+            {
+                WinConsole.Color = ConsoleColor.White;
+                WinConsole.WriteLine(TimeStamp() + "* " + response);
+            }
             else Client.Self.InstantMessage(fromAgentID, response, imSessionID);
         }
 
