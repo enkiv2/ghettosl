@@ -78,8 +78,10 @@ namespace ghetto
             string findName = name.ToLower();
             foreach (Avatar av in avatars.Values)
             {
-                if (av.Name.ToLower().Substring(0, findName.Length) == findName)
+                if (av.Name.Length < findName.Length) continue; //Name is too short to be a match
+                else if (av.Name.ToLower().Substring(0, findName.Length) == findName)
                 {
+                    followName = av.Name;
                     if (Helpers.VecDist(av.Position, Client.Self.Position) > 4)
                     {
                         //GridRegion region = Client.Network.CurrentSim.Region.GridRegionData;
@@ -95,6 +97,26 @@ namespace ghetto
                 }
             }
             return false;
+        }
+
+
+        void MoveAvatar(int time, bool fwd, bool back, bool left, bool right, bool up, bool down)
+        {
+            Client.Self.Status.Controls.AtPos = fwd;
+            Client.Self.Status.Controls.AtNeg = back;
+            Client.Self.Status.Controls.LeftPos = left;
+            Client.Self.Status.Controls.LeftNeg = right;
+            Client.Self.Status.Controls.UpPos = up;
+            Client.Self.Status.Controls.UpNeg = down;
+            Client.Self.Status.SendUpdate();
+            Thread.Sleep(time);
+            Client.Self.Status.Controls.AtPos = false;
+            Client.Self.Status.Controls.AtNeg = false;
+            Client.Self.Status.Controls.LeftPos = false;
+            Client.Self.Status.Controls.LeftNeg = false;
+            Client.Self.Status.Controls.UpPos = false;
+            Client.Self.Status.Controls.UpNeg = false;
+            Client.Self.Status.SendUpdate();
         }
 
 
