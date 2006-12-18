@@ -106,6 +106,8 @@ namespace ghetto
             appearances = new Dictionary<LLUUID, AvatarAppearancePacket>();
             imWindows = new Dictionary<uint, Avatar>();
 
+            WinConsole.Initialize();
+
             Client.Debug = false;
 
             Client.Self.Status.Camera.Far = 96.0f;

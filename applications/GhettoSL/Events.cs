@@ -106,13 +106,18 @@ namespace ghetto
             if (chatType > 3 || audible < 1) return;
             char[] splitChar = { ' ' };
             string[] msg = message.Split(splitChar);
+
+            if (sourceType == 1) WinConsole.Color = ConsoleColor.White | ConsoleColor.Intensified;
+            else WinConsole.Color = ConsoleColor.Green | ConsoleColor.Intensified;
+
             if (msg[0].ToLower() != "/me")
-                Console.WriteLine(TimeStamp() + "(type " + chatType + ") " + name + ": " + message);
+                WinConsole.WriteLine(TimeStamp() + "(ct=" + chatType + "|st=" + sourceType + ") " + name + ": " + message);
             else
             {
                 message = String.Join(" ", msg, 1, msg.Length - 1);
-                Console.WriteLine(TimeStamp() + "(type " + chatType + ") * " + name + " " + message);
+                WinConsole.WriteLine(TimeStamp() + "(ct=" + chatType + "|st=" + sourceType + ") * " + name + " " + message);
             }
+            WinConsole.Color = ConsoleColor.White;
         }
 
 
@@ -126,17 +131,29 @@ namespace ghetto
                 Client.Self.TeleportLureRespond(fromAgentID, true);
                 return;
             }
-            //Receive inventory
+            //Receive object
             else if (dialog == (int)InstantMessageDialog.GiveInventory)
             {
-                Console.WriteLine(TimeStamp() + "* " + fromAgentName + " gave you an object named \"" + message + "\"");
+                WinConsole.Color = ConsoleColor.Cyan | ConsoleColor.Intensified;
+                WinConsole.WriteLine(TimeStamp() + "* " + fromAgentName + " gave you an object named \"" + message + "\"");
+                WinConsole.Color = ConsoleColor.White;
+                return;
+            }
+            //Receive object
+            else if (dialog == (int)InstantMessageDialog.GiveNotecard)
+            {
+                WinConsole.Color = ConsoleColor.Cyan | ConsoleColor.Intensified;
+                WinConsole.WriteLine(TimeStamp() + "* " + fromAgentName + " gave you a notecard named \"" + message + "\"");
+                WinConsole.Color = ConsoleColor.White;
                 return;
             }
 
             CreateMessageWindow(fromAgentID, fromAgentName, dialog, imSessionID);
 
             //Display IM in console
-            Console.WriteLine(TimeStamp() + "(dialog " + dialog + ") <" + fromAgentName + ">: " + message);
+            WinConsole.Color = ConsoleColor.Yellow | ConsoleColor.Intensified;
+            WinConsole.WriteLine(TimeStamp() + "(dialog " + dialog + ") <" + fromAgentName + ">: " + message);
+            WinConsole.Color = ConsoleColor.White;
 
             //Parse commands from masterID only
             if (offline > 0 || fromAgentID != masterID) return;
@@ -149,8 +166,10 @@ namespace ghetto
 
         void OnFriendNotificationEvent(LLUUID friendID, bool online)
         {
-            if (online) Console.WriteLine("* ONLINE: {0}", friendID);
-            else Console.WriteLine("* OFFLINE: {0}", friendID);
+            WinConsole.Color = ConsoleColor.Yellow;
+            if (online) WinConsole.WriteLine("* ONLINE: {0}", friendID);
+            else WinConsole.WriteLine("* OFFLINE: {0}", friendID);
+            WinConsole.Color = ConsoleColor.White;
             //FIXME!!!
             Client.Avatars.BeginGetAvatarName(friendID, new AvatarManager.AgentNamesCallback(AgentNamesHandler));
         }

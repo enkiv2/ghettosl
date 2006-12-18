@@ -38,6 +38,7 @@
   -->
   <ItemGroup>
     <Compile Include="Appearance.cs" />
+    <Compile Include="ConsoleWriter.cs" />
     <Compile Include="Help.cs" />
     <Compile Include="Routines.cs" />
     <Compile Include="Strings.cs" />
@@ -45,6 +46,7 @@
     <Compile Include="Commands.cs" />
     <Compile Include="Events.cs" />
     <Compile Include="ghetto.cs" />
+    <Compile Include="WinConsole.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
