@@ -63,7 +63,9 @@ namespace ghetto
 
         void OnConnectedEvent(object sender)
         {
+            Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine("* CONNECTED");
+            Console.ForegroundColor = ConsoleColor.Gray;
 
             if (File.Exists("default.appearance")) LoadAppearance("default.appearance");
 

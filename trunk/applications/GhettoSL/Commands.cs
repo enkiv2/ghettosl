@@ -485,13 +485,32 @@ namespace ghetto
                     }
                 case "who":
                     {
-                        if (avatars.Count == 1) response = "1 person is nearby.";
-                        else response = avatars.Count + " people are nearby.";
-                        foreach (Avatar a in avatars.Values)
+                        if (avatars.Count == 0)
                         {
-                            string spaces = "";
-                            for (int sc = a.Name.Length; sc < 18; sc++) spaces += " ";
-                            response += "\n" + a.Name + spaces + " (" + (int)Helpers.VecDist(Client.Self.Position, a.Position) + "m) : " + a.ID;
+                            response = "No one is around";
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = System.ConsoleColor.DarkCyan; Console.Write("\r\n-=");
+                            Console.ForegroundColor = System.ConsoleColor.Cyan; Console.Write("[");
+                            Console.ForegroundColor = System.ConsoleColor.White; Console.Write(" Nearby Avatars ");
+                            Console.ForegroundColor = System.ConsoleColor.Cyan; Console.Write("]");
+                            Console.ForegroundColor = System.ConsoleColor.DarkCyan; Console.Write("=----------------------------------------------------------\r\n");
+                            Console.ForegroundColor = System.ConsoleColor.Gray;
+                            foreach (Avatar a in avatars.Values)
+                            {
+                                string spaces = "";
+                                for (int sc = a.Name.Length; sc < 18; sc++) spaces += " ";
+                                Console.ForegroundColor = ConsoleColor.White;
+                                Console.Write(a.Name + spaces);
+                                Console.ForegroundColor = ConsoleColor.Gray;
+                                Console.Write(" (" + (int)Helpers.VecDist(Client.Self.Position, a.Position) + "m) ");
+                                Console.ForegroundColor = ConsoleColor.DarkGray;
+                                Console.Write(a.ID + "\r\n");
+                            }
+                            Console.ForegroundColor = System.ConsoleColor.DarkCyan;
+                            Console.WriteLine("-------------------------------------------------------------------------------\r\n");
+                            Console.ForegroundColor = System.ConsoleColor.Gray;
                         }
                         break;
                     }
@@ -499,8 +518,9 @@ namespace ghetto
             if (response == "") return;
             else if (console)
             {
-                Console.ForegroundColor = System.ConsoleColor.Gray;
+                Console.ForegroundColor = System.ConsoleColor.Blue;
                 Console.WriteLine(TimeStamp() + "* " + response);
+                Console.ForegroundColor = System.ConsoleColor.Gray;
             }
             else Client.Self.InstantMessage(fromAgentID, response, imSessionID);
         }
