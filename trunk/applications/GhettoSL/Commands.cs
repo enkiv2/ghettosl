@@ -373,7 +373,12 @@ namespace ghetto
                             simName = details;
                             tPos = new LLVector3(128, 128, 0);
                         }
-                        if (console) Console.WriteLine("* Teleporting to {0}...", simName);
+                        if (console)
+                        {
+                            WinConsole.Color = ConsoleColor.Violet | ConsoleColor.Intensified;
+                            Console.WriteLine("* Teleporting to {0}...", simName);
+                            WinConsole.Color = ConsoleColor.White;
+                        }
                         else Client.Self.InstantMessage(fromAgentID, "Teleporting to {0}...", simName);
                         Client.Self.Teleport(simName, tPos);
                         break;
@@ -468,7 +473,12 @@ namespace ghetto
                     {
                         if (avatars.Count == 1) response = "1 person is nearby.";
                         else response = avatars.Count + " people are nearby.";
-                        foreach (Avatar a in avatars.Values) response += "\n" + a.Name + " (" + (int)Helpers.VecDist(Client.Self.Position, a.Position) + "m) : " + a.ID;
+                        foreach (Avatar a in avatars.Values)
+                        {
+                            string spaces = "";
+                            for (int sc = a.Name.Length; sc < 18; sc++) spaces += " ";
+                            response += "\n" + a.Name + spaces + " (" + (int)Helpers.VecDist(Client.Self.Position, a.Position) + "m) : " + a.ID;
+                        }
                         break;
                     }
             }

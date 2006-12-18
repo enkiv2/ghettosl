@@ -81,9 +81,16 @@ namespace ghetto
             if (args.Length > 6) scriptFile = args[6];
 
             WinConsole.Initialize();
+            WinConsole.Break += new WinConsole.HandlerRoutine(WinConsole_Break);
 
             GhettoSL ghetto = new GhettoSL(args[0], args[1], args[2], args[3], new LLUUID(args[4]), quiet,scriptFile);
         }
+
+        static bool WinConsole_Break(int type)
+        {
+            throw new Exception("The method or operation is not implemented.");
+        }
+
         //END OF MAIN VOID ####################################################
 
 

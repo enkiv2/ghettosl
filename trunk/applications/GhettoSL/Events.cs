@@ -83,7 +83,9 @@ namespace ghetto
 
         void OnSimDisconnectEvent(Simulator sim, NetworkManager.DisconnectType type)
         {
-            Console.WriteLine("* DISCONNECTED FROM SIM: " + type.ToString());
+            WinConsole.Color = ConsoleColor.Red | ConsoleColor.Intensified;
+            WinConsole.WriteLine("* DISCONNECTED FROM SIM: " + type.ToString());
+            WinConsole.Color = ConsoleColor.White;
             //FIXME - IPEndPoint is not a valid comparison and causes an error
             if (logout || sim.IPEndPoint != Client.Network.CurrentSim.IPEndPoint) return;
             Client.Network.Logout();
@@ -108,7 +110,7 @@ namespace ghetto
             string[] msg = message.Split(splitChar);
 
             if (sourceType == 1) WinConsole.Color = ConsoleColor.White | ConsoleColor.Intensified;
-            else WinConsole.Color = ConsoleColor.Green;
+            else WinConsole.Color = ConsoleColor.Cyan;
 
             if (msg[0].ToLower() != "/me")
                 WinConsole.WriteLine(TimeStamp() + "(ct=" + chatType + "|st=" + sourceType + ") " + name + ": " + message);
@@ -127,7 +129,9 @@ namespace ghetto
             //Teleport requests (dialog set to 22)
             if (dialog == (int)InstantMessageDialog.RequestTeleport && (fromAgentID == masterID || message == passPhrase))
             {
-                Console.WriteLine("* Accepting teleport request from " + fromAgentName + " (" + message + ")");
+                WinConsole.Color = ConsoleColor.Violet | ConsoleColor.Intensified;
+                WinConsole.WriteLine("* Accepting teleport request from " + fromAgentName + " (" + message + ")");
+                WinConsole.Color = ConsoleColor.White;
                 Client.Self.TeleportLureRespond(fromAgentID, true);
                 return;
             }
@@ -151,7 +155,7 @@ namespace ghetto
             CreateMessageWindow(fromAgentID, fromAgentName, dialog, imSessionID);
 
             //Display IM in console
-            WinConsole.Color = ConsoleColor.Yellow | ConsoleColor.Intensified;
+            WinConsole.Color = ConsoleColor.Cyan | ConsoleColor.Intensified;
             WinConsole.WriteLine(TimeStamp() + "(dialog " + dialog + ") <" + fromAgentName + ">: " + message);
             WinConsole.Color = ConsoleColor.White;
 
@@ -166,12 +170,12 @@ namespace ghetto
 
         void OnFriendNotificationEvent(LLUUID friendID, bool online)
         {
-            WinConsole.Color = ConsoleColor.Yellow;
-            if (online) WinConsole.WriteLine("* ONLINE: {0}", friendID);
-            else WinConsole.WriteLine("* OFFLINE: {0}", friendID);
+            WinConsole.Color = ConsoleColor.White | ConsoleColor.BlueBG;
+            if (online) WinConsole.WriteLine(" {0} is online ", friendID);
+            else WinConsole.WriteLine(" {0} is offline ", friendID);
             WinConsole.Color = ConsoleColor.White;
             //FIXME!!!
-            Client.Avatars.BeginGetAvatarName(friendID, new AvatarManager.AgentNamesCallback(AgentNamesHandler));
+            //Client.Avatars.BeginGetAvatarName(friendID, new AvatarManager.AgentNamesCallback(AgentNamesHandler));
         }
         void AgentNamesHandler(Dictionary<LLUUID, string> agentNames)
         {
