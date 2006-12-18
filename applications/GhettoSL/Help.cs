@@ -44,26 +44,26 @@ namespace ghetto
 
             if (topic == "")
             {
-                WinConsole.Color = ConsoleColor.Cyan; WinConsole.Write("\r\n-=");
-                WinConsole.Color = ConsoleColor.Cyan | ConsoleColor.Intensified; WinConsole.Write("[");
-                WinConsole.Color = ConsoleColor.White | ConsoleColor.Intensified; WinConsole.Write(" Commands ");
-                WinConsole.Color = ConsoleColor.Cyan | ConsoleColor.Intensified; WinConsole.Write("]");
-                WinConsole.Color = ConsoleColor.Cyan; WinConsole.Write("=-------------------------------------------------------\r\n");
-                WinConsole.Color = ConsoleColor.White;
+                Console.ForegroundColor = System.ConsoleColor.DarkCyan; Console.Write("\r\n-=");
+                Console.ForegroundColor = System.ConsoleColor.Cyan; Console.Write("[");
+                Console.ForegroundColor = System.ConsoleColor.White; Console.Write(" Commands ");
+                Console.ForegroundColor = System.ConsoleColor.Cyan; Console.Write("]");
+                Console.ForegroundColor = System.ConsoleColor.DarkCyan; Console.Write("=-------------------------------------------------------\r\n");
+                Console.ForegroundColor = System.ConsoleColor.Gray;
 
                 foreach (KeyValuePair<string, string> pair in HelpDict)
                 {
                     string spaces = "";
                     for (int sp = pair.Key.Length; sp < 24; sp++) spaces += " ";
-                    WinConsole.Color = ConsoleColor.White | ConsoleColor.Intensified;
-                    WinConsole.Write(pair.Key + spaces);
-                    WinConsole.Color = ConsoleColor.White;
-                    WinConsole.Write(pair.Value + "\r\n");
+                    Console.ForegroundColor = System.ConsoleColor.White;
+                    Console.Write(pair.Key + spaces);
+                    Console.ForegroundColor = System.ConsoleColor.Gray;
+                    Console.Write(pair.Value + "\r\n");
                 }
 
-                WinConsole.Color = ConsoleColor.Cyan;
-                WinConsole.WriteLine("----------------------------------------------------------------------\r\n");
-                WinConsole.Color = ConsoleColor.White;
+                Console.ForegroundColor = System.ConsoleColor.DarkCyan;
+                Console.WriteLine("----------------------------------------------------------------------\r\n");
+                Console.ForegroundColor = System.ConsoleColor.Gray;
             }
             else if (HelpDict.TryGetValue(topic, out result)) Console.WriteLine(topic + " - " + result);
             else Console.WriteLine("No help available for that topic. Type /help for a list of commands.");

@@ -37,7 +37,6 @@ namespace ghetto
 {
     partial class GhettoSL
     {
-
         void ParseCommand(bool console, string message, string fromAgentName, LLUUID fromAgentID, LLUUID imSessionID)
         {
             if (message.Length == 0) return;
@@ -246,6 +245,7 @@ namespace ghetto
                             data.OwnerID = Client.Network.AgentID;
                             Client.Network.SendPacket(p);
                         }
+
                         break;
                     }
                 case "land":
@@ -375,9 +375,9 @@ namespace ghetto
                         }
                         if (console)
                         {
-                            SetConsoleColor(ConsoleColor.Violet | ConsoleColor.Intensified);
+                            Console.ForegroundColor = System.ConsoleColor.Magenta;
                             Console.WriteLine("* Teleporting to {0}...", simName);
-                            SetConsoleColor(ConsoleColor.White);
+                            Console.ForegroundColor = System.ConsoleColor.Gray;
                         }
                         else Client.Self.InstantMessage(fromAgentID, "Teleporting to {0}...", simName);
                         Client.Self.Teleport(simName, tPos);
@@ -499,7 +499,7 @@ namespace ghetto
             if (response == "") return;
             else if (console)
             {
-                SetConsoleColor(ConsoleColor.White);
+                Console.ForegroundColor = System.ConsoleColor.Gray;
                 Console.WriteLine(TimeStamp() + "* " + response);
             }
             else Client.Self.InstantMessage(fromAgentID, response, imSessionID);
