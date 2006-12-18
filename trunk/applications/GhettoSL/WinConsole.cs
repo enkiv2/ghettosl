@@ -808,7 +808,7 @@ namespace ghetto
 		/// <summary>
 		/// Same as the Console counterpart
 		/// </summary>
-		[CLSCompliant(false)]
+		//[CLSCompliant(false)]
 		public static void WriteLine(uint value)
 		{
 			Console.WriteLine(value);
@@ -825,7 +825,7 @@ namespace ghetto
 		/// <summary>
 		/// Same as the Console counterpart
 		/// </summary>
-		[CLSCompliant(false)]
+		//[CLSCompliant(false)]
 		public static void WriteLine(ulong value)
 		{
 			Console.WriteLine(value);
@@ -978,7 +978,7 @@ namespace ghetto
 		/// <summary>
 		/// Same as the Console counterpart
 		/// </summary>
-		[CLSCompliant(false)]
+		//[CLSCompliant(false)]
 		public static void Write(uint value)
 		{
 			Console.Write(value);

@@ -108,7 +108,7 @@ namespace ghetto
             string[] msg = message.Split(splitChar);
 
             if (sourceType == 1) WinConsole.Color = ConsoleColor.White | ConsoleColor.Intensified;
-            else WinConsole.Color = ConsoleColor.Green | ConsoleColor.Intensified;
+            else WinConsole.Color = ConsoleColor.Green;
 
             if (msg[0].ToLower() != "/me")
                 WinConsole.WriteLine(TimeStamp() + "(ct=" + chatType + "|st=" + sourceType + ") " + name + ": " + message);
@@ -199,7 +199,8 @@ namespace ghetto
                 AcknowledgePayment(msg[0] + " " + msg[1], changeAmount);
 
             if (desc.Length > 1) Console.WriteLine("* " + desc);
-            Console.WriteLine(TimeStamp() + "* Balance: L$" + currentBalance);
+            WinConsole.Color = ConsoleColor.Green | ConsoleColor.Intensified;
+            WinConsole.WriteLine(TimeStamp() + "* Balance: L$" + currentBalance);
         }
 
 

@@ -80,6 +80,8 @@ namespace ghetto
             if (args.Length > 5 && (args[5].ToLower() == "quiet" || args[5].ToLower() == "true")) quiet = true;
             if (args.Length > 6) scriptFile = args[6];
 
+            WinConsole.Initialize();
+
             GhettoSL ghetto = new GhettoSL(args[0], args[1], args[2], args[3], new LLUUID(args[4]), quiet,scriptFile);
         }
         //END OF MAIN VOID ####################################################
@@ -105,8 +107,6 @@ namespace ghetto
             prims = new Dictionary<uint, PrimObject>();
             appearances = new Dictionary<LLUUID, AvatarAppearancePacket>();
             imWindows = new Dictionary<uint, Avatar>();
-
-            WinConsole.Initialize();
 
             Client.Debug = false;
 
