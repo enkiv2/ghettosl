@@ -106,10 +106,6 @@ namespace ghetto
             appearances = new Dictionary<LLUUID, AvatarAppearancePacket>();
             imWindows = new Dictionary<uint, Avatar>();
 
-            System.Timers.Timer updateTimer = new System.Timers.Timer(500);
-            updateTimer.Start();
-            updateTimer.Elapsed += new System.Timers.ElapsedEventHandler(SendUpdateTimer);
-
             Client.Debug = false;
 
             Client.Self.Status.Camera.Far = 96.0f;
@@ -142,10 +138,6 @@ namespace ghetto
         }
         //END OF GHETTOSL VOID ################################################
 
-        void SendUpdateTimer(object target, System.Timers.ElapsedEventArgs args)
-        {
-            Client.Self.Status.SendUpdate();
-        }
 
         //LOGIN SEQUENCE ######################################################
         bool Login()
