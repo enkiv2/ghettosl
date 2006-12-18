@@ -57,7 +57,9 @@ namespace ghetto
             appearance.AgentData.AgentID = Client.Network.AgentID;
             appearance.AgentData.SessionID = Client.Network.SessionID;
             Client.Network.SendPacket(appearance);
+            Console.ForegroundColor = System.ConsoleColor.DarkGray;
             Console.WriteLine("* Loaded " + fileName);
+            Console.ForegroundColor = System.ConsoleColor.Gray;
             lastAppearance = appearance;
         }
 

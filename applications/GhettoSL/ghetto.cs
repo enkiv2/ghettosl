@@ -171,11 +171,10 @@ namespace ghetto
             if (!Client.Network.Connected) return false;
 
             //We are in!
-            Console.ForegroundColor = System.ConsoleColor.Blue;
+            Console.ForegroundColor = System.ConsoleColor.White;
             Console.WriteLine(RPGWeather());
-            Console.ForegroundColor = System.ConsoleColor.Gray;
-
             Console.WriteLine("Location: " + Client.Self.Position);
+            Console.ForegroundColor = System.ConsoleColor.Gray;
 
             //Fix the "bot squat" animation
             Client.Self.Status.SendUpdate();

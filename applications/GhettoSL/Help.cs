@@ -48,7 +48,7 @@ namespace ghetto
                 Console.ForegroundColor = System.ConsoleColor.Cyan; Console.Write("[");
                 Console.ForegroundColor = System.ConsoleColor.White; Console.Write(" Commands ");
                 Console.ForegroundColor = System.ConsoleColor.Cyan; Console.Write("]");
-                Console.ForegroundColor = System.ConsoleColor.DarkCyan; Console.Write("=-------------------------------------------------------\r\n");
+                Console.ForegroundColor = System.ConsoleColor.DarkCyan; Console.Write("=----------------------------------------------------------------\r\n");
                 Console.ForegroundColor = System.ConsoleColor.Gray;
 
                 foreach (KeyValuePair<string, string> pair in HelpDict)
@@ -56,17 +56,22 @@ namespace ghetto
                     string spaces = "";
                     for (int sp = pair.Key.Length; sp < 24; sp++) spaces += " ";
                     Console.ForegroundColor = System.ConsoleColor.White;
-                    Console.Write(pair.Key + spaces);
+                    Console.Write(" " + pair.Key + spaces);
                     Console.ForegroundColor = System.ConsoleColor.Gray;
                     Console.Write(pair.Value + "\r\n");
                 }
 
                 Console.ForegroundColor = System.ConsoleColor.DarkCyan;
-                Console.WriteLine("----------------------------------------------------------------------\r\n");
+                Console.WriteLine("-------------------------------------------------------------------------------\r\n");
                 Console.ForegroundColor = System.ConsoleColor.Gray;
             }
-            else if (HelpDict.TryGetValue(topic, out result)) Console.WriteLine(topic + " - " + result);
-            else Console.WriteLine("No help available for that topic. Type /help for a list of commands.");
+            else
+            {
+                Console.ForegroundColor = System.ConsoleColor.DarkGray;
+                if (HelpDict.TryGetValue(topic, out result)) Console.WriteLine(topic + " - " + result);
+                else Console.WriteLine("No help available for that topic. Type /help for a list of commands.");
+                Console.ForegroundColor = System.ConsoleColor.Gray;
+            }
 
         }
     }
