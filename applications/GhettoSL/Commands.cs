@@ -375,9 +375,9 @@ namespace ghetto
                         }
                         if (console)
                         {
-                            WinConsole.Color = ConsoleColor.Violet | ConsoleColor.Intensified;
+                            SetConsoleColor(ConsoleColor.Violet | ConsoleColor.Intensified);
                             Console.WriteLine("* Teleporting to {0}...", simName);
-                            WinConsole.Color = ConsoleColor.White;
+                            SetConsoleColor(ConsoleColor.White);
                         }
                         else Client.Self.InstantMessage(fromAgentID, "Teleporting to {0}...", simName);
                         Client.Self.Teleport(simName, tPos);
@@ -415,7 +415,7 @@ namespace ghetto
                     }
                 case "time":
                     {
-                        response = TimeStamp() + RPGWeather();
+                        response = RPGWeather();
                         break;
                     }
                 case "touch":
@@ -499,8 +499,8 @@ namespace ghetto
             if (response == "") return;
             else if (console)
             {
-                WinConsole.Color = ConsoleColor.White;
-                WinConsole.WriteLine(TimeStamp() + "* " + response);
+                SetConsoleColor(ConsoleColor.White);
+                Console.WriteLine(TimeStamp() + "* " + response);
             }
             else Client.Self.InstantMessage(fromAgentID, response, imSessionID);
         }
