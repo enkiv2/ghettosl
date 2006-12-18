@@ -66,7 +66,9 @@ namespace ghetto
             Console.WriteLine("* CONNECTED");
 
             if (File.Exists("default.appearance")) LoadAppearance("default.appearance");
-           
+
+            Client.Self.Status.UpdateTimer.Start();
+
             Client.Grid.AddEstateSims();
 
             //FIXME!!! - ADD Client.Self.RetrieveInstantMessages() TO CORE!
