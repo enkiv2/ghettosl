@@ -83,9 +83,9 @@ namespace ghetto
 
         void OnSimDisconnectEvent(Simulator sim, NetworkManager.DisconnectType type)
         {
-            WinConsole.Color = ConsoleColor.Red | ConsoleColor.Intensified;
-            WinConsole.WriteLine("* DISCONNECTED FROM SIM: " + type.ToString());
-            WinConsole.Color = ConsoleColor.White;
+            SetConsoleColor(ConsoleColor.Red | ConsoleColor.Intensified);
+            Console.WriteLine("* DISCONNECTED FROM SIM: " + type.ToString());
+            SetConsoleColor(ConsoleColor.White);
             //FIXME - IPEndPoint is not a valid comparison and causes an error
             if (logout || sim.IPEndPoint != Client.Network.CurrentSim.IPEndPoint) return;
             Client.Network.Logout();
@@ -109,17 +109,17 @@ namespace ghetto
             char[] splitChar = { ' ' };
             string[] msg = message.Split(splitChar);
 
-            if (sourceType == 1) WinConsole.Color = ConsoleColor.White | ConsoleColor.Intensified;
-            else WinConsole.Color = ConsoleColor.Cyan;
+            if (sourceType == 1) SetConsoleColor(ConsoleColor.White | ConsoleColor.Intensified);
+            else SetConsoleColor(ConsoleColor.Cyan);
 
             if (msg[0].ToLower() != "/me")
-                WinConsole.WriteLine(TimeStamp() + "(ct=" + chatType + "|st=" + sourceType + ") " + name + ": " + message);
+                Console.WriteLine(TimeStamp() + "(ct=" + chatType + "|st=" + sourceType + ") " + name + ": " + message);
             else
             {
                 message = String.Join(" ", msg, 1, msg.Length - 1);
-                WinConsole.WriteLine(TimeStamp() + "(ct=" + chatType + "|st=" + sourceType + ") * " + name + " " + message);
+                Console.WriteLine(TimeStamp() + "(ct=" + chatType + "|st=" + sourceType + ") * " + name + " " + message);
             }
-            WinConsole.Color = ConsoleColor.White;
+            SetConsoleColor(ConsoleColor.White);
         }
 
 
@@ -129,35 +129,35 @@ namespace ghetto
             //Teleport requests (dialog set to 22)
             if (dialog == (int)InstantMessageDialog.RequestTeleport && (fromAgentID == masterID || message == passPhrase))
             {
-                WinConsole.Color = ConsoleColor.Violet | ConsoleColor.Intensified;
-                WinConsole.WriteLine("* Accepting teleport request from " + fromAgentName + " (" + message + ")");
-                WinConsole.Color = ConsoleColor.White;
+                SetConsoleColor(ConsoleColor.Violet | ConsoleColor.Intensified);
+                Console.WriteLine("* Accepting teleport request from " + fromAgentName + " (" + message + ")");
+                SetConsoleColor(ConsoleColor.White);
                 Client.Self.TeleportLureRespond(fromAgentID, true);
                 return;
             }
             //Receive object
             else if (dialog == (int)InstantMessageDialog.GiveInventory)
             {
-                WinConsole.Color = ConsoleColor.Cyan | ConsoleColor.Intensified;
-                WinConsole.WriteLine(TimeStamp() + "* " + fromAgentName + " gave you an object named \"" + message + "\"");
-                WinConsole.Color = ConsoleColor.White;
+                SetConsoleColor(ConsoleColor.Cyan | ConsoleColor.Intensified);
+                Console.WriteLine(TimeStamp() + "* " + fromAgentName + " gave you an object named \"" + message + "\"");
+                SetConsoleColor(ConsoleColor.White);
                 return;
             }
             //Receive object
             else if (dialog == (int)InstantMessageDialog.GiveNotecard)
             {
-                WinConsole.Color = ConsoleColor.Cyan | ConsoleColor.Intensified;
-                WinConsole.WriteLine(TimeStamp() + "* " + fromAgentName + " gave you a notecard named \"" + message + "\"");
-                WinConsole.Color = ConsoleColor.White;
+                SetConsoleColor(ConsoleColor.Cyan | ConsoleColor.Intensified);
+                Console.WriteLine(TimeStamp() + "* " + fromAgentName + " gave you a notecard named \"" + message + "\"");
+                SetConsoleColor(ConsoleColor.White);
                 return;
             }
 
             CreateMessageWindow(fromAgentID, fromAgentName, dialog, imSessionID);
 
             //Display IM in console
-            WinConsole.Color = ConsoleColor.Cyan | ConsoleColor.Intensified;
-            WinConsole.WriteLine(TimeStamp() + "(dialog " + dialog + ") <" + fromAgentName + ">: " + message);
-            WinConsole.Color = ConsoleColor.White;
+            SetConsoleColor(ConsoleColor.Cyan | ConsoleColor.Intensified);
+            Console.WriteLine(TimeStamp() + "(dialog " + dialog + ") <" + fromAgentName + ">: " + message);
+            SetConsoleColor(ConsoleColor.White);
 
             //Parse commands from masterID only
             if (offline > 0 || fromAgentID != masterID) return;
@@ -170,10 +170,10 @@ namespace ghetto
 
         void OnFriendNotificationEvent(LLUUID friendID, bool online)
         {
-            WinConsole.Color = ConsoleColor.White | ConsoleColor.BlueBG;
-            if (online) WinConsole.WriteLine(" {0} is online ", friendID);
-            else WinConsole.WriteLine(" {0} is offline ", friendID);
-            WinConsole.Color = ConsoleColor.White;
+            SetConsoleColor(ConsoleColor.White | ConsoleColor.BlueBG);
+            if (online) Console.WriteLine(" {0} is online ", friendID);
+            else Console.WriteLine(" {0} is offline ", friendID);
+            SetConsoleColor(ConsoleColor.White);
             //FIXME!!!
             //Client.Avatars.BeginGetAvatarName(friendID, new AvatarManager.AgentNamesCallback(AgentNamesHandler));
         }
@@ -201,10 +201,10 @@ namespace ghetto
             string[] msg = desc.Split(splitChar);
             if (msg.Length > 3 && msg[2] + " " + msg[3] == "paid you")
                 AcknowledgePayment(msg[0] + " " + msg[1], changeAmount);
-
             if (desc.Length > 1) Console.WriteLine("* " + desc);
-            WinConsole.Color = ConsoleColor.Green | ConsoleColor.Intensified;
-            WinConsole.WriteLine(TimeStamp() + "* Balance: L$" + currentBalance);
+            SetConsoleColor(ConsoleColor.Green | ConsoleColor.Intensified);
+            Console.WriteLine(TimeStamp() + "* Balance: L$" + currentBalance);
+            SetConsoleColor(ConsoleColor.White);
         }
 
 

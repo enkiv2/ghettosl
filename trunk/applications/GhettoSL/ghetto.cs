@@ -45,6 +45,7 @@ namespace ghetto
         Dictionary<LLUUID, Avatar> Friends;
         Dictionary<LLUUID, AvatarAppearancePacket> appearances;
         AgentSetAppearancePacket lastAppearance = new AgentSetAppearancePacket();
+        string platform;
         static bool logout = false;
         public string firstName;
         public string lastName;
@@ -80,15 +81,7 @@ namespace ghetto
             if (args.Length > 5 && (args[5].ToLower() == "quiet" || args[5].ToLower() == "true")) quiet = true;
             if (args.Length > 6) scriptFile = args[6];
 
-            WinConsole.Initialize();
-            WinConsole.Break += new WinConsole.HandlerRoutine(WinConsole_Break);
-
             GhettoSL ghetto = new GhettoSL(args[0], args[1], args[2], args[3], new LLUUID(args[4]), quiet,scriptFile);
-        }
-
-        static bool WinConsole_Break(int type)
-        {
-            throw new Exception("The method or operation is not implemented.");
         }
 
         //END OF MAIN VOID ####################################################
@@ -103,6 +96,10 @@ namespace ghetto
             //Console.WriteLine("RotBetween: " + Helpers.RotBetween(Helpers.VecNorm(a), Helpers.VecNorm(b)));
             //Console.ReadLine();
             //return;
+
+            platform = System.Convert.ToString(Environment.OSVersion.Platform);
+            if (platform == "Win32NT") WinConsole.Initialize();
+            else Console.WriteLine("Running on platform " + platform + ". Colors will not be displayed.");
 
             firstName = first;
             lastName = last;
@@ -174,7 +171,10 @@ namespace ghetto
             if (!Client.Network.Connected) return false;
 
             //We are in!
+            SetConsoleColor(ConsoleColor.Blue | ConsoleColor.Intensified);
             Console.WriteLine(RPGWeather());
+            SetConsoleColor(ConsoleColor.White);
+
             Console.WriteLine("Location: " + Client.Self.Position);
 
             //Fix the "bot squat" animation
