@@ -8,7 +8,6 @@ namespace ghetto
     {
         public void Help(string helpTopic)
         {
-            
 
             Dictionary<string,string> HelpDict = new Dictionary<string, string>();
             HelpDict.Add("anim <uuid>", "Start the specified animation");
@@ -34,6 +33,7 @@ namespace ghetto
             HelpDict.Add("time", "Displays time and region sun direction");
             HelpDict.Add("touch <uuid>", "Touch the specified object");
             HelpDict.Add("touchid <localID>", "Touch the specified object LocalID");
+            HelpDict.Add("updates <on|off>", "Toggles AgentUpdate timer (on by default)");
             HelpDict.Add("walk", "Disable running");
             HelpDict.Add("whisper", "Whisper the specified message to users within 5m");
             HelpDict.Add("who", "List avatars within viewing range");

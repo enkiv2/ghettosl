@@ -458,6 +458,20 @@ namespace ghetto
                         Client.Network.SendPacket(p);
                         break;
                     }
+                case "updates":
+                    {
+                        if (msg.Length < 2) response = "Usage: /updates <on|off>";
+                        else if (details == "on") {
+                            Client.Self.Status.UpdateTimer.Start();
+                            response = "Update timer ON";
+                        }
+                        else if (details == "off")
+                        {
+                            Client.Self.Status.UpdateTimer.Stop();
+                            response = "Update timer OFF";
+                        }
+                        break;
+                    }
                 case "walk":
                     {
                         Client.Self.SetAlwaysRun(false);

@@ -53,7 +53,7 @@ namespace ghetto
             {
                 char[] splitChar = { ' ' };
                 string[] args = input.ToLower().Split(splitChar);
-                string[] commandsWithArgs = { "camp", "goto", "if", "label", "pay", "payme", "say", "shout", "sit", "teleport", "touch", "touchid", "wait", "whisper" };
+                string[] commandsWithArgs = { "camp", "goto", "if", "label", "pay", "payme", "say", "shout", "sit", "teleport", "touch", "touchid", "updates", "wait", "whisper" };
                 string[] commandsWithoutArgs = { "fly", "land", "quit", "relog", "run", "sitg", "stand", "walk" };
                 if (Array.IndexOf(commandsWithArgs, args[0]) > -1 && args.Length < 2)
                 {

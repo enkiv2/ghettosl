@@ -151,6 +151,7 @@ namespace ghetto
         //LOGIN SEQUENCE ######################################################
         bool Login()
         {
+            Console.Title = "GhettoSL - Logging in...";
             Console.WriteLine("Logging in as " + firstName + " " + lastName + "...");
 
             //Attempt to log in
@@ -159,6 +160,8 @@ namespace ghetto
                 Console.WriteLine("Login failed.");
                 return false;
             }
+
+            Console.Title = "GhettoSL - " + Client.Self.FirstName + " " + Client.Self.LastName;
 
             //Succeeded - Wait for simulator name or disconnection
             Simulator sim = Client.Network.CurrentSim;
