@@ -8,10 +8,10 @@ namespace ghetto
     {
         void IntroArt()
         {
-            Console.ForegroundColor = ConsoleColor.DarkCyan;
+            Console.ForegroundColor = System.ConsoleColor.DarkCyan;
             Console.WriteLine("\r\n================================================================");
             Console.WriteLine("================================================================");
-            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.ForegroundColor = System.ConsoleColor.Cyan;
             Console.WriteLine("           __                             ________              ");
             Console.WriteLine("          |  |                           /        \\             ");
             Console.WriteLine("          |  |                          |   ____   |__          ");
@@ -24,12 +24,12 @@ namespace ghetto
             Console.WriteLine("  _     |  | |  | | _____|| |  | | |  ||  |.____|  |  |_______  ");
             Console.WriteLine(" | |____|  | |  | ||_____ | |  | | |  `   |        |          | ");
             Console.WriteLine(" |_________|_|  |_|______||_|  |_| |______|_______/+__________| ");
-            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.ForegroundColor = System.ConsoleColor.DarkGray;
             Console.WriteLine("                                   (c) 2006 obsoleet industries ");
-            Console.ForegroundColor = ConsoleColor.DarkCyan;
+            Console.ForegroundColor = System.ConsoleColor.DarkCyan;
             Console.WriteLine("================================================================");
             Console.WriteLine("================================================================\r\n");
-            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.ForegroundColor = System.ConsoleColor.Gray;
         }
 
         void HeaderHelp()
