@@ -455,8 +455,9 @@ namespace ghetto
                         Client.Self.Touch(uint.Parse(msg[1]));
                         break;
                     }
-                case "touchspy":
+                case "touchspy": //FIXME!!!
                     {
+                        //display the localID of prims selected by other users
                         if (msg.Length < 2) return;
                         else if (msg[1] == "on") Client.Network.RegisterCallback(PacketType.ObjectSelect, new NetworkManager.PacketCallback(OnObjectSelect));
                         else if (msg[1] == "off") Client.Network.UnregisterCallback(PacketType.ObjectSelect, new NetworkManager.PacketCallback(OnObjectSelect));

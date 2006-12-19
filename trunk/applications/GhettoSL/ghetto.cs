@@ -97,8 +97,9 @@ namespace ghetto
             //Console.ReadLine();
             //return;
 
-            IntroArt();
-
+            Random random = new Random();
+            IntroArt(random.Next(1, 2));
+            
             platform = System.Convert.ToString(Environment.OSVersion.Platform);
             Console.WriteLine("Running on platform " + platform);
 

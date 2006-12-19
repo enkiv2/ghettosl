@@ -64,12 +64,12 @@ namespace ghetto
 
         void TeleportToLocation(Location l)
         {
-            uint RegionX = (uint)(l.GlobalX / 256);
-            uint RegionY = (uint)(l.GlobalY / 256);
-            double LocalX = l.GlobalX - RegionX;
-            double LocalY = l.GlobalY - RegionY;
-            ulong RegionHandle = Helpers.UIntsToLong((uint)regionX, (uint)regionY);
-            Client.Self.Teleport(RegionHandle, new LLVector3(128.0f, 128.0f, 128.0f));
+            double LocalX = l.GlobalX % 256;
+            double LocalY = l.GlobalY % 256;
+            uint RegionX = (uint)(l.GlobalX - LocalX);
+            uint RegionY = (uint)(l.GlobalY - LocalY);
+            ulong RegionHandle = Helpers.UIntsToLong((uint)RegionX, (uint)RegionY);
+            Client.Self.Teleport(RegionHandle, new LLVector3((float)LocalX, (float)LocalY, 128.0f));
         }
     }
 }
