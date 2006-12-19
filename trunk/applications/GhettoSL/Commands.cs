@@ -368,6 +368,12 @@ namespace ghetto
                         Client.Self.Chat(details, 0, MainAvatar.ChatType.Shout);
                         break;
                     }
+                case "stalk":
+                    {
+                        OnMapStalk += new MapStalkDelegate(GhettoSL_OnMapStalk);
+                        Stalk(new LLUUID(msg[1]));
+                        break;
+                    }
                 case "teleport":
                     {
                         if (msg.Length < 2) return;
@@ -529,6 +535,12 @@ namespace ghetto
                 Console.ForegroundColor = System.ConsoleColor.Gray;
             }
             else Client.Self.InstantMessage(fromAgentID, response, imSessionID);
+        }
+
+        void GhettoSL_OnMapStalk(LLUUID stalked, Location location)
+        {
+            Console.WriteLine("Stalking " + stalked + " to " + location);
+            TeleportToLocation(location);
         }
 
     }

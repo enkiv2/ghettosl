@@ -47,7 +47,8 @@ namespace ghetto
             Client.Network.RegisterCallback(PacketType.RequestFriendship, new NetworkManager.PacketCallback(OnRequestFriendship));
             Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(OnTeleportFinish));
             Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(OnAlertMessage));
-
+            //Mapstalk
+            Client.Network.RegisterCallback(PacketType.FindAgent, new NetworkManager.PacketCallback(FindAgentCallback));
             Client.Network.OnConnected += new NetworkManager.ConnectedCallback(OnConnectedEvent);
             Client.Network.OnSimDisconnected += new NetworkManager.SimDisconnectCallback(OnSimDisconnectEvent);
             Client.Objects.OnAvatarMoved += new ObjectManager.AvatarMovedCallback(OnAvatarMovedEvent);
@@ -60,6 +61,7 @@ namespace ghetto
             Client.Self.OnTeleport += new TeleportCallback(OnTeleportEvent);
         }
 
+        
 
         void OnConnectedEvent(object sender)
         {

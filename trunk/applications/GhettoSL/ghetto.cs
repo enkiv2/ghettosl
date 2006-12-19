@@ -111,6 +111,7 @@ namespace ghetto
             Friends = new Dictionary<LLUUID, Avatar>();
             prims = new Dictionary<uint, PrimObject>();
             appearances = new Dictionary<LLUUID, AvatarAppearancePacket>();
+            Stalked = new Dictionary<LLUUID, Location>();
             imWindows = new Dictionary<uint, Avatar>();
 
             Client.Debug = false;
