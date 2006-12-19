@@ -44,13 +44,7 @@ namespace ghetto
 
             if (topic == "")
             {
-                Console.ForegroundColor = System.ConsoleColor.DarkCyan; Console.Write("\r\n-=");
-                Console.ForegroundColor = System.ConsoleColor.Cyan; Console.Write("[");
-                Console.ForegroundColor = System.ConsoleColor.White; Console.Write(" Commands ");
-                Console.ForegroundColor = System.ConsoleColor.Cyan; Console.Write("]");
-                Console.ForegroundColor = System.ConsoleColor.DarkCyan; Console.Write("=----------------------------------------------------------------\r\n");
-                Console.ForegroundColor = System.ConsoleColor.Gray;
-
+                HeaderHelp();
                 foreach (KeyValuePair<string, string> pair in HelpDict)
                 {
                     string spaces = "";
@@ -60,10 +54,7 @@ namespace ghetto
                     Console.ForegroundColor = System.ConsoleColor.Gray;
                     Console.Write(pair.Value + "\r\n");
                 }
-
-                Console.ForegroundColor = System.ConsoleColor.DarkCyan;
-                Console.WriteLine("-------------------------------------------------------------------------------\r\n");
-                Console.ForegroundColor = System.ConsoleColor.Gray;
+                Footer();
             }
             else
             {

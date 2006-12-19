@@ -97,8 +97,9 @@ namespace ghetto
             //Console.ReadLine();
             //return;
 
-            platform = System.Convert.ToString(Environment.OSVersion.Platform);
+            IntroArt();
 
+            platform = System.Convert.ToString(Environment.OSVersion.Platform);
             Console.WriteLine("Running on platform " + platform + ".");
 
             firstName = first;
@@ -124,7 +125,7 @@ namespace ghetto
 
             //Add callbacks for events
             InitializeCallbacks();
-            
+           
             if (!quiet) Client.Self.OnChat += new ChatCallback(OnChatEvent);
 
             //Attempt to login, and exit if failed

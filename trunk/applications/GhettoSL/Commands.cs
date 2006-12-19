@@ -491,26 +491,19 @@ namespace ghetto
                         }
                         else
                         {
-                            Console.ForegroundColor = System.ConsoleColor.DarkCyan; Console.Write("\r\n-=");
-                            Console.ForegroundColor = System.ConsoleColor.Cyan; Console.Write("[");
-                            Console.ForegroundColor = System.ConsoleColor.White; Console.Write(" Nearby Avatars ");
-                            Console.ForegroundColor = System.ConsoleColor.Cyan; Console.Write("]");
-                            Console.ForegroundColor = System.ConsoleColor.DarkCyan; Console.Write("=----------------------------------------------------------\r\n");
-                            Console.ForegroundColor = System.ConsoleColor.Gray;
+                            HeaderWho();
                             foreach (Avatar a in avatars.Values)
                             {
                                 string spaces = "";
                                 for (int sc = a.Name.Length; sc < 18; sc++) spaces += " ";
                                 Console.ForegroundColor = ConsoleColor.White;
-                                Console.Write(a.Name + spaces);
+                                Console.Write(" "+a.Name + spaces);
                                 Console.ForegroundColor = ConsoleColor.Gray;
                                 Console.Write(" (" + (int)Helpers.VecDist(Client.Self.Position, a.Position) + "m) ");
                                 Console.ForegroundColor = ConsoleColor.DarkGray;
                                 Console.Write(a.ID + "\r\n");
                             }
-                            Console.ForegroundColor = System.ConsoleColor.DarkCyan;
-                            Console.WriteLine("-------------------------------------------------------------------------------\r\n");
-                            Console.ForegroundColor = System.ConsoleColor.Gray;
+                            Footer();
                         }
                         break;
                     }
