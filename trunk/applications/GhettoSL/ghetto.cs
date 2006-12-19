@@ -100,7 +100,7 @@ namespace ghetto
             IntroArt();
 
             platform = System.Convert.ToString(Environment.OSVersion.Platform);
-            Console.WriteLine("Running on platform " + platform + ".");
+            Console.WriteLine("Running on platform " + platform);
 
             firstName = first;
             lastName = last;
@@ -150,7 +150,9 @@ namespace ghetto
         bool Login()
         {
             Console.Title = "GhettoSL - Logging in...";
+            Console.ForegroundColor = System.ConsoleColor.White;
             Console.WriteLine("Logging in as " + firstName + " " + lastName + "...");
+            Console.ForegroundColor = System.ConsoleColor.Gray;
 
             //Attempt to log in
             if (!Client.Network.Login(firstName, lastName, password, "GhettoSL", "ghetto@obsoleet.com"))

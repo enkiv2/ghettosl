@@ -100,7 +100,10 @@ namespace ghetto
         void OnAlertMessage(Packet packet, Simulator sim)
         {
             AlertMessagePacket p = (AlertMessagePacket)packet;
+
+            Console.ForegroundColor = System.ConsoleColor.Cyan;
             Console.WriteLine(TimeStamp() + "* " + Helpers.FieldToString(p.AlertData.Message));
+            Console.ForegroundColor = System.ConsoleColor.Gray;
         }
 
 
@@ -204,7 +207,11 @@ namespace ghetto
             string[] msg = desc.Split(splitChar);
             if (msg.Length > 3 && msg[2] + " " + msg[3] == "paid you")
                 AcknowledgePayment(msg[0] + " " + msg[1], changeAmount);
-            if (desc.Length > 1) Console.WriteLine("* " + desc);
+            if (desc.Length > 1)
+            {
+                Console.ForegroundColor = System.ConsoleColor.Cyan;
+                Console.WriteLine("* " + desc);
+            }
             Console.ForegroundColor = System.ConsoleColor.Green;
             Console.WriteLine(TimeStamp() + "* Balance: L$" + currentBalance);
             Console.ForegroundColor = System.ConsoleColor.Gray;
