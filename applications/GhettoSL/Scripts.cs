@@ -138,7 +138,7 @@ namespace ghetto
                             Thread.Sleep(int.Parse(cmd[1]) * 1000);
                             continue;
                         }
-                    case "go":
+                    case "goto":
                         {
                             int findLabel = Array.IndexOf(script, "label " + cmd[1]);
                             if (findLabel > -1) i = findLabel;
