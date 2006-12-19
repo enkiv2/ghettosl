@@ -218,6 +218,19 @@ namespace ghetto
                         else MoveAvatar((int)(1000 * float.Parse("0" + details)), false, false, false, true, false, false);
                         break;
                     }
+                case "goto":
+                    {
+                        if (msg.Length < 3) response = "Usage: /goto <X> <Y> [Z]";
+                        else
+                        {
+                            ulong x = (ulong)regionX + ulong.Parse(msg[1]);
+                            ulong y = (ulong)regionY + ulong.Parse(msg[2]);
+                            float z = Client.Self.Position.Z;
+                            if (msg.Length > 3) z = float.Parse(msg[3]);
+                            Client.Self.AutoPilot(x, y, z);
+                        }
+                        break;
+                    }
                 case "help":
                     {
                         if (!console) response = "Help is only available from the console.";

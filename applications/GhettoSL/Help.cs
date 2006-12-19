@@ -16,6 +16,7 @@ namespace ghetto
             HelpDict.Add("die", "Log out and exit");
             HelpDict.Add("fly", "Enable flying");
             HelpDict.Add("follow <name|off>", "Follow the specified avatar, or \"off\" to disable");
+            HelpDict.Add("go <X> <Y> [Z]", "Move to the specified coordinates using autopilot");
             HelpDict.Add("land", "Disable flying");
             HelpDict.Add("listen", "Listen to local chat (on by default)");
             HelpDict.Add("quiet", "Stop listening to local chat");
