@@ -159,12 +159,14 @@ namespace ghetto
                 return;
             }
 
-            CreateMessageWindow(fromAgentID, fromAgentName, dialog, imSessionID);
-
-            //Display IM in console
-            Console.ForegroundColor = System.ConsoleColor.Cyan;
-            Console.WriteLine(TimeStamp() + "(IM|d={0}) <{1}>: {2}",dialog, fromAgentName, message);
-            Console.ForegroundColor = System.ConsoleColor.Gray;
+            if (!quiet)
+            {
+                CreateMessageWindow(fromAgentID, fromAgentName, dialog, imSessionID);
+                //Display IM in console
+                Console.ForegroundColor = System.ConsoleColor.Cyan;
+                Console.WriteLine(TimeStamp() + "(IM|d={0}) <{1}>: {2}", dialog, fromAgentName, message);
+                Console.ForegroundColor = System.ConsoleColor.Gray;
+            }
 
             //Parse commands from masterID only
             if (offline > 0 || fromAgentID != masterID) return;
@@ -182,6 +184,7 @@ namespace ghetto
             if (online) Console.WriteLine(" {0} is online ", friendID);
             else Console.WriteLine(" {0} is offline ", friendID);
             Console.BackgroundColor = System.ConsoleColor.Black;
+            
             //FIXME!!!
             //Client.Avatars.BeginGetAvatarName(friendID, new AvatarManager.AgentNamesCallback(AgentNamesHandler));
         }

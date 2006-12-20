@@ -269,6 +269,7 @@ namespace ghetto
                     }
                 case "listen":
                     {
+                        quiet = false;
                         Client.Self.OnChat += new ChatCallback(OnChatEvent);
                         response = "Displaying object/avatar chat.";
                         break;
@@ -298,6 +299,7 @@ namespace ghetto
                     }
                 case "quiet":
                     {
+                        quiet = true;
                         response = "Stopped listening to chat.";
                         Client.Self.OnChat -= new ChatCallback(OnChatEvent);
                         break;
