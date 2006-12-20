@@ -49,14 +49,9 @@
     <Compile Include="ghetto.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="libsecondlife, Version=0.0.6.0, Culture=neutral, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.XML" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\libsecondlife\libsecondlife-cs\libsecondlife.csproj">
-      <Project>{D9CDEDFB-8169-4B03-B57F-0DF638F044EC}</Project>
-      <Name>libsecondlife</Name>
-    </ProjectReference>
   </ItemGroup>
 </Project>
