@@ -52,6 +52,7 @@ namespace ghetto
         public string password;
         public string passPhrase;
         public LLUUID masterID;
+        bool quiet;
         LLUUID masterIMSessionID;
         string followName;
         int currentBalance;
@@ -88,7 +89,7 @@ namespace ghetto
 
 
         //GHETTOSL VOID #######################################################
-        public GhettoSL(string first, string last, string pass, string phrase, LLUUID master, bool quiet,string scriptFile)
+        public GhettoSL(string first, string last, string pass, string phrase, LLUUID master, bool quietMode,string scriptFile)
         {
             //RotBetween Test
             //LLVector3 a = new LLVector3(1, 0, 0);
@@ -108,6 +109,7 @@ namespace ghetto
             password = pass;
             passPhrase = phrase;
             masterID = master;
+            quiet = quietMode;
             avatars = new Dictionary<uint, Avatar>();
             Friends = new Dictionary<LLUUID, Avatar>();
             prims = new Dictionary<uint, PrimObject>();
