@@ -87,7 +87,7 @@ namespace ghetto
         //END OF MAIN VOID ####################################################
 
 
-        //GHETTOSL VOID ######################################################
+        //GHETTOSL VOID #######################################################
         public GhettoSL(string first, string last, string pass, string phrase, LLUUID master, bool quiet,string scriptFile)
         {
             //RotBetween Test
@@ -98,7 +98,7 @@ namespace ghetto
             //return;
 
             Random random = new Random();
-            IntroArt(random.Next(1, 2));
+            IntroArt(random.Next(1, 3));
             
             platform = System.Convert.ToString(Environment.OSVersion.Platform);
             Console.WriteLine("Running on platform " + platform);

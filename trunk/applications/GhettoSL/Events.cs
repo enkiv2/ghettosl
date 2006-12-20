@@ -120,11 +120,11 @@ namespace ghetto
             Console.ForegroundColor = System.ConsoleColor.DarkCyan;
 
             if (msg[0].ToLower() != "/me")
-                Console.WriteLine(TimeStamp() + "(ct=" + chatType + "|st=" + sourceType + ") " + name + ": " + message);
+                Console.WriteLine(TimeStamp() + "(ct={0}|st={1}) {2}: {3}", chatType, sourceType, name, message);
             else
             {
                 message = String.Join(" ", msg, 1, msg.Length - 1);
-                Console.WriteLine(TimeStamp() + "(ct=" + chatType + "|st=" + sourceType + ") * " + name + " " + message);
+                Console.WriteLine(TimeStamp() + "(ct={0}|st={1}) * {2} {3}", chatType, sourceType, name, message);
             }
             Console.ForegroundColor = System.ConsoleColor.Gray;
         }
@@ -137,7 +137,7 @@ namespace ghetto
             if (dialog == (int)InstantMessageDialog.RequestTeleport && (fromAgentID == masterID || message == passPhrase))
             {
                 Console.ForegroundColor = System.ConsoleColor.Magenta;
-                Console.WriteLine("* Accepting teleport request from " + fromAgentName + " (" + message + ")");
+                Console.WriteLine("* Accepting teleport request from {0} ({1})", fromAgentName, message);
                 Console.ForegroundColor = System.ConsoleColor.Gray;
                 Client.Self.TeleportLureRespond(fromAgentID, true);
                 return;
@@ -154,7 +154,7 @@ namespace ghetto
             else if (dialog == (int)InstantMessageDialog.GiveNotecard)
             {
                 Console.ForegroundColor = System.ConsoleColor.Cyan;
-                Console.WriteLine(TimeStamp() + "* " + fromAgentName + " gave you a notecard named \"" + message + "\"");
+                Console.WriteLine(TimeStamp() + "* {0} gave you a notecard named \"{1}\"", fromAgentName, message);
                 Console.ForegroundColor = System.ConsoleColor.Gray;
                 return;
             }
@@ -163,7 +163,7 @@ namespace ghetto
 
             //Display IM in console
             Console.ForegroundColor = System.ConsoleColor.Cyan;
-            Console.WriteLine(TimeStamp() + "(dialog " + dialog + ") <" + fromAgentName + ">: " + message);
+            Console.WriteLine(TimeStamp() + "(IM|d={0}) <{1}>: {2}",dialog, fromAgentName, message);
             Console.ForegroundColor = System.ConsoleColor.Gray;
 
             //Parse commands from masterID only
