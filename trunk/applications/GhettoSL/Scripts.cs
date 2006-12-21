@@ -100,7 +100,16 @@ namespace ghetto
                 bool fail = false; //FIXME - works, but can this go inside the "if" condition?
                 if (cmd[0] == "if")
                 {
-                    switch (cmd[1])
+
+                    bool not; //set to true if NOT is used
+                    if (cmd[1] == "not") not = true;
+                    else not = false;
+
+                    string condition;
+                    if (not) condition = cmd[2];
+                    else condition = cmd[1];
+
+                    switch (condition)
                     {
                         case "standing":
                             {
@@ -118,11 +127,20 @@ namespace ghetto
                                 break;
                             }
                     }
-                    //strip conditional statement from command array
-                    //string[] temp = new string[cmd.Length - 2];
-                    //for (int t = 2, s = 0; t < cmd.Length; t++, s++) temp[s] = cmd[t];
-                    //cmd = temp;
-                    Array.Copy(cmd, 2, cmd, 0, cmd.Length - 2); //More efficient
+
+                    int preArgs;
+
+                    if (not)
+                    {
+                        preArgs = 3;
+                        fail = !fail;
+                    }
+                    else
+                    {
+                        preArgs = 2;
+                    }
+                    Array.Copy(cmd, preArgs, cmd, 0, cmd.Length - preArgs);
+                    Array.Resize(ref cmd, cmd.Length - preArgs);
 
                 }
 
@@ -150,8 +168,8 @@ namespace ghetto
                             continue;
                         }
                 }
-                Console.WriteLine("* SCRIPTED COMMAND: " + script[i]);
-                ParseCommand(true, "/" + script[i], "", new LLUUID(), new LLUUID());
+                Console.WriteLine("* SCRIPTED COMMAND (" + cmd[0] + "): " + script[i]);
+                ParseCommand(true, "/" + String.Join(" ", cmd), "", new LLUUID(), new LLUUID());
             }
         }
 
