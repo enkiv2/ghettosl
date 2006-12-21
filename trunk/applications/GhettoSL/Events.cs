@@ -112,7 +112,7 @@ namespace ghetto
         
         void OnChatEvent(string message, byte audible, byte chatType, byte sourceType, string name, LLUUID fromAgentID, LLUUID ownerID, LLVector3 position)
         {
-            if (chatType > 3 || audible < 1) return;
+            if (quiet || chatType > 3 || audible < 1) return;
             char[] splitChar = { ' ' };
             string[] msg = message.Split(splitChar);
 
@@ -133,7 +133,7 @@ namespace ghetto
 
         void OnInstantMessageEvent(LLUUID fromAgentID, string fromAgentName, LLUUID toAgentID, uint parentEstateID, LLUUID regionID, LLVector3 position, byte dialog, bool groupIM, LLUUID imSessionID, DateTime timestamp, string message, byte offline, byte[] binaryBucket)
         {
-            //Teleport requests (dialog set to 22)
+            //Teleport request
             if (dialog == (int)InstantMessageDialog.RequestTeleport && (fromAgentID == masterID || message == passPhrase))
             {
                 Console.ForegroundColor = System.ConsoleColor.Magenta;
@@ -150,7 +150,7 @@ namespace ghetto
                 Console.ForegroundColor = System.ConsoleColor.Gray;
                 return;
             }
-            //Receive object
+            //Receive notecard
             else if (dialog == (int)InstantMessageDialog.GiveNotecard)
             {
                 Console.ForegroundColor = System.ConsoleColor.Cyan;

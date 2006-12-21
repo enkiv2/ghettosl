@@ -38,6 +38,11 @@ namespace ghetto
     partial class GhettoSL
     {
 
+        string[] script = { };
+        int scriptStep;
+        uint scriptTime;
+        System.Timers.Timer scriptWait;
+
         bool LoadScript(string scriptFile)
         {
             if (!File.Exists(scriptFile))
@@ -45,7 +50,6 @@ namespace ghetto
                 Console.WriteLine("File not found: " + scriptFile);
                 return false;
             }
-            string[] script = { };
             string input;
             int error = 0;
             StreamReader read = File.OpenText(scriptFile);
@@ -80,21 +84,30 @@ namespace ghetto
             else
             {
                 Console.WriteLine("* Running script \"{0}\"", scriptFile);
-                RunScript(script);
+
+                scriptStep = 0;
+
+                scriptWait = new System.Timers.Timer();
+                scriptWait.AutoReset = false;
+                scriptWait.Elapsed += new System.Timers.ElapsedEventHandler(ScriptWaitEvent);
+
+                while(ParseScriptLine(script,scriptStep)) scriptStep++;
+
                 return true;
             }
         }
 
-
-        void RunScript(string[] script)
+        void ScriptWaitEvent(object target, System.Timers.ElapsedEventArgs eventArgs)
         {
-            
-            for (int i = 0; i < script.Length; i++)
-            {
+            do scriptStep++;
+            while (ParseScriptLine(script, scriptStep));
+        }
 
+        bool ParseScriptLine(string[] script, int line)
+        {
                 //split command string into array
                 char[] splitChar = { ' ' };
-                string[] cmd = script[i].Split(splitChar);
+                string[] cmd = script[line].Split(splitChar);
 
                 int preArgs = 0; //number of arguments preceding actual command
 
@@ -128,13 +141,13 @@ namespace ghetto
 
                                 if (cmd.Length < preArgs + 2)
                                 {
-                                    Console.WriteLine("* Script error in line " + i + ": Should be IF ELAPSED 10 COMMAND for 10 seconds since SETTIME command. (time or command missing?)");
-                                    return;
+                                    Console.WriteLine("* Script error in line " + line + ": Should be IF ELAPSED 10 COMMAND for 10 seconds since SETTIME command. (time or command missing?)");
+                                    return false;
                                 }
                                 else if (int.TryParse(cmd[preArgs], out waitTime) == false)
                                 {
-                                    Console.WriteLine("* Script error in line " + i + ": Should be IF ELAPSED 10 COMMAND for 10 seconds since SETTIME command. (invalid time?)");
-                                    return;
+                                    Console.WriteLine("* Script error in line " + line + ": Should be IF ELAPSED 10 COMMAND for 10 seconds since SETTIME command. (invalid time?)");
+                                    return false;
                                 }
                                 else
                                 {
@@ -162,11 +175,11 @@ namespace ghetto
                         case "region":
                             {
                                 char[] splitQuotes = { '"' };
-                                string[] sq = script[i].ToLower().Split(splitQuotes);
+                                string[] sq = script[line].ToLower().Split(splitQuotes);
                                 if (sq.Length < 3)
                                 {
-                                    Console.WriteLine("* Script error in line "+i+": Should be IF REGION \"Simulator Name\" COMMAND statement (missing quotes?)");
-                                    return;
+                                    Console.WriteLine("* Script error in line "+line+": Should be IF REGION \"Simulator Name\" COMMAND statement (missing quotes?)");
+                                    return false;
                                 }
                                 else
                                 {
@@ -189,7 +202,7 @@ namespace ghetto
 
                 //if condition failed, skip to next loop iteration
                 //FIXME - works, but can this go inside the "if" condition?
-                if (fail) continue;
+                if (fail) return true;
                 
                 //process command
                 switch (cmd[0])
@@ -197,30 +210,35 @@ namespace ghetto
                     case "settime":
                         {
                             scriptTime = Helpers.GetUnixTime();
-                            continue;
+                            return true;
                         }
                     case "wait":
                         {
                             Console.WriteLine("* Sleeping {0} seconds...", cmd[1]);
-                            Thread.Sleep(int.Parse(cmd[1]) * 1000);
-                            continue;
+                            scriptWait.Interval = int.Parse(cmd[1]) * 1000;
+                            scriptWait.Enabled = true;
+                            return false;
                         }
                     case "goto":
                         {
                             int findLabel = Array.IndexOf(script, "label " + cmd[1]);
-                            if (findLabel > -1) i = findLabel;
-                            else Console.WriteLine("* Label \"{0}\" not found on line {1}", cmd[1], i + 1);
-                            continue;
+                            if (findLabel > -1) scriptStep = findLabel - 1;
+                            else
+                            {
+                                Console.WriteLine("* Script error: Label \"{0}\" not found on line {1}", cmd[1], line + 1);
+                                return false;
+                            }
+                            return true;
                         }
                     case "label":
                         {
-                            continue;
+                            return true;
                         }
                 }
-                Console.WriteLine("* SCRIPTED COMMAND (" + cmd[0] + "): " + script[i]);
+                Console.WriteLine("* SCRIPTED COMMAND (" + cmd[0] + "): " + script[line]);
                 ParseCommand(true, "/" + String.Join(" ", cmd), "", new LLUUID(), new LLUUID());
+                return true;
             }
-        }
 
     }
 }
