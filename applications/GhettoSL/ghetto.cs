@@ -60,7 +60,6 @@ namespace ghetto
         int regionX;
         int regionY;
         string campChairTextMatch;
-        uint scriptTime;
 
         //END OF GLOBAL VARIABLES #############################################
 
