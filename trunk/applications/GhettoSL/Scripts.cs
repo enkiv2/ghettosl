@@ -95,12 +95,13 @@ namespace ghetto
                 char[] splitChar = { ' ' };
                 string[] cmd = script[i].Split(splitChar);
 
+                int preArgs = 0; //number of arguments preceding actual command
 
                 //check conditional statement
                 bool fail = false; //FIXME - works, but can this go inside the "if" condition?
                 if (cmd[0] == "if")
                 {
-
+                    preArgs = 2; //"if blah" = 2 words
                     bool not; //set to true if NOT is used
                     if (cmd[1] == "not") not = true;
                     else not = false;
@@ -126,19 +127,32 @@ namespace ghetto
                                 if (!Client.Self.Status.Controls.Fly) fail = true;
                                 break;
                             }
+                        case "region":
+                            {
+                                char[] splitQuotes = { '"' };
+                                string[] sq = script[i].ToLower().Split(splitQuotes);
+                                if (sq.Length < 3)
+                                {
+                                    Console.WriteLine("* SCRIPT ERROR (MISSING QUOTES?)");
+                                    continue;
+                                }
+                                else
+                                {
+                                    string testRegion = sq[1];
+                                    char[] splitSpaces = { ' ' };
+                                    string[] regionNameParts = testRegion.Split(splitSpaces);
+                                    preArgs += regionNameParts.Length; //include words in region name as preArgs
+                                    if (testRegion != Client.Network.CurrentSim.Region.Name.ToLower()) fail = true;
+                                }
+                                break;
+                            }
                     }
-
-                    int preArgs;
 
                     if (not)
                     {
-                        preArgs = 3;
-                        fail = !fail;
-                    }
-                    else
-                    {
-                        preArgs = 2;
-                    }
+                        fail = !fail; //swap fail value
+                        preArgs += 1; //include the word NOT in preArgs
+                     }
                     Array.Copy(cmd, preArgs, cmd, 0, cmd.Length - preArgs);
                     Array.Resize(ref cmd, cmd.Length - preArgs);
 
