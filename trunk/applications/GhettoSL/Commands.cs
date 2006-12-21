@@ -484,11 +484,13 @@ namespace ghetto
                     {
                         if (msg.Length < 2) response = "Usage: /updates <on|off>";
                         else if (details == "on") {
+                            sendUpdates = true;
                             Client.Self.Status.UpdateTimer.Start();
                             response = "Update timer ON";
                         }
                         else if (details == "off")
                         {
+                            sendUpdates = false;
                             Client.Self.Status.UpdateTimer.Stop();
                             response = "Update timer OFF";
                         }
@@ -514,16 +516,26 @@ namespace ghetto
                         else
                         {
                             HeaderWho();
+                            string spaces;
                             foreach (Avatar a in avatars.Values)
                             {
-                                string spaces = "";
-                                for (int sc = a.Name.Length; sc < 18; sc++) spaces += " ";
+                                spaces = ""; for (int sc = a.Name.Length; sc < 19; sc++) spaces += " ";
                                 Console.ForegroundColor = ConsoleColor.White;
                                 Console.Write(" "+a.Name + spaces);
+                                
+                                string dist = "(" + (int)Helpers.VecDist(Client.Self.Position, a.Position) + "m)";
+                                spaces = ""; for (int sc = dist.Length; sc < 6; sc++) spaces += " ";
                                 Console.ForegroundColor = ConsoleColor.Gray;
-                                Console.Write(" (" + (int)Helpers.VecDist(Client.Self.Position, a.Position) + "m) ");
+                                Console.Write(" " + dist + spaces);
+
+                                
+                                string pos = " <" + (int)a.Position.X + "," + (int)a.Position.Y +"," + (int)a.Position.Z+">";
+                                spaces = ""; for (int sc = pos.Length; sc < 14; sc++) spaces += " ";
+                                Console.ForegroundColor = ConsoleColor.DarkCyan;
+                                Console.Write(" " + pos + spaces);
+
                                 Console.ForegroundColor = ConsoleColor.DarkGray;
-                                Console.Write(a.ID + "\r\n");
+                                Console.Write(" " + a.ID + "\r\n");
                             }
                             Footer();
                         }
