@@ -181,21 +181,24 @@ namespace ghetto
         {
             Console.ForegroundColor = System.ConsoleColor.Gray;
             Console.BackgroundColor = System.ConsoleColor.DarkBlue;
-            if (online) Console.WriteLine(" {0} is online ", friendID);
-            else Console.WriteLine(" {0} is offline ", friendID);
+            if (online) Console.WriteLine(" {0} is online ({1}) ", friendID, online);
+            else Console.WriteLine(" {0} is offline ({1}) ", friendID, online);
             Console.BackgroundColor = System.ConsoleColor.Black;
             
             //FIXME!!!
-            //Client.Avatars.BeginGetAvatarName(friendID, new AvatarManager.AgentNamesCallback(AgentNamesHandler));
+            Client.Avatars.BeginGetAvatarName(friendID, new AvatarManager.AgentNamesCallback(AgentNamesHandler));
         }
+
         void AgentNamesHandler(Dictionary<LLUUID, string> agentNames)
         {
-            foreach (KeyValuePair<LLUUID, string> agent in agentNames)
+         lock(Friends)
             {
+                foreach (KeyValuePair<LLUUID, string> agent in agentNames)
+                {
                 //FIXME!!!
-                //Friends[agent.Key].Name = agent.Value;
-                //Friends[agent.Key].ID = agent.Key;
-                Console.WriteLine("agent: {0} {1}", agent.Key, agent.Value);
+                    //Friends[agent.Key] = agent.Value;
+                    Console.WriteLine("AgentNames: key={0}, name={1}", agent.Key, agent.Value);
+                }
             }
         }
 
@@ -233,9 +236,10 @@ namespace ghetto
 
         void OnTeleportFinish(Packet packet, Simulator simulator)
         {
-
+            Console.WriteLine("* FINISHED TELEPORT TO REGION AT " + regionX + ", " + regionY);
             TeleportFinishPacket reply = (TeleportFinishPacket)packet;
-            Console.WriteLine("* FINISHED TELEPORT TO REGION " + regionX + "," + regionY);
+            regionX = (int)(reply.Info.RegionHandle >> 32);
+            regionY = (int)(reply.Info.RegionHandle & 0xFFFFFFFF);
             if (reply.Info.AgentID != Client.Network.AgentID) return;
             if (lastAppearance.AgentData.SerialNum > 0) Client.Network.SendPacket(lastAppearance);
             Client.Self.Status.SendUpdate();
