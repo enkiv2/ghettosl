@@ -49,7 +49,10 @@
     <Compile Include="ghetto.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="libsecondlife, Version=0.0.6.0, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="libsecondlife, Version=0.0.6.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\libsecondlife\bin\libsecondlife.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.XML" />

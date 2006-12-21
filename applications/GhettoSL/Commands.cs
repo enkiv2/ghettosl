@@ -339,9 +339,8 @@ namespace ghetto
                 case "relog":
                     {
                         response = "Relogging...";
+                        logout = false;
                         Client.Network.Logout();
-                        Thread.Sleep(3000);
-                        while (!Login()) Thread.Sleep(5000);
                         break;
                     }
                 case "ride":
