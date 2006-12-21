@@ -54,7 +54,7 @@ namespace ghetto
                 char[] splitChar = { ' ' };
                 string[] args = input.ToLower().Split(splitChar);
                 string[] commandsWithArgs = { "camp", "go", "goto", "if", "label", "pay", "payme", "say", "shout", "sit", "teleport", "touch", "touchid", "updates", "wait", "whisper" };
-                string[] commandsWithoutArgs = { "fly", "land", "quit", "relog", "run", "sitg", "stand", "walk" };
+                string[] commandsWithoutArgs = { "fly", "land", "quit", "relog", "run", "settime", "sitg", "stand", "walk" };
                 if (Array.IndexOf(commandsWithArgs, args[0]) > -1 && args.Length < 2)
                 {
                     Console.WriteLine("Missing argument(s) for command \"{0}\" on line {1} of {2}", args[0], i + 1, scriptFile);
@@ -88,6 +88,7 @@ namespace ghetto
 
         void RunScript(string[] script)
         {
+            
             for (int i = 0; i < script.Length; i++)
             {
 
@@ -98,13 +99,22 @@ namespace ghetto
                 int preArgs = 0; //number of arguments preceding actual command
 
                 //check conditional statement
-                bool fail = false; //FIXME - works, but can this go inside the "if" condition?
+                //FIXME - works, but can this go inside the "if" condition?
+                bool fail = false;
+
                 if (cmd[0] == "if")
                 {
-                    preArgs = 2; //"if blah" = 2 words
                     bool not; //set to true if NOT is used
-                    if (cmd[1] == "not") not = true;
-                    else not = false;
+                    if (cmd[1] == "not")
+                    {
+                        not = true;
+                        preArgs = 3; //"if not blah" = at least 3 words
+                    }
+                    else
+                    {
+                        not = false;
+                        preArgs = 2; //"if blah" = at least 2 words
+                    }
 
                     string condition;
                     if (not) condition = cmd[2];
@@ -112,6 +122,28 @@ namespace ghetto
 
                     switch (condition)
                     {
+                        case "elapsed":
+                            {
+                                int waitTime;
+
+                                if (cmd.Length < preArgs + 2)
+                                {
+                                    Console.WriteLine("* Script error in line " + i + ": Should be IF ELAPSED 10 COMMAND for 10 seconds since SETTIME command. (time or command missing?)");
+                                    return;
+                                }
+                                else if (int.TryParse(cmd[preArgs], out waitTime) == false)
+                                {
+                                    Console.WriteLine("* Script error in line " + i + ": Should be IF ELAPSED 10 COMMAND for 10 seconds since SETTIME command. (invalid time?)");
+                                    return;
+                                }
+                                else
+                                {
+                                    uint elapsed = Helpers.GetUnixTime() - scriptTime;
+                                    if (elapsed < waitTime) fail = true;
+                                }
+                                preArgs++; //account for extra preArg (the number of seconds)
+                                break;
+                            }
                         case "standing":
                             {
                                 if (Client.Self.SittingOn > 0 || Client.Self.Status.Controls.Fly) fail = true;
@@ -133,37 +165,40 @@ namespace ghetto
                                 string[] sq = script[i].ToLower().Split(splitQuotes);
                                 if (sq.Length < 3)
                                 {
-                                    Console.WriteLine("* SCRIPT ERROR (MISSING QUOTES?)");
-                                    continue;
+                                    Console.WriteLine("* Script error in line "+i+": Should be IF REGION \"Simulator Name\" COMMAND statement (missing quotes?)");
+                                    return;
                                 }
                                 else
                                 {
                                     string testRegion = sq[1];
                                     char[] splitSpaces = { ' ' };
-                                    string[] regionNameParts = testRegion.Split(splitSpaces);
-                                    preArgs += regionNameParts.Length; //include words in region name as preArgs
+                                    string[] regionNameWords = testRegion.Split(splitSpaces);
+                                    preArgs += regionNameWords.Length; //add number of words to preArgs count
                                     if (testRegion != Client.Network.CurrentSim.Region.Name.ToLower()) fail = true;
                                 }
                                 break;
                             }
                     }
 
-                    if (not)
-                    {
-                        fail = !fail; //swap fail value
-                        preArgs += 1; //include the word NOT in preArgs
-                     }
+                    if (not) fail = !fail; //swap fail value
+                        
                     Array.Copy(cmd, preArgs, cmd, 0, cmd.Length - preArgs);
                     Array.Resize(ref cmd, cmd.Length - preArgs);
 
                 }
 
-                //if condition failed, skip to next loop iteration - FIXME same as above
+                //if condition failed, skip to next loop iteration
+                //FIXME - works, but can this go inside the "if" condition?
                 if (fail) continue;
                 
                 //process command
                 switch (cmd[0])
                 {
+                    case "settime":
+                        {
+                            scriptTime = Helpers.GetUnixTime();
+                            continue;
+                        }
                     case "wait":
                         {
                             Console.WriteLine("* Sleeping {0} seconds...", cmd[1]);
