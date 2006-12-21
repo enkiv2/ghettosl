@@ -361,7 +361,25 @@ namespace ghetto
                     }
                 case "script":
                     {
-                        if (msg.Length > 0) LoadScript(msg[1] + ".script");
+                        if (msg.Length > 1) LoadScript(msg[1] + ".script");
+                        else
+                        {
+                            if (script.Length == 0) response = "No script loaded";
+                            else
+                            {
+                                for (int lnum = 0; lnum < script.Length; lnum++)
+                                {
+                                    string lstring = ""+(lnum + 1);
+                                    while (lstring.Length < 3) lstring += " ";
+                                    Console.ForegroundColor = System.ConsoleColor.Gray;
+                                    Console.Write("{0}: ", lstring);
+                                    if (lnum < scriptStep) Console.ForegroundColor = System.ConsoleColor.DarkCyan;
+                                    else if (lnum > scriptStep) Console.ForegroundColor = System.ConsoleColor.Cyan;
+                                    else Console.ForegroundColor = System.ConsoleColor.White;
+                                    Console.WriteLine(script[lnum]);                                    
+                                }
+                            }
+                        }
                         break;
                     }
                 case "shout":
