@@ -71,7 +71,7 @@ namespace ghetto
 
             if (File.Exists("default.appearance")) LoadAppearance("default.appearance");
 
-            Client.Self.Status.UpdateTimer.Start();
+            if (sendUpdates) Client.Self.Status.UpdateTimer.Start();
 
             Client.Grid.AddEstateSims();
 

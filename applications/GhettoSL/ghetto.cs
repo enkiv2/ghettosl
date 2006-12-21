@@ -53,6 +53,7 @@ namespace ghetto
         public string passPhrase;
         public LLUUID masterID;
         bool quiet;
+        bool sendUpdates;
         LLUUID masterIMSessionID;
         string followName;
         int currentBalance;
@@ -111,6 +112,7 @@ namespace ghetto
             passPhrase = phrase;
             masterID = master;
             quiet = quietMode;
+            sendUpdates = true;
             avatars = new Dictionary<uint, Avatar>();
             Friends = new Dictionary<LLUUID, Avatar>();
             prims = new Dictionary<uint, PrimObject>();
