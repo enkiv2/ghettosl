@@ -118,6 +118,7 @@ namespace ghetto
             appearances = new Dictionary<LLUUID, AvatarAppearancePacket>();
             Stalked = new Dictionary<LLUUID, Location>();
             imWindows = new Dictionary<uint, Avatar>();
+            scriptEvents = new Dictionary<int, Event>();
 
             Client.Debug = false;
 
@@ -132,7 +133,7 @@ namespace ghetto
             //Add callbacks for events
             InitializeCallbacks();
            
-            if (!quiet) Client.Self.OnChat += new ChatCallback(OnChatEvent);
+            if (!quiet) Client.Self.OnChat += new MainAvatar.ChatCallback(OnChatEvent);
 
             //Attempt to login, and exit if failed
             while (!Login()) Thread.Sleep(5000);

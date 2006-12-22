@@ -101,7 +101,8 @@ namespace ghetto
                     if (av.Name.ToLower() == findName)
                     {
                         CopyAppearance(av);
-                        SaveAppearance("default.appearance", lastAppearance);
+                        string appearanceFile = Client.Self.FirstName + " " + Client.Self.LastName + ".appearance";
+                        SaveAppearance(appearanceFile, lastAppearance);
                         return true;
                     }
                 }

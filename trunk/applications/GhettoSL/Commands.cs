@@ -270,7 +270,7 @@ namespace ghetto
                 case "listen":
                     {
                         quiet = false;
-                        Client.Self.OnChat += new ChatCallback(OnChatEvent);
+                        Client.Self.OnChat += new MainAvatar.ChatCallback(OnChatEvent);
                         response = "Displaying object/avatar chat.";
                         break;
                     }
@@ -301,7 +301,7 @@ namespace ghetto
                     {
                         quiet = true;
                         response = "Stopped listening to chat.";
-                        Client.Self.OnChat -= new ChatCallback(OnChatEvent);
+                        Client.Self.OnChat -= new MainAvatar.ChatCallback(OnChatEvent);
                         break;
                     }
                 case "re":
@@ -329,7 +329,7 @@ namespace ghetto
                                 if (index < 0 || index >= imWindows.Count) response = "Invalid IM window number";
                                 else
                                 {
-                                    Client.Self.InstantMessage(imWindows[index].ID, details, imWindows[index].PartnerID);
+                                    Client.Self.InstantMessage(imWindows[index].ID, details, imWindows[index].ProfileProperties.Partner);
                                     response = "Message sent.";
                                 }
                             }
@@ -544,20 +544,35 @@ namespace ghetto
                             {
                                 foreach (Avatar a in avatars.Values)
                                 {
+
+                                    LLVector3 position;
+                                    string pos;
+
+                                    if (a.SittingOn < 1)
+                                    {
+                                        position = a.Position;
+                                        pos = " <" + (int)a.Position.X + "," + (int)a.Position.Y + "," + (int)a.Position.Z + ">";
+                                    }
+                                    else if (prims.ContainsKey(a.SittingOn))
+                                    {
+                                        position = prims[a.SittingOn].Position;
+                                        pos = " <" + (int)prims[a.SittingOn].Position.X + "," + (int)prims[a.SittingOn].Position.Y + "," + (int)prims[a.SittingOn].Position.Z + ">";
+                                    }
+                                    else
+                                    {
+                                        position = new LLVector3(0f,0f,0f);
+                                        pos = " <???>";
+                                    }
+
                                     spaces = ""; for (int sc = a.Name.Length; sc < 20; sc++) spaces += " ";
                                     Console.ForegroundColor = ConsoleColor.White;
                                     Console.Write(" " + a.Name + spaces);
 
-                                    string dist = "(" + (int)Helpers.VecDist(Client.Self.Position, a.Position) + "m)";
+                                    string dist = "(" + (int)Helpers.VecDist(Client.Self.Position, position) + "m)";
                                     spaces = ""; for (int sc = dist.Length; sc < 6; sc++) spaces += " ";
                                     Console.ForegroundColor = ConsoleColor.Gray;
                                     Console.Write(" " + dist + spaces);
 
-
-                                    string pos;
-                                    if (a.SittingOn < 1) pos = " <" + (int)a.Position.X + "," + (int)a.Position.Y + "," + (int)a.Position.Z + ">";
-                                    else if (prims.ContainsKey(a.SittingOn)) pos = " <" + (int)prims[a.SittingOn].Position.X + "," + (int)prims[a.SittingOn].Position.Y + "," + (int)prims[a.SittingOn].Position.Z + ">";
-                                    else pos = " <???>";
                                     spaces = ""; for (int sc = pos.Length; sc < 14; sc++) spaces += " ";
                                     Console.ForegroundColor = ConsoleColor.DarkCyan;
                                     Console.Write(" " + pos + spaces);

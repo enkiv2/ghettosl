@@ -66,8 +66,8 @@ namespace ghetto
             Avatar newAvatar = new Avatar();
             newAvatar.ID = fromAgentID;
             newAvatar.Name = fromAgentName;
-            newAvatar.PartnerID = imSessionID; //hack
-            newAvatar.LocalID = (uint)(imWindows.Count + 1); //hack
+            newAvatar.ProfileProperties.Partner = imSessionID; //hack - imSessionID, not PartnerID
+            newAvatar.LocalID = (uint)(imWindows.Count + 1); //hack - windowID, not LocalID
             if (!hasWindow) imWindows.Add((uint)imWindows.Count, newAvatar);
         }
 
