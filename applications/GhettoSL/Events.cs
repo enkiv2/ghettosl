@@ -57,8 +57,7 @@ namespace ghetto
             Client.Objects.OnObjectKilled += new ObjectManager.KillObjectCallback(OnObjectKilledEvent);
             Client.Objects.OnPrimMoved += new ObjectManager.PrimMovedCallback(OnPrimMovedEvent);
             Client.Avatars.OnFriendNotification += new AvatarManager.FriendNotificationCallback(OnFriendNotificationEvent);
-            Client.Self.OnInstantMessage += new InstantMessageCallback(OnInstantMessageEvent);
-            Client.Self.OnTeleport += new TeleportCallback(OnTeleportEvent);
+            Client.Self.OnInstantMessage += new MainAvatar.InstantMessageCallback(OnInstantMessageEvent);
         }
 
         
@@ -69,7 +68,8 @@ namespace ghetto
             Console.WriteLine("* CONNECTED");
             Console.ForegroundColor = ConsoleColor.Gray;
 
-            if (File.Exists("default.appearance")) LoadAppearance("default.appearance");
+            string appearanceFile = Client.Self.FirstName + " " + Client.Self.LastName + ".appearance";
+            if (File.Exists(appearanceFile)) LoadAppearance(appearanceFile);
 
             if (sendUpdates) Client.Self.Status.UpdateTimer.Start();
 
@@ -91,7 +91,7 @@ namespace ghetto
             Console.WriteLine("* DISCONNECTED FROM SIM: " + type.ToString());
             Console.ForegroundColor = System.ConsoleColor.Gray;
             //FIXME - IPEndPoint is not a valid comparison and causes an error
-            if (logout || sim.IPEndPoint != Client.Network.CurrentSim.IPEndPoint) return;
+            if (logout || sim.Region.Handle != Client.Network.CurrentSim.Region.Handle) return;
             Client.Network.Logout();
             do Thread.Sleep(5000);
             while (!Login());
@@ -151,7 +151,7 @@ namespace ghetto
             }
 
             //Teleport request
-            if (dialog == (int)InstantMessageDialog.RequestTeleport && (fromAgentID == masterID || message == passPhrase))
+            if (dialog == (int)MainAvatar.InstantMessageDialog.RequestTeleport && (fromAgentID == masterID || message == passPhrase))
             {
                 Console.ForegroundColor = System.ConsoleColor.Magenta;
                 Console.WriteLine("* Accepting teleport request from {0} ({1})", fromAgentName, message);
@@ -160,7 +160,7 @@ namespace ghetto
                 return;
             }
             //Receive object
-            else if (dialog == (int)InstantMessageDialog.GiveInventory)
+            else if (dialog == (int)MainAvatar.InstantMessageDialog.GiveInventory)
             {
                 Console.ForegroundColor = System.ConsoleColor.Cyan;
                 Console.WriteLine(TimeStamp() + "* " + fromAgentName + " gave you an object named \"" + message + "\"");
@@ -168,7 +168,7 @@ namespace ghetto
                 return;
             }
             //Receive notecard
-            else if (dialog == (int)InstantMessageDialog.GiveNotecard)
+            else if (dialog == (int)MainAvatar.InstantMessageDialog.GiveNotecard)
             {
                 Console.ForegroundColor = System.ConsoleColor.Cyan;
                 Console.WriteLine(TimeStamp() + "* {0} gave you a notecard named \"{1}\"", fromAgentName, message);
@@ -198,26 +198,35 @@ namespace ghetto
         {
             Console.ForegroundColor = System.ConsoleColor.Gray;
             Console.BackgroundColor = System.ConsoleColor.DarkBlue;
-            if (online) Console.WriteLine(" {0} is online ({1}) ", friendID, online);
-            else Console.WriteLine(" {0} is offline ({1}) ", friendID, online);
+            //string name1 = Client.Avatars.GetAvatarName(friendID);
+            //string name2 = Client.Avatars.GetAvatarName(friendID);
+            //Console.WriteLine(" {0} is online ({1}) ", name1, online);
+            //Console.WriteLine(" {0} is online ({1}) ", name2, online);
+            //if (online) Console.WriteLine(" {0} is online ({1}) ", friendID, online);
+            //else Console.WriteLine(" {0} is offline ({1}) ", friendID, online);
+            UUIDNameRequestPacket key2name = new UUIDNameRequestPacket();
+            UUIDNameRequestPacket.UUIDNameBlockBlock nb = new UUIDNameRequestPacket.UUIDNameBlockBlock();
+            nb.ID = friendID;
+            key2name.UUIDNameBlock[0] = nb;
+            Client.Network.SendPacket(key2name);
             Console.BackgroundColor = System.ConsoleColor.Black;
-            
+
             //FIXME!!!
-            Client.Avatars.BeginGetAvatarName(friendID, new AvatarManager.AgentNamesCallback(AgentNamesHandler));
+            //Client.Avatars.BeginGetAvatarName(friendID, new AvatarManager.AgentNamesCallback(AgentNamesHandler));
         }
 
-        void AgentNamesHandler(Dictionary<LLUUID, string> agentNames)
-        {
-         lock(Friends)
-            {
-                foreach (KeyValuePair<LLUUID, string> agent in agentNames)
-                {
-                //FIXME!!!
-                    //Friends[agent.Key] = agent.Value;
-                    Console.WriteLine("AgentNames: key={0}, name={1}", agent.Key, agent.Value);
-                }
-            }
-        }
+        //void AgentNamesHandler(Dictionary<LLUUID, string> agentNames)
+        //{
+        // lock(Friends)
+        //    {
+        //        foreach (KeyValuePair<LLUUID, string> agent in agentNames)
+        //        {
+        //        //FIXME!!!
+        //            //Friends[agent.Key] = agent.Value;
+        //            Console.WriteLine("AgentNames: key={0}, name={1}", agent.Key, agent.Value);
+        //        }
+        //    }
+        //}
 
 
 
@@ -240,13 +249,6 @@ namespace ghetto
             Console.ForegroundColor = System.ConsoleColor.Green;
             Console.WriteLine(TimeStamp() + "* Balance: L$" + currentBalance);
             Console.ForegroundColor = System.ConsoleColor.Gray;
-        }
-
-
-
-        void OnTeleportEvent(Simulator sim, string message, TeleportStatus status)
-        {
-            Console.WriteLine("* TELEPORT (" + status.ToString() + "): " + message);
         }
 
 
