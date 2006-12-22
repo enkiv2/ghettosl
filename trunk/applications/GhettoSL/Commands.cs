@@ -540,25 +540,31 @@ namespace ghetto
                         {
                             HeaderWho();
                             string spaces;
-                            foreach (Avatar a in avatars.Values)
+                            lock (avatars)
                             {
-                                spaces = ""; for (int sc = a.Name.Length; sc < 19; sc++) spaces += " ";
-                                Console.ForegroundColor = ConsoleColor.White;
-                                Console.Write(" "+a.Name + spaces);
-                                
-                                string dist = "(" + (int)Helpers.VecDist(Client.Self.Position, a.Position) + "m)";
-                                spaces = ""; for (int sc = dist.Length; sc < 6; sc++) spaces += " ";
-                                Console.ForegroundColor = ConsoleColor.Gray;
-                                Console.Write(" " + dist + spaces);
+                                foreach (Avatar a in avatars.Values)
+                                {
+                                    spaces = ""; for (int sc = a.Name.Length; sc < 20; sc++) spaces += " ";
+                                    Console.ForegroundColor = ConsoleColor.White;
+                                    Console.Write(" " + a.Name + spaces);
 
-                                
-                                string pos = " <" + (int)a.Position.X + "," + (int)a.Position.Y +"," + (int)a.Position.Z+">";
-                                spaces = ""; for (int sc = pos.Length; sc < 14; sc++) spaces += " ";
-                                Console.ForegroundColor = ConsoleColor.DarkCyan;
-                                Console.Write(" " + pos + spaces);
+                                    string dist = "(" + (int)Helpers.VecDist(Client.Self.Position, a.Position) + "m)";
+                                    spaces = ""; for (int sc = dist.Length; sc < 6; sc++) spaces += " ";
+                                    Console.ForegroundColor = ConsoleColor.Gray;
+                                    Console.Write(" " + dist + spaces);
 
-                                Console.ForegroundColor = ConsoleColor.DarkGray;
-                                Console.Write(" " + a.ID + "\r\n");
+
+                                    string pos;
+                                    if (a.SittingOn < 1) pos = " <" + (int)a.Position.X + "," + (int)a.Position.Y + "," + (int)a.Position.Z + ">";
+                                    else if (prims.ContainsKey(a.SittingOn)) pos = " <" + (int)prims[a.SittingOn].Position.X + "," + (int)prims[a.SittingOn].Position.Y + "," + (int)prims[a.SittingOn].Position.Z + ">";
+                                    else pos = " <???>";
+                                    spaces = ""; for (int sc = pos.Length; sc < 14; sc++) spaces += " ";
+                                    Console.ForegroundColor = ConsoleColor.DarkCyan;
+                                    Console.Write(" " + pos + spaces);
+
+                                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                                    Console.Write(" " + a.ID + "\r\n");
+                                }
                             }
                             Footer();
                         }
