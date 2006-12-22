@@ -42,6 +42,32 @@ namespace ghetto
         int scriptStep;
         uint scriptTime;
         System.Timers.Timer scriptWait;
+        Dictionary<int, Event> scriptEvents;
+
+
+        public enum EventTypes
+        {
+            Chat = 0,
+            IM = 1
+        }
+
+        public struct Event
+        {
+            /// <summary>
+            /// Event type, enumerated in EventTypes.*
+            /// </summary>
+            public int Type;
+            /// <summary>
+            /// Comparison string used for text-matching events
+            /// </summary>
+            public string CompareString;
+            /// <summary>
+            /// Command to execute on the specified event
+            /// </summary>
+            public string Command;
+        }
+
+
 
         bool LoadScript(string scriptFile)
         {
@@ -57,8 +83,8 @@ namespace ghetto
             {
                 char[] splitChar = { ' ' };
                 string[] args = input.ToLower().Split(splitChar);
-                string[] commandsWithArgs = { "camp", "go", "goto", "if", "label", "pay", "payme", "say", "shout", "sit", "teleport", "touch", "touchid", "updates", "wait", "whisper" };
-                string[] commandsWithoutArgs = { "fly", "land", "quit", "relog", "run", "settime", "sitg", "stand", "walk" };
+                string[] commandsWithArgs = { "camp", "event", "go", "goto", "if", "label", "pay", "payme", "say", "shout", "sit", "teleport", "touch", "touchid", "updates", "wait", "whisper" };
+                string[] commandsWithoutArgs = { "die", "fly", "land", "quit", "relog", "run", "settime", "sitg", "stand", "walk" };
                 if (Array.IndexOf(commandsWithArgs, args[0]) > -1 && args.Length < 2)
                 {
                     Console.WriteLine("Missing argument(s) for command \"{0}\" on line {1} of {2}", args[0], i + 1, scriptFile);
@@ -85,13 +111,14 @@ namespace ghetto
             {
                 Console.WriteLine("* Running script \"{0}\"", scriptFile);
 
+                //initialize script
                 scriptStep = 0;
-
+                scriptEvents = new Dictionary<int, Event>();
                 scriptWait = new System.Timers.Timer();
                 scriptWait.AutoReset = false;
                 scriptWait.Elapsed += new System.Timers.ElapsedEventHandler(ScriptWaitEvent);
-
-                while(ParseScriptLine(script,scriptStep)) scriptStep++;
+                //run until wait or break
+                while (ParseScriptLine(script, scriptStep)) scriptStep++;
 
                 return true;
             }
@@ -103,142 +130,201 @@ namespace ghetto
             while (ParseScriptLine(script, scriptStep));
         }
 
+        /// <summary>
+        /// Return false if there is a script error and the script should stop running
+        /// </summary>
         bool ParseScriptLine(string[] script, int line)
         {
-                //split command string into array
-                char[] splitChar = { ' ' };
-                string[] cmd = script[line].Split(splitChar);
 
-                int preArgs = 0; //number of arguments preceding actual command
+            if (line >= script.Length)
+            {
+                Console.WriteLine("* END OF SCRIPT");
+                return false;
+            }
 
-                //check conditional statement
-                //FIXME - works, but can this go inside the "if" condition?
-                bool fail = false;
+            //split command string into array
+            char[] splitChar = { ' ' };
+            string[] cmd = script[line].Split(splitChar);
 
-                if (cmd[0] == "if")
+            int preArgs = 0; //number of arguments preceding actual command
+
+            //check conditional statement
+            if (cmd[0] == "if")
+            {
+                bool fail = false; //whether or not the condition fails
+                bool not; //set to true if NOT is used
+                if (cmd[1] == "not")
                 {
-                    bool not; //set to true if NOT is used
-                    if (cmd[1] == "not")
-                    {
-                        not = true;
-                        preArgs = 3; //"if not blah" = at least 3 words
-                    }
-                    else
-                    {
-                        not = false;
-                        preArgs = 2; //"if blah" = at least 2 words
-                    }
-
-                    string condition;
-                    if (not) condition = cmd[2];
-                    else condition = cmd[1];
-
-                    switch (condition)
-                    {
-                        case "elapsed":
-                            {
-                                int waitTime;
-
-                                if (cmd.Length < preArgs + 2)
-                                {
-                                    Console.WriteLine("* Script error in line " + line + ": Should be IF ELAPSED 10 COMMAND for 10 seconds since SETTIME command. (time or command missing?)");
-                                    return false;
-                                }
-                                else if (int.TryParse(cmd[preArgs], out waitTime) == false)
-                                {
-                                    Console.WriteLine("* Script error in line " + line + ": Should be IF ELAPSED 10 COMMAND for 10 seconds since SETTIME command. (invalid time?)");
-                                    return false;
-                                }
-                                else
-                                {
-                                    uint elapsed = Helpers.GetUnixTime() - scriptTime;
-                                    if (elapsed < waitTime) fail = true;
-                                }
-                                preArgs++; //account for extra preArg (the number of seconds)
-                                break;
-                            }
-                        case "standing":
-                            {
-                                if (Client.Self.SittingOn > 0 || Client.Self.Status.Controls.Fly) fail = true;
-                                break;
-                            }
-                        case "sitting":
-                            {
-                                if (Client.Self.SittingOn == 0) fail = true;
-                                break;
-                            }
-                        case "flying":
-                            {
-                                if (!Client.Self.Status.Controls.Fly) fail = true;
-                                break;
-                            }
-                        case "region":
-                            {
-                                char[] splitQuotes = { '"' };
-                                string[] sq = script[line].ToLower().Split(splitQuotes);
-                                if (sq.Length < 3)
-                                {
-                                    Console.WriteLine("* Script error in line "+line+": Should be IF REGION \"Simulator Name\" COMMAND statement (missing quotes?)");
-                                    return false;
-                                }
-                                else
-                                {
-                                    string testRegion = sq[1];
-                                    char[] splitSpaces = { ' ' };
-                                    string[] regionNameWords = testRegion.Split(splitSpaces);
-                                    preArgs += regionNameWords.Length; //add number of words to preArgs count
-                                    if (testRegion != Client.Network.CurrentSim.Region.Name.ToLower()) fail = true;
-                                }
-                                break;
-                            }
-                    }
-
-                    if (not) fail = !fail; //swap fail value
-                        
-                    Array.Copy(cmd, preArgs, cmd, 0, cmd.Length - preArgs);
-                    Array.Resize(ref cmd, cmd.Length - preArgs);
-
+                    not = true;
+                    preArgs = 3; //"if not blah" = at least 3 words
+                }
+                else
+                {
+                    not = false;
+                    preArgs = 2; //"if blah" = at least 2 words
                 }
 
-                //if condition failed, skip to next loop iteration
-                //FIXME - works, but can this go inside the "if" condition?
-                if (fail) return true;
-                
-                //process command
-                switch (cmd[0])
+                string condition;
+                if (not) condition = cmd[2];
+                else condition = cmd[1];
+
+                switch (condition)
                 {
-                    case "settime":
+                    case "elapsed":
                         {
-                            scriptTime = Helpers.GetUnixTime();
-                            return true;
-                        }
-                    case "wait":
-                        {
-                            Console.WriteLine("* Sleeping {0} seconds...", cmd[1]);
-                            scriptWait.Interval = int.Parse(cmd[1]) * 1000;
-                            scriptWait.Enabled = true;
-                            return false;
-                        }
-                    case "goto":
-                        {
-                            int findLabel = Array.IndexOf(script, "label " + cmd[1]);
-                            if (findLabel > -1) scriptStep = findLabel - 1;
-                            else
+                            int waitTime;
+
+                            if (cmd.Length < preArgs + 2)
                             {
-                                Console.WriteLine("* Script error: Label \"{0}\" not found on line {1}", cmd[1], line + 1);
+                                Console.WriteLine("* Script error in line " + line + ": Should be IF ELAPSED 10 COMMAND for 10 seconds since SETTIME command. (time or command missing?)");
                                 return false;
                             }
-                            return true;
+                            else if (int.TryParse(cmd[preArgs], out waitTime) == false)
+                            {
+                                Console.WriteLine("* Script error in line " + line + ": Should be IF ELAPSED 10 COMMAND for 10 seconds since SETTIME command. (invalid time?)");
+                                return false;
+                            }
+                            else
+                            {
+                                uint elapsed = Helpers.GetUnixTime() - scriptTime;
+                                if (elapsed < waitTime) fail = true;
+                            }
+                            preArgs++; //account for extra preArg (the number of seconds)
+                            break;
                         }
-                    case "label":
+                    case "standing":
                         {
-                            return true;
+                            if (Client.Self.SittingOn > 0 || Client.Self.Status.Controls.Fly) fail = true;
+                            break;
+                        }
+                    case "sitting":
+                        {
+                            if (Client.Self.SittingOn == 0) fail = true;
+                            break;
+                        }
+                    case "flying":
+                        {
+                            if (!Client.Self.Status.Controls.Fly) fail = true;
+                            break;
+                        }
+                    case "region":
+                        {
+                            char[] splitQuotes = { '"' };
+                            string[] sq = script[line].ToLower().Split(splitQuotes);
+                            if (sq.Length < 3)
+                            {
+                                Console.WriteLine("* Script error in line " + line + ": Should be IF REGION \"Simulator Name\" COMMAND statement (missing quotes?)");
+                                return false;
+                            }
+                            else
+                            {
+                                string testRegion = sq[1];
+                                char[] splitSpaces = { ' ' };
+                                string[] regionNameWords = testRegion.Split(splitSpaces);
+                                preArgs += regionNameWords.Length; //add number of words to preArgs count
+                                if (testRegion != Client.Network.CurrentSim.Region.Name.ToLower()) fail = true;
+                            }
+                            break;
                         }
                 }
-                Console.WriteLine("* SCRIPTED COMMAND (" + cmd[0] + "): " + script[line]);
-                ParseCommand(true, "/" + String.Join(" ", cmd), "", new LLUUID(), new LLUUID());
-                return true;
+
+                if (not) fail = !fail; //swap fail value
+
+                Array.Copy(cmd, preArgs, cmd, 0, cmd.Length - preArgs);
+                Array.Resize(ref cmd, cmd.Length - preArgs);
+                if (fail) return true;
             }
+
+
+
+            //process command
+            switch (cmd[0])
+            {
+                case "settime":
+                    {
+                        scriptTime = Helpers.GetUnixTime();
+                        return true;
+                    }
+                case "wait":
+                    {
+                        Console.WriteLine("* Sleeping {0} seconds...", cmd[1]);
+                        scriptWait.Interval = int.Parse(cmd[1]) * 1000;
+                        scriptWait.Enabled = true;
+                        return false;
+                    }
+                case "goto":
+                    {
+                        int findLabel = Array.IndexOf(script, "label " + cmd[1]);
+                        if (findLabel > -1)
+                        {
+                            scriptStep = findLabel - 1;
+                            Thread.Sleep(100); //imposed 1ms delay to prevent bad scripts from hogging cpu
+                        }
+                        else
+                        {
+                            Console.WriteLine("* Script error: Label \"{0}\" not found on line {1}", cmd[1], line + 1);
+                            return false;
+                        }
+                        return true;
+                    }
+                case "label":
+                    {
+                        return true;
+                    }
+                case "event":
+                    {
+                        //check for bad scripting
+                        int eventID;
+                        if (!int.TryParse(cmd[1], out eventID))
+                        {
+                            Console.WriteLine("* Script error: Invalid event ID on line {0}", line);
+                            return false;
+                        }
+                        if (cmd[2] != "chat" && cmd[2] != "im")
+                        {
+                            Console.WriteLine("* Script error: Invalid event description on line {0} (events supported are CHAT and IM)", line);
+                            return false;
+                        }
+                        char[] splitChr = { '"' };
+                        string[] splitQuotes = script[line].Split(splitChr);
+                        if (splitQuotes.Length < 3)
+                        {
+                            Console.WriteLine("* Script error: Invalid event text on line {0} (missing quotations)", line);
+                            return false;
+                        }
+                        string compareString = splitQuotes[1];
+                        //ok, the script looks good
+
+                        Event newEvent = new Event();
+                        newEvent.CompareString = compareString;
+
+                        if (cmd[2] == "chat")
+                        {
+                            newEvent.Type = (int)EventTypes.Chat;
+                        }
+                        else if (cmd[2] == "im")
+                        {
+                            newEvent.Type = (int)EventTypes.IM;
+                        }
+
+                        char[] splitSp = { ' ' };
+                        string[] splitSpaces = compareString.Split(splitSp);
+                        int start = 3 + splitSpaces.Length;
+                        int len = cmd.Length - start;
+                        string[] command = new string[len];
+                        Array.Copy(cmd, start, command, 0, len);
+                        newEvent.Command = String.Join(" ", command);
+
+                        scriptEvents[eventID] = newEvent;
+
+                        Console.WriteLine("* SCRIPTED EVENT: " + script[line]);
+                        return true;
+                    }
+            }
+            Console.WriteLine("* SCRIPTED COMMAND: " + script[line]);
+            ParseCommand(true, "/" + String.Join(" ", cmd), "", new LLUUID(), new LLUUID());
+            return true;
+        }
 
     }
 }
