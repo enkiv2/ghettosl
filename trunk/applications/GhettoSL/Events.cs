@@ -112,6 +112,14 @@ namespace ghetto
         
         void OnChatEvent(string message, byte audible, byte chatType, byte sourceType, string name, LLUUID fromAgentID, LLUUID ownerID, LLVector3 position)
         {
+            string lowerMessage = message.ToLower();
+            foreach(KeyValuePair<int, Event> pair in scriptEvents)
+            {
+                if (pair.Value.Type == (int)EventTypes.Chat && pair.Value.CompareString.ToLower() == lowerMessage)
+                {
+                    ParseCommand(true, "/" + pair.Value.Command, "", new LLUUID(), new LLUUID());
+                }
+            }
             if (quiet || chatType > 3 || audible < 1) return;
             char[] splitChar = { ' ' };
             string[] msg = message.Split(splitChar);
@@ -133,6 +141,15 @@ namespace ghetto
 
         void OnInstantMessageEvent(LLUUID fromAgentID, string fromAgentName, LLUUID toAgentID, uint parentEstateID, LLUUID regionID, LLVector3 position, byte dialog, bool groupIM, LLUUID imSessionID, DateTime timestamp, string message, byte offline, byte[] binaryBucket)
         {
+            string lowerMessage = message.ToLower();
+            foreach (KeyValuePair<int, Event> pair in scriptEvents)
+            {
+                if (pair.Value.Type == (int)EventTypes.IM && pair.Value.CompareString.ToLower() == lowerMessage)
+                {
+                    ParseCommand(true, "/" + pair.Value.Command, "", new LLUUID(), new LLUUID());
+                }
+            }
+
             //Teleport request
             if (dialog == (int)InstantMessageDialog.RequestTeleport && (fromAgentID == masterID || message == passPhrase))
             {

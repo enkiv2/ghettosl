@@ -192,23 +192,5 @@ namespace ghetto
         }
         //END OF LOGIN ########################################################
 
-        uint FindObjectByText(string textValue)
-        {
-            campChairTextMatch = textValue;
-            uint localID = 0;
-            foreach (PrimObject prim in prims.Values)
-            {
-                int len = campChairTextMatch.Length;
-                string match = prim.Text.Replace("\n", ""); //Strip newlines
-                if (match.Length < len) continue; //Text is too short to be a match
-                else if (match.Substring(0, len).ToLower() == campChairTextMatch)
-                {
-                    localID = prim.LocalID;
-                    break;
-                }
-            }
-            return localID;
-        }
-  
     }
 }

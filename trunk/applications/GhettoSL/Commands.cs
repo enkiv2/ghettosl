@@ -375,9 +375,15 @@ namespace ghetto
                                     Console.Write("{0}: ", lstring);
                                     if (lnum < scriptStep) Console.ForegroundColor = System.ConsoleColor.DarkCyan;
                                     else if (lnum > scriptStep) Console.ForegroundColor = System.ConsoleColor.Cyan;
-                                    else Console.ForegroundColor = System.ConsoleColor.White;
+                                    else
+                                    {
+                                        Console.ForegroundColor = System.ConsoleColor.White;
+                                        //FIXME!!! Display time remaining instead of time elapsed
+                                        //if (scriptWait.Enabled == true) response = "Time remaining at current step: "+(scriptWait.Interval / 1000);
+                                    }
                                     Console.WriteLine(script[lnum]);                                    
                                 }
+                                Console.ForegroundColor = System.ConsoleColor.Gray;
                             }
                         }
                         break;
