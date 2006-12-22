@@ -280,6 +280,14 @@ namespace ghetto
                             Console.WriteLine("* Script error: Invalid event ID on line {0}", line);
                             return false;
                         }
+
+                        if (cmd[2] == "off")
+                        {
+                            scriptEvents.Remove(eventID);
+                            Console.WriteLine("* Removed event "+eventID);
+                            return true;
+                        }
+
                         if (cmd[2] != "chat" && cmd[2] != "im")
                         {
                             Console.WriteLine("* Script error: Invalid event description on line {0} (events supported are CHAT and IM)", line);
