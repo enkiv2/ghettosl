@@ -90,11 +90,11 @@ namespace ghetto
             Console.ForegroundColor = System.ConsoleColor.Red;
             Console.WriteLine("* DISCONNECTED FROM SIM: " + type.ToString());
             Console.ForegroundColor = System.ConsoleColor.Gray;
-            //FIXME - IPEndPoint is not a valid comparison and causes an error
-            if (logout || sim.Region.Handle != Client.Network.CurrentSim.Region.Handle) return;
-            Client.Network.Logout();
-            do Thread.Sleep(5000);
-            while (!Login());
+            //FIXME - reconnect on disconnect
+            //if (logout) return;
+            //Client.Network.Logout();
+            //do Thread.Sleep(5000);
+            //while (!Login());
         }
 
         
@@ -204,11 +204,9 @@ namespace ghetto
             //Console.WriteLine(" {0} is online ({1}) ", name2, online);
             //if (online) Console.WriteLine(" {0} is online ({1}) ", friendID, online);
             //else Console.WriteLine(" {0} is offline ({1}) ", friendID, online);
-            UUIDNameRequestPacket key2name = new UUIDNameRequestPacket();
-            UUIDNameRequestPacket.UUIDNameBlockBlock nb = new UUIDNameRequestPacket.UUIDNameBlockBlock();
-            nb.ID = friendID;
-            key2name.UUIDNameBlock[0] = nb;
-            Client.Network.SendPacket(key2name);
+            //FIXME
+
+
             Console.BackgroundColor = System.ConsoleColor.Black;
 
             //FIXME!!!
