@@ -48,7 +48,9 @@ namespace ghetto
         public enum EventTypes
         {
             Chat = 0,
-            IM = 1
+            IM = 1,
+            GetMoney =  2,
+            GiveMoney = 3
         }
 
         public struct Event
@@ -58,9 +60,13 @@ namespace ghetto
             /// </summary>
             public int Type;
             /// <summary>
-            /// Comparison string used for text-matching events
+            /// Used for text-matching events, or events with messages attached
             /// </summary>
-            public string CompareString;
+            public string Text;
+            /// <summary>
+            /// Used for events which contain a numerical value
+            /// </summary>
+            public int Number;
             /// <summary>
             /// Command to execute on the specified event
             /// </summary>
@@ -247,7 +253,7 @@ namespace ghetto
                     }
                 case "wait":
                     {
-                        Console.WriteLine("* Sleeping {0} seconds...", cmd[1]);
+                        Console.WriteLine(TimeStamp() + "* Sleeping {0} seconds...", cmd[1]);
                         scriptWait.Interval = int.Parse(cmd[1]) * 1000;
                         scriptWait.Enabled = true;
                         return false;
@@ -284,40 +290,45 @@ namespace ghetto
                         if (cmd[2] == "off")
                         {
                             scriptEvents.Remove(eventID);
-                            Console.WriteLine("* Removed event "+eventID);
+                            Console.WriteLine("* Removed event " + eventID);
                             return true;
                         }
 
-                        if (cmd[2] != "chat" && cmd[2] != "im")
+                        Event newEvent = new Event();
+
+                        if (cmd[2] == "chat") newEvent.Type = (int)EventTypes.Chat;
+                        else if (cmd[2] == "im") newEvent.Type = (int)EventTypes.IM;
+                        else if (cmd[2] == "getmoney") newEvent.Type = (int)EventTypes.GetMoney;
+                        else if (cmd[2] == "givemoney") newEvent.Type = (int)EventTypes.GiveMoney;
+                        else
                         {
-                            Console.WriteLine("* Script error: Invalid event description on line {0} (events supported are CHAT and IM)", line);
+                            Console.WriteLine("* Script error: Invalid event description on line {0} (events supported are CHAT, IM, GETMONEY, GIVEMONEY)", line);
                             return false;
                         }
-                        char[] splitChr = { '"' };
-                        string[] splitQuotes = script[line].Split(splitChr);
-                        if (splitQuotes.Length < 3)
+
+                        if (cmd[2] == "chat" || cmd[2] == "im")
                         {
-                            Console.WriteLine("* Script error: Invalid event text on line {0} (missing quotations)", line);
-                            return false;
+                            char[] splitChr = { '"' };
+                            string[] splitQuotes = script[line].Split(splitChr);
+                            if (splitQuotes.Length < 3)
+                            {
+                                Console.WriteLine("* Script error: Invalid event text on line {0} (missing quotations)", line);
+                                return false;
+                            }
+                            newEvent.Text = splitQuotes[1];
+
                         }
-                        string compareString = splitQuotes[1];
+                        
                         //ok, the script looks good
 
-                        Event newEvent = new Event();
-                        newEvent.CompareString = compareString;
 
-                        if (cmd[2] == "chat")
+                        int start = 3;
+                        if (newEvent.Text != null)
                         {
-                            newEvent.Type = (int)EventTypes.Chat;
+                            char[] splitSp = { ' ' };
+                            string[] splitSpaces = newEvent.Text.Split(splitSp);
+                            start += splitSpaces.Length;
                         }
-                        else if (cmd[2] == "im")
-                        {
-                            newEvent.Type = (int)EventTypes.IM;
-                        }
-
-                        char[] splitSp = { ' ' };
-                        string[] splitSpaces = compareString.Split(splitSp);
-                        int start = 3 + splitSpaces.Length;
                         int len = cmd.Length - start;
                         string[] command = new string[len];
                         Array.Copy(cmd, start, command, 0, len);
@@ -325,12 +336,12 @@ namespace ghetto
 
                         scriptEvents[eventID] = newEvent;
 
-                        Console.WriteLine("* SCRIPTED EVENT: " + script[line]);
+                        Console.WriteLine(TimeStamp() + "* ADDED EVENT {0} ({1}): {2}", eventID, newEvent.Type, newEvent.Command);
                         return true;
                     }
             }
-            Console.WriteLine("* SCRIPTED COMMAND: " + script[line]);
-            ParseCommand(true, "/" + String.Join(" ", cmd), "", new LLUUID(), new LLUUID());
+            Console.WriteLine(TimeStamp() + "* SCRIPTED COMMAND: " + script[line]);
+            ParseCommand(true, String.Join(" ", cmd), "", new LLUUID(), new LLUUID());
             return true;
         }
 

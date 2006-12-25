@@ -115,9 +115,9 @@ namespace ghetto
             string lowerMessage = message.ToLower();
             foreach(KeyValuePair<int, Event> pair in scriptEvents)
             {
-                if (pair.Value.Type == (int)EventTypes.Chat && pair.Value.CompareString.ToLower() == lowerMessage)
+                if (pair.Value.Type == (int)EventTypes.Chat && pair.Value.Text.ToLower() == lowerMessage)
                 {
-                    ParseCommand(true, "/" + pair.Value.Command, "", new LLUUID(), new LLUUID());
+                    ParseCommand(true, pair.Value.Command, "", new LLUUID(), new LLUUID());
                 }
             }
             if (quiet || chatType > 3 || audible < 1) return;
@@ -144,9 +144,9 @@ namespace ghetto
             string lowerMessage = message.ToLower();
             foreach (KeyValuePair<int, Event> pair in scriptEvents)
             {
-                if (pair.Value.Type == (int)EventTypes.IM && pair.Value.CompareString.ToLower() == lowerMessage)
+                if (pair.Value.Type == (int)EventTypes.IM && pair.Value.Text.ToLower() == lowerMessage)
                 {
-                    ParseCommand(true, "/" + pair.Value.Command, "", new LLUUID(), new LLUUID());
+                    ParseCommand(true, pair.Value.Command, "", new LLUUID(), new LLUUID());
                 }
             }
 
@@ -190,6 +190,9 @@ namespace ghetto
 
             //Remember IM session
             masterIMSessionID = imSessionID;
+            string command;
+            if (message.Substring(0, 1) == "/") command = message.Substring(1);
+            else command = message;
             ParseCommand(false, message, fromAgentName, fromAgentID, imSessionID);
         }
 
@@ -237,8 +240,18 @@ namespace ghetto
 
             char[] splitChar = { ' ' };
             string[] msg = desc.Split(splitChar);
-            if (msg.Length > 3 && msg[2] + " " + msg[3] == "paid you")
-                AcknowledgePayment(msg[0] + " " + msg[1], changeAmount);
+            if (msg.Length == 5)
+            {
+                if (msg[0] + " " + msg[1] == "You paid")
+                    AcknowledgePayment(msg[2] + " " + msg[3], changeAmount * -1);
+                else if (msg[2] + " " + msg[3] == "paid you")
+                    AcknowledgePayment(msg[0] + " " + msg[1], changeAmount);
+                else
+                    Console.WriteLine("* UNEXPECTED PAYMENT MESSAGE");
+                if (!int.TryParse(msg[4].Substring(2), out changeAmount))
+                    Console.WriteLine("* UNEXPECTED PAYMENT MESSAGE");
+            }
+                
             if (desc.Length > 1)
             {
                 Console.ForegroundColor = System.ConsoleColor.Cyan;

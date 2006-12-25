@@ -38,17 +38,24 @@ namespace ghetto
     partial class GhettoSL
     {
 
-        void AcknowledgePayment(string agentName, int balance)
+        void AcknowledgePayment(string agentName, int amount)
         {
+            Console.WriteLine("* PAYMENT ACKNOWLEDGED: " + amount);
+            foreach (KeyValuePair<int, Event> pair in scriptEvents)
+            {
+                if (pair.Value.Type == (int)EventTypes.GetMoney && amount > 0) ParseCommand(true, pair.Value.Command, "", new LLUUID(), new LLUUID());
+                else if (pair.Value.Type == (int)EventTypes.GiveMoney && amount < 0) ParseCommand(true, pair.Value.Command, "", new LLUUID(), new LLUUID());
+            }
+
             foreach (Avatar av in avatars.Values)
             {
                 if (av.Name != agentName) continue;
-                Console.WriteLine("* RECEIVED PAYMENT FROM " + av.ID);
+                Console.WriteLine("* FOUND AVATAR WHO PAID: " + av.Name + " - " + av.ID);
                 //uncomment to whisper payment info on a secret channel
                 //Client.Self.Chat(av.Name+", "+av.ID+", "+balance, 8414263, MainAvatar.ChatType.Whisper);
                 return;
             }
-            //Console.WriteLine("* RECEIVED UNIDENTIFIABLE PAYMENT FROM " + agentName + ": L$" + balance);
+            Console.WriteLine("* COULD NOT LOCATE AVATAR WHO PAID");
         }
 
 
