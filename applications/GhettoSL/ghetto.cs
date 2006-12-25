@@ -145,7 +145,10 @@ namespace ghetto
             //Accept commands
             do
             {
-                ParseCommand(true, Console.ReadLine(), Client.Self.FirstName + " " + Client.Self.LastName, new LLUUID(), new LLUUID());
+                string read = Console.ReadLine();
+                if (read.Substring(0, 1) == "/") read = read.Substring(1);
+                else Client.Self.Chat(read, 0, MainAvatar.ChatType.Normal);
+                ParseCommand(true, read, Client.Self.FirstName + " " + Client.Self.LastName, new LLUUID(), new LLUUID());
             }
             while (!logout);
 

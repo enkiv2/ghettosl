@@ -37,21 +37,14 @@ namespace ghetto
 {
     partial class GhettoSL
     {
-        void ParseCommand(bool console, string message, string fromAgentName, LLUUID fromAgentID, LLUUID imSessionID)
+        void ParseCommand(bool console, string commandString, string fromAgentName, LLUUID fromAgentID, LLUUID imSessionID)
         {
-            if (message.Length == 0) return;
+            if (commandString.Length == 0) return;
             char[] splitChar = { ' ' };
-            string[] msg = message.Split(splitChar);
+            string[] msg = commandString.Split(splitChar);
             if (msg[0] == null || msg[0] == "") return;
 
             string command = msg[0].ToLower();
-            if (command.Substring(0, 1) == "/") command = command.Substring(1);
-            else if (console)
-            {
-                Client.Self.Chat(message, 0, MainAvatar.ChatType.Normal);
-                return;
-            }
-
             string response = "";
 
             //Store command arguments in "details" variable
@@ -281,7 +274,10 @@ namespace ghetto
                     }
                 case "pay":
                     {
-                        Client.Self.GiveMoney((LLUUID)msg[2], int.Parse(msg[1]), "");
+                        int amount;
+                        if (msg.Length < 3) return;
+                        if (!int.TryParse(msg[1], out amount)) return;
+                        Client.Self.GiveMoney((LLUUID)msg[2], amount, "");
                         response = "Payment sent to " + msg[2] + ".";
                         break;
                     }
