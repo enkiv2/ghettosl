@@ -60,13 +60,13 @@ namespace ghetto
                 if (pair.Value.Type == (int)EventTypes.GetMoney && amount > 0)
                 {
                     Stats.MoneySpent += amount;
-                    string[] cmdScript = { ParseScriptVariables(pair.Value.Command, agentName, agentID, amount, null) };
+                    string[] cmdScript = { ParseScriptVariables(pair.Value.Command, agentName, agentID, amount, "") };
                     ParseScriptLine(cmdScript, 0);
                 }
                 else if (pair.Value.Type == (int)EventTypes.GiveMoney && amount < 0)
                 {
                     Stats.MoneyReceived += amount;
-                    string[] cmdScript = { ParseScriptVariables(pair.Value.Command, agentName, agentID, amount, null) };
+                    string[] cmdScript = { ParseScriptVariables(pair.Value.Command, agentName, agentID, amount, "") };
                     ParseScriptLine(cmdScript, 0);
                 }
             }
