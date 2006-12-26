@@ -104,11 +104,12 @@ namespace ghetto
             //Console.ReadLine();
             //return;
 
+            Console.WriteLine("\r\nRunning on platform " + platform);
+
             Random random = new Random();
             IntroArt(random.Next(1, 3));
             
             platform = System.Convert.ToString(Environment.OSVersion.Platform);
-            Console.WriteLine("Running on platform " + platform);
 
             firstName = first;
             lastName = last;
@@ -167,7 +168,7 @@ namespace ghetto
         {
             Console.Title = "GhettoSL - Logging in...";
             Console.ForegroundColor = System.ConsoleColor.White;
-            Console.WriteLine("Logging in as " + firstName + " " + lastName + "...");
+            Console.WriteLine(TimeStamp() + "Logging in as " + firstName + " " + lastName + "...");
             Console.ForegroundColor = System.ConsoleColor.Gray;
 
             //Attempt to log in
@@ -191,8 +192,8 @@ namespace ghetto
 
             //We are in!
             Console.ForegroundColor = System.ConsoleColor.White;
-            Console.WriteLine(RPGWeather());
-            Console.WriteLine("Location: " + Client.Self.Position);
+            Console.WriteLine(TimeStamp() + RPGWeather());
+            Console.WriteLine(TimeStamp() + "Location: " + Client.Self.Position);
             Console.ForegroundColor = System.ConsoleColor.Gray;
 
             //Fix the "bot squat" animation

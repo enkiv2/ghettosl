@@ -40,20 +40,20 @@ namespace ghetto
 
         void AcknowledgePayment(string agentName, int amount)
         {
-            Console.WriteLine("* PAYMENT ACKNOWLEDGED: " + amount);
-
             LLUUID agentID = new LLUUID();
+            string msg = "* Unable to locate " + agentName;
             foreach (Avatar av in avatars.Values)
             {
                 if (av.Name != agentName) continue;
-                Console.WriteLine("* FOUND AVATAR: " + av.Name + " - " + av.ID);
                 agentID = av.ID;
+
                 //uncomment to whisper payment info on a secret channel
                 //Client.Self.Chat(av.Name+", "+av.ID+", "+balance, 8414263, MainAvatar.ChatType.Whisper);
+
+                msg = "* Found avatar " + av.Name + ": " + av.ID;
                 break;
             }
-
-            if (agentID == new LLUUID()) Console.WriteLine("* COULD NOT LOCATE AVATAR");
+            Console.WriteLine(TimeStamp() + msg);
 
             foreach (KeyValuePair<int, Event> pair in scriptEvents)
             {
