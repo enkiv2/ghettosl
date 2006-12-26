@@ -65,7 +65,7 @@ namespace ghetto
         void OnConnectedEvent(object sender)
         {
             Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("* CONNECTED");
+            Console.WriteLine(TimeStamp() + "* CONNECTED");
             Console.ForegroundColor = ConsoleColor.Gray;
 
             string appearanceFile = Client.Self.FirstName + " " + Client.Self.LastName + ".appearance";
@@ -257,7 +257,7 @@ namespace ghetto
             if (desc.Length > 1)
             {
                 Console.ForegroundColor = System.ConsoleColor.Cyan;
-                Console.WriteLine("* " + desc);
+                Console.WriteLine(TimeStamp() + "* " + desc);
             }
             Console.ForegroundColor = System.ConsoleColor.Green;
             Console.WriteLine(TimeStamp() + "* Balance: L$" + currentBalance);
