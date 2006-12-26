@@ -117,7 +117,8 @@ namespace ghetto
             {
                 if (pair.Value.Type == (int)EventTypes.Chat && pair.Value.Text.ToLower() == lowerMessage)
                 {
-                    ParseCommand(true, pair.Value.Command, "", new LLUUID(), new LLUUID());
+                    string[] cmdScript = { ParseScriptVariables(pair.Value.Command, name, fromAgentID, 0, message) };
+                    ParseScriptLine(cmdScript, 0);
                 }
             }
             if (quiet || chatType > 3 || audible < 1) return;
@@ -146,7 +147,8 @@ namespace ghetto
             {
                 if (pair.Value.Type == (int)EventTypes.IM && pair.Value.Text.ToLower() == lowerMessage)
                 {
-                    ParseCommand(true, pair.Value.Command, "", new LLUUID(), new LLUUID());
+                    string[] cmdScript = { pair.Value.Command };
+                    ParseScriptLine(cmdScript, 0);
                 }
             }
 
@@ -242,13 +244,13 @@ namespace ghetto
             string[] msg = desc.Split(splitChar);
             if (msg.Length == 5)
             {
-                if (msg[0] + " " + msg[1] == "You paid")
+                if (!int.TryParse(msg[4].Substring(2, msg[4].Length - 3), out changeAmount))
+                    Console.WriteLine("* UNEXPECTED PAYMENT MESSAGE");
+                else if (msg[0] + " " + msg[1] == "You paid")
                     AcknowledgePayment(msg[2] + " " + msg[3], changeAmount * -1);
                 else if (msg[2] + " " + msg[3] == "paid you")
                     AcknowledgePayment(msg[0] + " " + msg[1], changeAmount);
                 else
-                    Console.WriteLine("* UNEXPECTED PAYMENT MESSAGE");
-                if (!int.TryParse(msg[4].Substring(2), out changeAmount))
                     Console.WriteLine("* UNEXPECTED PAYMENT MESSAGE");
             }
                 

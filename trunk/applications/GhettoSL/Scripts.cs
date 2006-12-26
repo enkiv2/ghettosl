@@ -238,7 +238,8 @@ namespace ghetto
 
                 Array.Copy(cmd, preArgs, cmd, 0, cmd.Length - preArgs);
                 Array.Resize(ref cmd, cmd.Length - preArgs);
-                if (fail) return true;
+
+                if (fail) return true; //just a logical fail, not a script error
             }
 
 
@@ -340,9 +341,22 @@ namespace ghetto
                         return true;
                     }
             }
-            Console.WriteLine(TimeStamp() + "* SCRIPTED COMMAND: " + script[line]);
+            if (script.Length > 1)
+            {
+                Console.WriteLine(TimeStamp() + "* SCRIPTED COMMAND: " + script[line]);
+            }
             ParseCommand(true, String.Join(" ", cmd), "", new LLUUID(), new LLUUID());
             return true;
+        }
+
+        string ParseScriptVariables(string scriptCommand, string name, LLUUID id, int amount, string message)
+        {
+            string sc;
+            sc = scriptCommand.Replace(" $name ", name);
+            sc = scriptCommand.Replace(" $id ", id.ToString());
+            sc = scriptCommand.Replace(" $amount ", amount.ToString());
+            sc = scriptCommand.Replace(" $message ", message.ToString());
+            return sc;
         }
 
     }
