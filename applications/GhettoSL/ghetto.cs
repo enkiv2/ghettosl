@@ -84,6 +84,10 @@ namespace ghetto
             if (args.Length > 5 && (args[5].ToLower() == "quiet" || args[5].ToLower() == "true")) quiet = true;
             if (args.Length > 6) scriptFile = args[6];
 
+            Stats.StartTime = Helpers.GetUnixTime();
+            Stats.MoneySpent = 0;
+            Stats.MoneyReceived = 0;
+
             GhettoSL ghetto = new GhettoSL(args[0], args[1], args[2], args[3], masterID, quiet, scriptFile);
         }
 
@@ -148,7 +152,8 @@ namespace ghetto
                 string read = Console.ReadLine();
                 if (read.Substring(0, 1) == "/") read = read.Substring(1);
                 else Client.Self.Chat(read, 0, MainAvatar.ChatType.Normal);
-                ParseCommand(true, read, Client.Self.FirstName + " " + Client.Self.LastName, new LLUUID(), new LLUUID());
+                string[] cmdScript = { read };
+                ParseScriptLine(cmdScript, 0);
             }
             while (!logout);
 

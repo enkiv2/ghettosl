@@ -41,21 +41,36 @@ namespace ghetto
         void AcknowledgePayment(string agentName, int amount)
         {
             Console.WriteLine("* PAYMENT ACKNOWLEDGED: " + amount);
-            foreach (KeyValuePair<int, Event> pair in scriptEvents)
-            {
-                if (pair.Value.Type == (int)EventTypes.GetMoney && amount > 0) ParseCommand(true, pair.Value.Command, "", new LLUUID(), new LLUUID());
-                else if (pair.Value.Type == (int)EventTypes.GiveMoney && amount < 0) ParseCommand(true, pair.Value.Command, "", new LLUUID(), new LLUUID());
-            }
 
+            LLUUID agentID = new LLUUID();
             foreach (Avatar av in avatars.Values)
             {
                 if (av.Name != agentName) continue;
-                Console.WriteLine("* FOUND AVATAR WHO PAID: " + av.Name + " - " + av.ID);
+                Console.WriteLine("* FOUND AVATAR: " + av.Name + " - " + av.ID);
+                agentID = av.ID;
                 //uncomment to whisper payment info on a secret channel
                 //Client.Self.Chat(av.Name+", "+av.ID+", "+balance, 8414263, MainAvatar.ChatType.Whisper);
-                return;
+                break;
             }
-            Console.WriteLine("* COULD NOT LOCATE AVATAR WHO PAID");
+
+            if (agentID == new LLUUID()) Console.WriteLine("* COULD NOT LOCATE AVATAR");
+
+            foreach (KeyValuePair<int, Event> pair in scriptEvents)
+            {
+                if (pair.Value.Type == (int)EventTypes.GetMoney && amount > 0)
+                {
+                    Stats.MoneySpent += amount;
+                    string[] cmdScript = { ParseScriptVariables(pair.Value.Command, agentName, agentID, amount, null) };
+                    ParseScriptLine(cmdScript, 0);
+                }
+                else if (pair.Value.Type == (int)EventTypes.GiveMoney && amount < 0)
+                {
+                    Stats.MoneyReceived += amount;
+                    string[] cmdScript = { ParseScriptVariables(pair.Value.Command, agentName, agentID, amount, null) };
+                    ParseScriptLine(cmdScript, 0);
+                }
+            }
+
         }
 
 
