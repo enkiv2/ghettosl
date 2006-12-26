@@ -353,10 +353,10 @@ namespace ghetto
         {
             string sc;
             sc = scriptCommand.Replace("$master", masterID.ToString());
-            sc = scriptCommand.Replace("$name", name);
-            sc = scriptCommand.Replace("$id", id.ToString());
-            sc = scriptCommand.Replace("$amount", amount.ToString());
-            sc = scriptCommand.Replace("$message", message);
+            sc = sc.Replace("$name", name);
+            sc = sc.Replace("$id", id.ToString());
+            sc = sc.Replace("$amount", amount.ToString());
+            sc = sc.Replace("$message", message);
             return sc;
         }
 
