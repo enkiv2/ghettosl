@@ -39,7 +39,6 @@
   <ItemGroup>
     <Compile Include="Appearance.cs" />
     <Compile Include="Art.cs" />
-    <Compile Include="Stats.cs" />
     <Compile Include="Help.cs" />
     <Compile Include="MapStalk.cs" />
     <Compile Include="Routines.cs" />

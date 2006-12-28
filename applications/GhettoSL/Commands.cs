@@ -263,7 +263,6 @@ namespace ghetto
                 case "listen":
                     {
                         quiet = false;
-                        Client.Self.OnChat += new MainAvatar.ChatCallback(OnChatEvent);
                         response = "Displaying object/avatar chat.";
                         break;
                     }
@@ -297,7 +296,6 @@ namespace ghetto
                     {
                         quiet = true;
                         response = "Stopped listening to chat.";
-                        Client.Self.OnChat -= new MainAvatar.ChatCallback(OnChatEvent);
                         break;
                     }
                 case "re":
@@ -395,6 +393,11 @@ namespace ghetto
                         Stalk(new LLUUID(msg[1]));
                         break;
                     }
+                case "stats":
+                    {
+                        ShowStats();
+                        break;
+                    }
                 case "teleport":
                     {
                         if (msg.Length < 2) return;
@@ -416,7 +419,7 @@ namespace ghetto
                         if (console)
                         {
                             Console.ForegroundColor = System.ConsoleColor.Magenta;
-                            Console.WriteLine("* Teleporting to {0}...", simName);
+                            Console.WriteLine(TimeStamp() + "* Teleporting to {0}...", simName);
                             Console.ForegroundColor = System.ConsoleColor.Gray;
                         }
                         else Client.Self.InstantMessage(fromAgentID, "Teleporting to {0}...", simName);

@@ -41,7 +41,7 @@ namespace ghetto
         void AcknowledgePayment(string agentName, int amount)
         {
             LLUUID agentID = new LLUUID();
-            string msg = "* Unable to locate " + agentName;
+            string msg = "* Unable to locate " + agentName + ". Payment: L$" + amount;
             foreach (Avatar av in avatars.Values)
             {
                 if (av.Name != agentName) continue;
@@ -53,19 +53,19 @@ namespace ghetto
                 msg = "* Found avatar " + av.Name + ": " + av.ID;
                 break;
             }
-            Console.WriteLine(TimeStamp() + msg);
+            if (amount > 0) Console.WriteLine(TimeStamp() + msg);
 
             foreach (KeyValuePair<int, Event> pair in scriptEvents)
             {
                 if (pair.Value.Type == (int)EventTypes.GetMoney && amount > 0)
                 {
-                    Stats.MoneySpent += amount;
+                    MoneyReceived += amount;
                     string[] cmdScript = { ParseScriptVariables(pair.Value.Command, agentName, agentID, amount, "") };
                     ParseScriptLine(cmdScript, 0);
                 }
                 else if (pair.Value.Type == (int)EventTypes.GiveMoney && amount < 0)
                 {
-                    Stats.MoneyReceived += amount;
+                    MoneySpent += amount;
                     string[] cmdScript = { ParseScriptVariables(pair.Value.Command, agentName, agentID, amount, "") };
                     ParseScriptLine(cmdScript, 0);
                 }
@@ -195,6 +195,52 @@ namespace ghetto
                 }
             }
             return false;
+        }
+
+
+        string Duration(uint seconds)
+        {
+            string d = "";
+            uint remaining = seconds;
+            uint years = remaining % 31556926;
+            if (years > 0)
+            {
+                d += years + "y ";
+                remaining -= years * 31556926;
+            }
+            uint months = remaining % 2629744;
+            if (months > 0)
+            {
+                d += months + "m ";
+                remaining -= months * 2629744;
+            }
+            uint weeks = remaining % 604800;
+            if (weeks > 0)
+            {
+                d += weeks + "w ";
+                remaining -= weeks % 604800;
+            }
+            uint days = remaining % 86400;
+            if (days > 0)
+            {
+                d += days + "d ";
+                remaining -= days * 86400;
+            }
+            uint hours = remaining % 3600;
+            if (hours > 0)
+            {
+                d += hours + "h ";
+                remaining -= hours * 3600;
+            }
+            uint minutes = remaining % 60;
+            if (hours > 0)
+            {
+                d += minutes + "m ";
+                remaining -= minutes * 60;
+            }
+            d += remaining + "s";
+
+            return d;
         }
 
     }

@@ -126,14 +126,21 @@ namespace ghetto
             string[] msg = message.Split(splitChar);
 
             if (sourceType == 1) Console.ForegroundColor = System.ConsoleColor.White;
-            Console.ForegroundColor = System.ConsoleColor.DarkCyan;
+            else Console.ForegroundColor = System.ConsoleColor.DarkCyan;
 
+            string prefix = "";
             if (msg[0].ToLower() != "/me")
-                Console.WriteLine(TimeStamp() + "(ct={0}|st={1}) {2}: {3}", chatType, sourceType, name, message);
+            {
+                if (chatType == (int)MainAvatar.ChatType.Shout) prefix = " shouts";
+                else if (chatType == (int)MainAvatar.ChatType.Whisper) prefix = " whispers";
+                Console.WriteLine(TimeStamp() + "{0}{1}: {2}", name, prefix, message);
+            }
             else
             {
+                if (chatType == (int)MainAvatar.ChatType.Shout) prefix = "(shouted) ";
+                else if (chatType == (int)MainAvatar.ChatType.Whisper) prefix = "(whispered) ";
                 message = String.Join(" ", msg, 1, msg.Length - 1);
-                Console.WriteLine(TimeStamp() + "(ct={0}|st={1}) * {2} {3}", chatType, sourceType, name, message);
+                Console.WriteLine(TimeStamp() + "* {0}{1} {2}", prefix, name, message);
             }
             Console.ForegroundColor = System.ConsoleColor.Gray;
         }
@@ -268,7 +275,7 @@ namespace ghetto
 
         void OnTeleportFinish(Packet packet, Simulator simulator)
         {
-            Console.WriteLine("* FINISHED TELEPORT TO REGION AT " + regionX + ", " + regionY);
+            Console.WriteLine(TimeStamp() + "* FINISHED TELEPORT TO REGION AT " + regionX + ", " + regionY);
             TeleportFinishPacket reply = (TeleportFinishPacket)packet;
             regionX = (int)(reply.Info.RegionHandle >> 32);
             regionY = (int)(reply.Info.RegionHandle & 0xFFFFFFFF);

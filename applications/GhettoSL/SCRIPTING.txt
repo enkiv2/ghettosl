@@ -70,3 +70,10 @@ event <id> im "text" <command>
 event <id> getmoney <command>
 event <id> givemoney <command>
 
+EVENT IDENTIFIERS:
+
+$amount ..... Dollar amount associated with money events
+$master ..... MasterID as defined in the command arguments
+$message .... Message associated with event
+$name ....... Name associated with event
+$id ......... UUID associated with event
