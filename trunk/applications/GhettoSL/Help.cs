@@ -29,6 +29,7 @@ namespace ghetto
             HelpDict.Add("sit <uuid>", "Sit on the specified UUID");
             HelpDict.Add("sitg", "Sit on the ground at current location");
             HelpDict.Add("stand", "Stand while seated on an object or on the ground");
+            HelpDict.Add("stats", "Displays statistics such as uptime and recent earnings");
             HelpDict.Add("stopanim <uuid>", "Stop the specified animation");
             HelpDict.Add("teleport <sim> [x y z]", "Teleports to the specified destination");
             HelpDict.Add("time", "Displays time and region sun direction");

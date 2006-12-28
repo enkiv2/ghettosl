@@ -47,7 +47,7 @@ namespace ghetto
         AgentSetAppearancePacket lastAppearance = new AgentSetAppearancePacket();
 
         string platform;
-        static bool logout = false;
+        static bool logout;
         public string firstName;
         public string lastName;
         public string password;
@@ -61,6 +61,11 @@ namespace ghetto
         int regionX;
         int regionY;
         string campChairTextMatch;
+
+        uint StartTime;
+        int MoneySpent;
+        int MoneyReceived;
+
 
         //END OF GLOBAL VARIABLES #############################################
 
@@ -84,10 +89,6 @@ namespace ghetto
             if (args.Length > 5 && (args[5].ToLower() == "quiet" || args[5].ToLower() == "true")) quiet = true;
             if (args.Length > 6) scriptFile = args[6];
 
-            Stats.StartTime = Helpers.GetUnixTime();
-            Stats.MoneySpent = 0;
-            Stats.MoneyReceived = 0;
-
             GhettoSL ghetto = new GhettoSL(args[0], args[1], args[2], args[3], masterID, quiet, scriptFile);
         }
 
@@ -95,7 +96,7 @@ namespace ghetto
 
 
         //GHETTOSL VOID #######################################################
-        public GhettoSL(string first, string last, string pass, string phrase, LLUUID master, bool quietMode,string scriptFile)
+        public GhettoSL(string first, string last, string pass, string phrase, LLUUID master, bool quietMode, string scriptFile)
         {
             //RotBetween Test
             //LLVector3 a = new LLVector3(1, 0, 0);
@@ -108,7 +109,7 @@ namespace ghetto
 
             Random random = new Random();
             IntroArt(random.Next(1, 3));
-            
+
             platform = System.Convert.ToString(Environment.OSVersion.Platform);
 
             firstName = first;
@@ -117,7 +118,10 @@ namespace ghetto
             passPhrase = phrase;
             masterID = master;
             quiet = quietMode;
+
+            logout = false;
             sendUpdates = true;
+
             avatars = new Dictionary<uint, Avatar>();
             Friends = new Dictionary<LLUUID, Avatar>();
             prims = new Dictionary<uint, PrimObject>();
@@ -125,6 +129,13 @@ namespace ghetto
             Stalked = new Dictionary<LLUUID, Location>();
             imWindows = new Dictionary<uint, Avatar>();
             scriptEvents = new Dictionary<int, Event>();
+
+            // Unix timestamp of when the client was launched
+            StartTime = Helpers.GetUnixTime();
+            // L$ paid out to objects/avatars since login
+            MoneySpent = 0;
+            // L$ received since login (before subtracting .MoneySpent)
+            MoneyReceived = 0;
 
             Client.Debug = false;
 
@@ -138,7 +149,7 @@ namespace ghetto
 
             //Add callbacks for events
             InitializeCallbacks();
-           
+
             Client.Self.OnChat += new MainAvatar.ChatCallback(OnChatEvent);
 
             //Attempt to login, and exit if failed
@@ -151,14 +162,23 @@ namespace ghetto
             do
             {
                 string read = Console.ReadLine();
-                if (read.Substring(0, 1) == "/") read = read.Substring(1);
-                else Client.Self.Chat(read, 0, MainAvatar.ChatType.Normal);
-                string[] cmdScript = { read };
-                ParseScriptLine(cmdScript, 0);
+                if (read.Length > 0)
+                {
+                    if (read.Substring(0, 1) == "/")
+                    {
+                        read = read.Substring(1);
+                        string[] cmdScript = { read };
+                        ParseScriptLine(cmdScript, 0);
+                    }
+                    else Client.Self.Chat(read, 0, MainAvatar.ChatType.Normal);
+                }
             }
             while (!logout);
 
             Client.Network.Logout();
+            Thread.Sleep(500);
+            //Exit application
+
         }
         //END OF GHETTOSL VOID ################################################
 
