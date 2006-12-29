@@ -234,7 +234,7 @@ namespace ghetto
                     {
                         if (msg.Length > 2)
                         {
-                            Client.Self.InstantMessage((LLUUID)msg[1], msg[2]);
+                            Client.Self.InstantMessage(new LLUUID(msg[1]), details);
                             response = "Message sent.";
                         }
                         break;
@@ -423,6 +423,7 @@ namespace ghetto
                             Console.ForegroundColor = System.ConsoleColor.Gray;
                         }
                         else Client.Self.InstantMessage(fromAgentID, "Teleporting to {0}...", simName);
+                        teleport = true;
                         Client.Self.Teleport(simName, tPos);
                         break;
                     }
