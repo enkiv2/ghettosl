@@ -12,8 +12,7 @@ teleport "Test Region" 128 128 0
 label wait
 wait 1
 if not region "Test Region" goto wait
-say hi
-
+say hello
 
 The above example initiates a teleport to the sim "Test Region", then
 waits for 1 second. If it is not in Test Region yet, it waits another
@@ -38,58 +37,36 @@ if not region "Test Region" goto wait
 say hi
 goto done
 label fail
-say I coundn't make it to Test Region!
-label done
-
+im $master I coundn't make it to Test Region!
+label end
 
 In this improved example, we call "settime" before we teleport. Now each
 time we check with "if elapsed 60" it will go to our "fail" label after
-60 seconds of retrying. We have added the "done" label so the "fail"
-routine is skipped in the event that we made it successfully.
+60 seconds of retrying. We have added the "end" label so that "fail"
+is skipped in the event that we made it successfully.
 
 
 
-3. Loops and routines
-----------------------------
-
-As you can see in the above example, labels can be defined which you can
-jump to using the "goto" command. Here is an example of how you could use
-a loop to aggressively attempt to connect to a certain region for a
-maximum of 10 minutes:
-
-settime
-label letsgo
-teleport "My Home Region" 128 128 0
-wait 15
-if elapsed 600 goto giveup
-if not region "My Home Region" goto letsgo
-im $master I made it!
-goto end
-label giveup
-im $master I couldn't make it for some reason. :(
-label end
-
-
-
-4. Reference section
+3. Reference section
 ----------------------------
 
 CONDITIONS:
 
-if [not] elapsed <seconds> <command> ....... checks time since SETTIME command
-if [not] flying <command> ..................
-if [not] region "Region Name" <command> .... 
-if [not] running <command> .................
-if [not] sitting <command> .................
-if [not] standing <command> ................
+if [not] elapsed <seconds> <command> ....... if X seconds has elapsed since settime
+if [not] flying <command> .................. if the avatar is flying
+if [not] region "Region Name" <command> .... if the avatar is in the specified region
+if [not] running <command> ................. if the avatar is running
+if [not] sitting <command> ................. if the avatar is sitting on an object
+if [not] standing <command> ................ if the avatar is not flying or sitting
 
 
 EVENTS:
 
-event <id> chat "text" <command> ...........
-event <id> im "text" <command> .............
-event <id> getmoney <command> ..............
-event <id> givemoney <command> .............
+event <label> chat "text" <command> ........ on chat from avatars and objects
+event <label> im "text" <command> .......... on instant message from avatars and objects 
+event <label> getmoney <command> ........... money paid to the avatar
+event <label> givemoney <command> .......... money paid to other objects/avatars
+
 
 EVENT IDENTIFIERS:
 
