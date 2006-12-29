@@ -48,10 +48,11 @@ namespace ghetto
 
         string platform;
         static bool logout;
-        public string firstName;
-        public string lastName;
-        public string password;
-        public string passPhrase;
+        static bool teleport;
+        string firstName;
+        string lastName;
+        string password;
+        string passPhrase;
         public LLUUID masterID;
         bool quiet;
         bool sendUpdates;
