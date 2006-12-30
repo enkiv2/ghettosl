@@ -30,6 +30,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using libsecondlife;
 using libsecondlife.Packets;
@@ -119,13 +120,12 @@ namespace ghetto
         void OnChatEvent(string message, byte audible, byte chatType, byte sourceType, string name, LLUUID fromAgentID, LLUUID ownerID, LLVector3 position)
         {
             string lowerMessage = message.ToLower();
-            foreach(KeyValuePair<int, Event> pair in scriptEvents)
+            foreach(KeyValuePair<string, Event> pair in scriptEvents)
             {
-                if (pair.Value.Type == (int)EventTypes.Chat && pair.Value.Text.ToLower() == lowerMessage)
-                {
-                    string[] cmdScript = { ParseScriptVariables(pair.Value.Command, name, fromAgentID, 0, message) };
-                    ParseScriptLine(cmdScript, 0);
-                }
+                if (pair.Value.Type != (int)EventTypes.Chat) continue;
+                if (pair.Value.Text.ToLower() != lowerMessage) continue;
+                string[] cmdScript = { ParseScriptVariables(pair.Value.Command, name, fromAgentID, 0, message) };
+                ParseScriptLine(cmdScript, 0);
             }
             if (quiet || chatType > 3 || audible < 1) return;
             char[] splitChar = { ' ' };
@@ -156,7 +156,7 @@ namespace ghetto
         void OnInstantMessageEvent(LLUUID fromAgentID, string fromAgentName, LLUUID toAgentID, uint parentEstateID, LLUUID regionID, LLVector3 position, byte dialog, bool groupIM, LLUUID imSessionID, DateTime timestamp, string message, byte offline, byte[] binaryBucket)
         {
             string lowerMessage = message.ToLower();
-            foreach (KeyValuePair<int, Event> pair in scriptEvents)
+            foreach (KeyValuePair<string, Event> pair in scriptEvents)
             {
                 if (pair.Value.Type == (int)EventTypes.IM && pair.Value.Text.ToLower() == lowerMessage)
                 {

@@ -129,7 +129,7 @@ namespace ghetto
             appearances = new Dictionary<LLUUID, AvatarAppearancePacket>();
             Stalked = new Dictionary<LLUUID, Location>();
             imWindows = new Dictionary<uint, Avatar>();
-            scriptEvents = new Dictionary<int, Event>();
+            scriptEvents = new Dictionary<string, Event>();
 
             // Unix timestamp of when the client was launched
             StartTime = Helpers.GetUnixTime();
