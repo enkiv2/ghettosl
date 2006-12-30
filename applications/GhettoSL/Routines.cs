@@ -55,7 +55,7 @@ namespace ghetto
             }
             if (amount > 0) Console.WriteLine(TimeStamp() + msg);
 
-            foreach (KeyValuePair<int, Event> pair in scriptEvents)
+            foreach (KeyValuePair<string, Event> pair in scriptEvents)
             {
                 if (pair.Value.Type == (int)EventTypes.GetMoney && amount > 0)
                 {

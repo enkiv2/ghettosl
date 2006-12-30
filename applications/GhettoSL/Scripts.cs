@@ -42,7 +42,7 @@ namespace ghetto
         int scriptStep;
         uint scriptTime;
         System.Timers.Timer scriptWait;
-        Dictionary<int, Event> scriptEvents;
+        Dictionary<string, Event> scriptEvents;
 
 
         public enum EventTypes
@@ -119,7 +119,7 @@ namespace ghetto
 
                 //initialize script
                 scriptStep = 0;
-                scriptEvents = new Dictionary<int, Event>();
+                scriptEvents = new Dictionary<string, Event>();
                 scriptWait = new System.Timers.Timer();
                 scriptWait.AutoReset = false;
                 scriptWait.Elapsed += new System.Timers.ElapsedEventHandler(ScriptWaitEvent);
@@ -281,17 +281,11 @@ namespace ghetto
                 case "event":
                     {
                         //check for bad scripting
-                        int eventID;
-                        if (!int.TryParse(cmd[1], out eventID))
-                        {
-                            Console.WriteLine("* Script error: Invalid event ID on line {0}", line);
-                            return false;
-                        }
-
+                        string eventLabel = cmd[1];
                         if (cmd[2] == "off")
                         {
-                            scriptEvents.Remove(eventID);
-                            Console.WriteLine("* Removed event " + eventID);
+                            scriptEvents.Remove(eventLabel);
+                            Console.WriteLine("* Removed event " + eventLabel);
                             return true;
                         }
 
@@ -335,9 +329,9 @@ namespace ghetto
                         Array.Copy(cmd, start, command, 0, len);
                         newEvent.Command = String.Join(" ", command);
 
-                        scriptEvents[eventID] = newEvent;
+                        scriptEvents[eventLabel] = newEvent;
 
-                        Console.WriteLine(TimeStamp() + "* ADDED EVENT {0} ({1}): {2}", eventID, newEvent.Type, newEvent.Command);
+                        Console.WriteLine(TimeStamp() + "* ADDED EVENT {0} ({1}): {2}", eventLabel, newEvent.Type, newEvent.Command);
                         return true;
                     }
             }
