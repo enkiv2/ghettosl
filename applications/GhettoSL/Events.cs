@@ -92,13 +92,9 @@ namespace ghetto
             Console.WriteLine("* DISCONNECTED FROM SIM: " + type.ToString());
             Console.ForegroundColor = System.ConsoleColor.Gray;
             if (logout) return;
-            if (teleport)
-            {
-                teleport = false;
-                return;
-            }
 
-            //FIXME - not sure this is right yet
+            return; //FIXME - log back in after disconnect
+
             Client.Network.Logout();
             do Thread.Sleep(5000);
             while (!Login());
@@ -171,7 +167,6 @@ namespace ghetto
                 Console.ForegroundColor = System.ConsoleColor.Magenta;
                 Console.WriteLine("* Accepting teleport request from {0} ({1})", fromAgentName, message);
                 Console.ForegroundColor = System.ConsoleColor.Gray;
-                teleport = true;
                 Client.Self.TeleportLureRespond(fromAgentID, true);
                 return;
             }

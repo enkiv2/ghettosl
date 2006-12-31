@@ -147,6 +147,20 @@ namespace ghetto
                         if (response == "") response = "NO OBJECT FOUND MATCHING " + findID;
                         break;
                     }
+                case "events":
+                    {
+                        foreach (KeyValuePair<string, Event> pair in scriptEvents)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Cyan;
+                            Console.Write(pair.Key);
+                            Console.ForegroundColor = ConsoleColor.DarkCyan;
+                            Console.Write(" " + pair.Value.Command);
+
+                            Console.Write("\r\n");
+                            Console.ForegroundColor = ConsoleColor.Gray;
+                        }
+                        break;
+                    }
                 case "face":
                     {
                         LLUUID findID = (LLUUID)msg[1];
@@ -423,7 +437,6 @@ namespace ghetto
                             Console.ForegroundColor = System.ConsoleColor.Gray;
                         }
                         else Client.Self.InstantMessage(fromAgentID, "Teleporting to {0}...", simName);
-                        teleport = true;
                         Client.Self.Teleport(simName, tPos);
                         break;
                     }
