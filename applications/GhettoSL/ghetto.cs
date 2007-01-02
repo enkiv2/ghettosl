@@ -90,6 +90,29 @@ namespace ghetto
             if (args.Length > 6) scriptFile = args[6];
 
             GhettoSL ghetto = new GhettoSL(args[0], args[1], args[2], args[3], masterID, quiet, scriptFile);
+
+            //Accept commands
+            do
+            {
+                string read = Console.ReadLine();
+                if (read.Length > 0)
+                {
+                    if (read.Substring(0, 1) == "/")
+                    {
+                        read = read.Substring(1);
+                        string[] cmdScript = { read };
+                        ghetto.ParseScriptLine(cmdScript, 0);
+                    }
+                    else ghetto.Client.Self.Chat(read, 0, MainAvatar.ChatType.Normal);
+                }
+            }
+            while (!logout);
+
+            ghetto.Client.Network.Logout();
+            Thread.Sleep(500);
+            //Exit application
+
+
         }
 
         //END OF MAIN VOID ####################################################
@@ -157,27 +180,6 @@ namespace ghetto
 
             //Run script
             if (scriptFile != "") LoadScript(scriptFile);
-
-            //Accept commands
-            do
-            {
-                string read = Console.ReadLine();
-                if (read.Length > 0)
-                {
-                    if (read.Substring(0, 1) == "/")
-                    {
-                        read = read.Substring(1);
-                        string[] cmdScript = { read };
-                        ParseScriptLine(cmdScript, 0);
-                    }
-                    else Client.Self.Chat(read, 0, MainAvatar.ChatType.Normal);
-                }
-            }
-            while (!logout);
-
-            Client.Network.Logout();
-            Thread.Sleep(500);
-            //Exit application
 
         }
         //END OF GHETTOSL VOID ################################################
