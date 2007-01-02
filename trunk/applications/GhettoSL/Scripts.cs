@@ -89,7 +89,7 @@ namespace ghetto
             {
                 char[] splitChar = { ' ' };
                 string[] args = input.ToLower().Split(splitChar);
-                string[] commandsWithArgs = { "camp", "event", "go", "goto", "if", "label", "pay", "payme", "say", "shout", "sit", "teleport", "touch", "touchid", "updates", "wait", "whisper" };
+                string[] commandsWithArgs = { "camp", "event", "go", "goto", "if", "label", "pay", "payme", "say", "shout", "sleep", "sit", "teleport", "touch", "touchid", "updates", "wait", "whisper" };
                 string[] commandsWithoutArgs = { "die", "fly", "land", "quit", "relog", "run", "settime", "sitg", "stand", "walk" };
                 if (Array.IndexOf(commandsWithArgs, args[0]) > -1 && args.Length < 2)
                 {
@@ -252,13 +252,6 @@ namespace ghetto
                         scriptTime = Helpers.GetUnixTime();
                         return true;
                     }
-                case "wait":
-                    {
-                        Console.WriteLine(TimeStamp() + "* Sleeping {0} seconds...", cmd[1]);
-                        scriptWait.Interval = int.Parse(cmd[1]) * 1000;
-                        scriptWait.Enabled = true;
-                        return false;
-                    }
                 case "goto":
                     {
                         int findLabel = Array.IndexOf(script, "label " + cmd[1]);
@@ -334,6 +327,20 @@ namespace ghetto
                         Console.WriteLine(TimeStamp() + "* ADDED EVENT {0} ({1}): {2}", eventLabel, newEvent.Type, newEvent.Command);
                         return true;
                     }
+                case "sleep":
+                    {
+                        float interval;
+                        if (!float.TryParse(cmd[1], out interval)) Console.WriteLine("* Invalid sleep time specified");
+                        else ScriptSleep(interval);
+                        return false; //pause script parsing
+                    }
+                case "wait": //same as sleep
+                    {
+                        float interval;
+                        if (!float.TryParse(cmd[1], out interval)) Console.WriteLine("* Invalid sleep time specified");
+                        else ScriptSleep(interval);
+                        return false; //pause script parsing
+                    }
             }
             if (script.Length > 1)
             {
@@ -352,6 +359,13 @@ namespace ghetto
             sc = sc.Replace("$amount", amount.ToString());
             sc = sc.Replace("$message", message);
             return sc;
+        }
+
+        void ScriptSleep(float seconds)
+        {
+            Console.WriteLine(TimeStamp() + "* Sleeping {0} seconds...", seconds);
+            scriptWait.Interval = (int)(seconds * 1000);
+            scriptWait.Enabled = true;
         }
 
     }

@@ -48,7 +48,6 @@ namespace ghetto
 
         string platform;
         static bool logout;
-        static bool teleport;
         string firstName;
         string lastName;
         string password;
@@ -199,7 +198,7 @@ namespace ghetto
                 return false;
             }
 
-            Console.Title = "GhettoSL - " + Client.Self.FirstName + " " + Client.Self.LastName;
+            Console.Title = Client.Self.FirstName + " " + Client.Self.LastName + " - GhettoSL";
 
             //Succeeded - Wait for simulator name or disconnection
             Simulator sim = Client.Network.CurrentSim;
