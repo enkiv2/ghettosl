@@ -89,7 +89,7 @@ namespace ghetto
         void OnSimDisconnectEvent(Simulator sim, NetworkManager.DisconnectType type)
         {
             Console.ForegroundColor = System.ConsoleColor.Red;
-            Console.WriteLine("* DISCONNECTED FROM SIM: " + type.ToString());
+            Console.WriteLine(TimeStamp() + "* DISCONNECTED FROM SIM: " + type.ToString());
             Console.ForegroundColor = System.ConsoleColor.Gray;
             if (logout) return;
 

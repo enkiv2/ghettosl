@@ -60,16 +60,6 @@ namespace ghetto
 
             switch (command)
             {
-                case "button1":
-                    {
-                        Client.Self.Touch(9835045);
-                        break;
-                    }
-                case "button2":
-                    {
-                        Client.Self.Touch(9835044);
-                        break;
-                    }
                 case "anim":
                     {
                         SendAgentAnimation((LLUUID)details, true);
@@ -89,6 +79,15 @@ namespace ghetto
                         Thread.Sleep(500);
                         Client.Self.Status.Controls.FinishAnim = false;
                         Client.Self.Status.SendUpdate();
+                        break;
+                    }
+                case "balance":
+                    {
+                        MoneyBalanceRequestPacket req = new MoneyBalanceRequestPacket();
+                        req.AgentData.AgentID = Client.Network.AgentID;
+                        req.AgentData.SessionID = Client.Network.SessionID;
+                        req.MoneyData.TransactionID = new LLUUID();
+                        Client.Network.SendPacket(req);
                         break;
                     }
                 case "camp":
