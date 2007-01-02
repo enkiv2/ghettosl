@@ -59,13 +59,13 @@ namespace ghetto
             {
                 if (pair.Value.Type == (int)EventTypes.GetMoney && amount > 0)
                 {
-                    MoneyReceived += amount;
+                    Session.MoneyReceived += amount;
                     string[] cmdScript = { ParseScriptVariables(pair.Value.Command, agentName, agentID, amount, "") };
                     ParseScriptLine(cmdScript, 0);
                 }
                 else if (pair.Value.Type == (int)EventTypes.GiveMoney && amount < 0)
                 {
-                    MoneySpent += amount;
+                    Session.MoneySpent += amount;
                     string[] cmdScript = { ParseScriptVariables(pair.Value.Command, agentName, agentID, amount, "") };
                     ParseScriptLine(cmdScript, 0);
                 }
@@ -77,7 +77,7 @@ namespace ghetto
         void CreateMessageWindow(LLUUID fromAgentID, string fromAgentName, byte dialog, LLUUID imSessionID)
         {
             bool hasWindow = false;
-            foreach (Avatar av in imWindows.Values)
+            foreach (Avatar av in Session.IMSession.Values)
             {
                 if (av.ID == fromAgentID)
                 {
@@ -89,20 +89,20 @@ namespace ghetto
             newAvatar.ID = fromAgentID;
             newAvatar.Name = fromAgentName;
             newAvatar.ProfileProperties.Partner = imSessionID; //hack - imSessionID, not PartnerID
-            newAvatar.LocalID = (uint)(imWindows.Count + 1); //hack - windowID, not LocalID
-            if (!hasWindow) imWindows.Add((uint)imWindows.Count, newAvatar);
+            newAvatar.LocalID = (uint)(Session.IMSession.Count + 1); //hack - windowID, not LocalID
+            if (!hasWindow) Session.IMSession.Add((uint)Session.IMSession.Count, newAvatar);
         }
 
         uint FindObjectByText(string textValue)
         {
-            campChairTextMatch = textValue;
+            Session.CampChairMatchText = textValue;
             uint localID = 0;
-            foreach (PrimObject prim in prims.Values)
+            foreach (PrimObject prim in Session.Prims.Values)
             {
-                int len = campChairTextMatch.Length;
+                int len = Session.CampChairMatchText.Length;
                 string match = prim.Text.Replace("\n", ""); //Strip newlines
                 if (match.Length < len) continue; //Text is too short to be a match
-                else if (match.Substring(0, len).ToLower() == campChairTextMatch)
+                else if (match.Substring(0, len).ToLower() == Session.CampChairMatchText)
                 {
                     localID = prim.LocalID;
                     break;
@@ -119,11 +119,11 @@ namespace ghetto
                 if (av.Name.Length < findName.Length) continue; //Name is too short to be a match
                 else if (av.Name.ToLower().Substring(0, findName.Length) == findName)
                 {
-                    followName = av.Name;
+                    Session.FollowName = av.Name;
                     if (Helpers.VecDist(av.Position, Client.Self.Position) > 4)
                     {
                         //GridRegion region = Client.Network.CurrentSim.Region.GridRegionData;
-                        Client.Self.AutoPilot((ulong)(av.Position.X + regionX), (ulong)(av.Position.Y + regionY), av.Position.Z);
+                        Client.Self.AutoPilot((ulong)(av.Position.X + Session.RegionX), (ulong)(av.Position.Y + Session.RegionY), av.Position.Z);
                         Thread.Sleep(100);
                         Client.Self.Status.SendUpdate();
                     }
@@ -183,7 +183,7 @@ namespace ghetto
                     if (av.SittingOn > 0)
                     {
                         Console.WriteLine("* Riding with " + av.Name + ".");
-                        Client.Self.RequestSit(prims[av.SittingOn].ID, new LLVector3(0, 0, 0));
+                        Client.Self.RequestSit(Session.Prims[av.SittingOn].ID, new LLVector3(0, 0, 0));
                         Client.Self.Sit();
                         return true;
                     }

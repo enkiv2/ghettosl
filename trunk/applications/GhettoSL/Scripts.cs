@@ -353,7 +353,7 @@ namespace ghetto
         string ParseScriptVariables(string scriptCommand, string name, LLUUID id, int amount, string message)
         {
             string sc;
-            sc = scriptCommand.Replace("$master", masterID.ToString());
+            sc = scriptCommand.Replace("$master", Session.MasterID.ToString());
             sc = sc.Replace("$name", name);
             sc = sc.Replace("$id", id.ToString());
             sc = sc.Replace("$amount", amount.ToString());

@@ -37,38 +37,46 @@ namespace ghetto
 {
     partial class GhettoSL
     {
-        //GLOBAL VARIABLES ####################################################
+
+        static Dictionary<uint, UserSession> sessions; //details for all accounts
+        static Dictionary<uint, GhettoSL> connections;
+
+        UserSession Session;
         SecondLife Client = new SecondLife();
+
         Dictionary<uint, Avatar> avatars;
-        Dictionary<uint, PrimObject> prims;
-        Dictionary<uint, Avatar> imWindows;
-        Dictionary<LLUUID, Avatar> Friends;
         Dictionary<LLUUID, AvatarAppearancePacket> appearances;
-        AgentSetAppearancePacket lastAppearance = new AgentSetAppearancePacket();
 
         string platform;
+        static uint currentSession;
         static bool logout;
-        string firstName;
-        string lastName;
-        string password;
-        string passPhrase;
-        public LLUUID masterID;
-        bool quiet;
-        bool sendUpdates;
-        LLUUID masterIMSessionID;
-        string followName;
-        int currentBalance;
-        int regionX;
-        int regionY;
-        string campChairTextMatch;
 
-        uint StartTime;
-        int MoneySpent;
-        int MoneyReceived;
+        public struct UserSession
+        {
+            public string FirstName;
+            public string LastName;
+            public string Password;
+            public string PassPhrase;
+            public LLUUID MasterID;
+            public bool Quiet;
+            public string Script;
+            public int CurrentBalance;
+            public Dictionary<uint, PrimObject> Prims;
+            public Dictionary<LLUUID, Avatar> Friends;
+            public Dictionary<uint, Avatar> IMSession;
+            public AgentSetAppearancePacket LastAppearance;
+            public int MoneySpent;
+            public int MoneyReceived;
+            public bool SendUpdates;
+            public LLUUID MasterIMSession;
+            public string FollowName;
+            public int RegionX;
+            public int RegionY;
+            public string CampChairMatchText;
+            public uint StartTime;
 
-
-        //END OF GLOBAL VARIABLES #############################################
-
+        }
+        
 
         //BEGIN MAIN VOID #####################################################
         static void Main(string[] args)
@@ -89,7 +97,18 @@ namespace ghetto
             if (args.Length > 5 && (args[5].ToLower() == "quiet" || args[5].ToLower() == "true")) quiet = true;
             if (args.Length > 6) scriptFile = args[6];
 
-            GhettoSL ghetto = new GhettoSL(args[0], args[1], args[2], args[3], masterID, quiet, scriptFile);
+            UserSession session = new UserSession();
+            session.FirstName = args[0];
+            session.LastName = args[1];
+            session.Password = args[2];
+            session.PassPhrase = args[3];
+            session.MasterID = masterID;
+            session.Quiet = quiet;
+            session.Script = scriptFile;
+
+            connections = new Dictionary<uint, GhettoSL>();
+            currentSession = 1;
+            connections.Add(currentSession, new GhettoSL(session));
 
             //Accept commands
             do
@@ -101,14 +120,14 @@ namespace ghetto
                     {
                         read = read.Substring(1);
                         string[] cmdScript = { read };
-                        ghetto.ParseScriptLine(cmdScript, 0);
+                        connections[currentSession].ParseScriptLine(cmdScript, 0);
                     }
-                    else ghetto.Client.Self.Chat(read, 0, MainAvatar.ChatType.Normal);
+                    else connections[currentSession].Client.Self.Chat(read, 0, MainAvatar.ChatType.Normal);
                 }
             }
             while (!logout);
 
-            ghetto.Client.Network.Logout();
+            connections[1].Client.Network.Logout();
             Thread.Sleep(500);
             //Exit application
 
@@ -119,7 +138,7 @@ namespace ghetto
 
 
         //GHETTOSL VOID #######################################################
-        public GhettoSL(string first, string last, string pass, string phrase, LLUUID master, bool quietMode, string scriptFile)
+        public GhettoSL(UserSession session)
         {
             //RotBetween Test
             //LLVector3 a = new LLVector3(1, 0, 0);
@@ -128,37 +147,32 @@ namespace ghetto
             //Console.ReadLine();
             //return;
 
+            platform = System.Convert.ToString(Environment.OSVersion.Platform);
             Console.WriteLine("\r\nRunning on platform " + platform);
 
             Random random = new Random();
             IntroArt(random.Next(1, 3));
 
-            platform = System.Convert.ToString(Environment.OSVersion.Platform);
-
-            firstName = first;
-            lastName = last;
-            password = pass;
-            passPhrase = phrase;
-            masterID = master;
-            quiet = quietMode;
+            Session = session;
+            Session.IMSession = new Dictionary<uint, Avatar>();
+            Session.LastAppearance = new AgentSetAppearancePacket();
 
             logout = false;
-            sendUpdates = true;
+            Session.SendUpdates = true;
 
             avatars = new Dictionary<uint, Avatar>();
-            Friends = new Dictionary<LLUUID, Avatar>();
-            prims = new Dictionary<uint, PrimObject>();
+            Session.Friends = new Dictionary<LLUUID, Avatar>();
+            Session.Prims = new Dictionary<uint, PrimObject>();
             appearances = new Dictionary<LLUUID, AvatarAppearancePacket>();
             Stalked = new Dictionary<LLUUID, Location>();
-            imWindows = new Dictionary<uint, Avatar>();
             scriptEvents = new Dictionary<string, Event>();
 
             // Unix timestamp of when the client was launched
-            StartTime = Helpers.GetUnixTime();
+            Session.StartTime = Helpers.GetUnixTime();
             // L$ paid out to objects/avatars since login
-            MoneySpent = 0;
+            Session.MoneySpent = 0;
             // L$ received since login (before subtracting .MoneySpent)
-            MoneyReceived = 0;
+            Session.MoneyReceived = 0;
 
             Client.Debug = false;
 
@@ -179,7 +193,7 @@ namespace ghetto
             while (!Login()) Thread.Sleep(5000);
 
             //Run script
-            if (scriptFile != "") LoadScript(scriptFile);
+            if (Session.Script != "") LoadScript(Session.Script);
 
         }
         //END OF GHETTOSL VOID ################################################
@@ -190,11 +204,11 @@ namespace ghetto
         {
             Console.Title = "GhettoSL - Logging in...";
             Console.ForegroundColor = System.ConsoleColor.White;
-            Console.WriteLine(TimeStamp() + "Logging in as " + firstName + " " + lastName + "...");
+            Console.WriteLine(TimeStamp() + "Logging in as " + Session.FirstName + " " + Session.LastName + "...");
             Console.ForegroundColor = System.ConsoleColor.Gray;
 
             //Attempt to log in
-            if (!Client.Network.Login(firstName, lastName, password, "GhettoSL", "ghetto@obsoleet.com"))
+            if (!Client.Network.Login(Session.FirstName, Session.LastName, Session.Password, "GhettoSL", "ghetto@obsoleet.com"))
             {
                 Console.WriteLine("Login failed.");
                 return false;
