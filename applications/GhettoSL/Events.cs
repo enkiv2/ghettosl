@@ -72,7 +72,7 @@ namespace ghetto
             string appearanceFile = Client.Self.FirstName + " " + Client.Self.LastName + ".appearance";
             if (File.Exists(appearanceFile)) LoadAppearance(appearanceFile);
 
-            if (sendUpdates) Client.Self.Status.UpdateTimer.Start();
+            if (Session.SendUpdates) Client.Self.Status.UpdateTimer.Start();
 
             Client.Grid.AddEstateSims();
 
@@ -123,7 +123,7 @@ namespace ghetto
                 string[] cmdScript = { ParseScriptVariables(pair.Value.Command, name, fromAgentID, 0, message) };
                 ParseScriptLine(cmdScript, 0);
             }
-            if (quiet || chatType > 3 || audible < 1) return;
+            if (Session.Quiet || chatType > 3 || audible < 1) return;
             char[] splitChar = { ' ' };
             string[] msg = message.Split(splitChar);
 
@@ -162,7 +162,7 @@ namespace ghetto
             }
 
             //Teleport request
-            if (dialog == (int)MainAvatar.InstantMessageDialog.RequestTeleport && (fromAgentID == masterID || message == passPhrase))
+            if (dialog == (int)MainAvatar.InstantMessageDialog.RequestTeleport && (fromAgentID == Session.MasterID || message == Session.PassPhrase))
             {
                 Console.ForegroundColor = System.ConsoleColor.Magenta;
                 Console.WriteLine("* Accepting teleport request from {0} ({1})", fromAgentName, message);
@@ -187,7 +187,7 @@ namespace ghetto
                 return;
             }
 
-            if (!quiet)
+            if (!Session.Quiet)
             {
                 CreateMessageWindow(fromAgentID, fromAgentName, dialog, imSessionID);
                 //Display IM in console
@@ -197,10 +197,10 @@ namespace ghetto
             }
 
             //Parse commands from masterID only
-            if (offline > 0 || fromAgentID != masterID) return;
+            if (offline > 0 || fromAgentID != Session.MasterID) return;
 
             //Remember IM session
-            masterIMSessionID = imSessionID;
+            Session.MasterIMSession = imSessionID;
             string command;
             if (message.Substring(0, 1) == "/") command = message.Substring(1);
             else command = message;
@@ -246,8 +246,8 @@ namespace ghetto
         {
             MoneyBalanceReplyPacket reply = (MoneyBalanceReplyPacket)packet;
             string desc = Helpers.FieldToString(reply.MoneyData.Description);
-            int changeAmount = reply.MoneyData.MoneyBalance - currentBalance;
-            currentBalance = reply.MoneyData.MoneyBalance;
+            int changeAmount = reply.MoneyData.MoneyBalance - Session.CurrentBalance;
+            Session.CurrentBalance = reply.MoneyData.MoneyBalance;
 
             char[] splitChar = { ' ' };
             string[] msg = desc.Split(splitChar);
@@ -269,7 +269,7 @@ namespace ghetto
                 Console.WriteLine(TimeStamp() + "* " + desc);
             }
             Console.ForegroundColor = System.ConsoleColor.Green;
-            Console.WriteLine(TimeStamp() + "* Balance: L$" + currentBalance);
+            Console.WriteLine(TimeStamp() + "* Balance: L$" + Session.CurrentBalance);
             Console.ForegroundColor = System.ConsoleColor.Gray;
         }
 
@@ -277,12 +277,12 @@ namespace ghetto
 
         void OnTeleportFinish(Packet packet, Simulator simulator)
         {
-            Console.WriteLine(TimeStamp() + "* FINISHED TELEPORT TO REGION AT " + regionX + ", " + regionY);
+            Console.WriteLine(TimeStamp() + "* FINISHED TELEPORT TO REGION AT " + Session.RegionX + ", " + Session.RegionY);
             TeleportFinishPacket reply = (TeleportFinishPacket)packet;
-            regionX = (int)(reply.Info.RegionHandle >> 32);
-            regionY = (int)(reply.Info.RegionHandle & 0xFFFFFFFF);
+            Session.RegionX = (int)(reply.Info.RegionHandle >> 32);
+            Session.RegionY = (int)(reply.Info.RegionHandle & 0xFFFFFFFF);
             if (reply.Info.AgentID != Client.Network.AgentID) return;
-            if (lastAppearance.AgentData.SerialNum > 0) Client.Network.SendPacket(lastAppearance);
+            if (Session.LastAppearance.AgentData.SerialNum > 0) Client.Network.SendPacket(Session.LastAppearance);
             Client.Self.Status.SendUpdate();
         }
 
@@ -298,10 +298,10 @@ namespace ghetto
                 //if (avatars[avatar.LocalID].ID == Client.Network.AgentID)
                 //{
                 //this is a temp hack to update region corner X/Y any time any av moves (not just the follow target)
-                regionX = (int)(regionHandle >> 32);
-                regionY = (int)(regionHandle & 0xFFFFFFFF);
+                Session.RegionX = (int)(regionHandle >> 32);
+                Session.RegionY = (int)(regionHandle & 0xFFFFFFFF);
                 //}
-                if (avatars[avatar.LocalID].Name == followName)
+                if (avatars[avatar.LocalID].Name == Session.FollowName)
                 {
                     avatars[avatar.LocalID].Position = avatar.Position;
                     avatars[avatar.LocalID].Rotation = avatar.Rotation;
@@ -332,17 +332,17 @@ namespace ghetto
         }
         void OnNewPrimEvent(Simulator simulator, PrimObject prim, ulong regionHandle, ushort timeDilation)
         {
-            lock (prims)
+            lock (Session.Prims)
             {
-                prims[prim.LocalID] = prim;
+                Session.Prims[prim.LocalID] = prim;
             }
         }
         void OnObjectKilledEvent(Simulator simulator, uint objectID)
         {
-            lock (prims)
+            lock (Session.Prims)
             {
-                if (prims.ContainsKey(objectID))
-                    prims.Remove(objectID);
+                if (Session.Prims.ContainsKey(objectID))
+                    Session.Prims.Remove(objectID);
             }
             lock (avatars)
             {
@@ -352,12 +352,12 @@ namespace ghetto
         }
         void OnPrimMovedEvent(Simulator simulator, PrimUpdate prim, ulong regionHandle, ushort timeDilation)
         {
-            lock (prims)
+            lock (Session.Prims)
             {
-                if (prims.ContainsKey(prim.LocalID))
+                if (Session.Prims.ContainsKey(prim.LocalID))
                 {
-                    prims[prim.LocalID].Position = prim.Position;
-                    prims[prim.LocalID].Rotation = prim.Rotation;
+                    Session.Prims[prim.LocalID].Position = prim.Position;
+                    Session.Prims[prim.LocalID].Rotation = prim.Rotation;
                 }
             }
         }
@@ -427,7 +427,7 @@ namespace ghetto
         void OnRequestFriendship(Packet packet, Simulator simulator)
         {
             RequestFriendshipPacket reply = (RequestFriendshipPacket)packet;
-            if (reply.AgentData.AgentID != masterID) return;
+            if (reply.AgentData.AgentID != Session.MasterID) return;
             AcceptFriendshipPacket p = new AcceptFriendshipPacket();
             p.AgentData.AgentID = Client.Network.AgentID;
             p.AgentData.SessionID = Client.Network.SessionID;

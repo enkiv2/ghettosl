@@ -60,6 +60,36 @@ namespace ghetto
 
             switch (command)
             {
+                case "account":
+                    {
+                        string action = msg[1].ToLower();
+                        if (action == "add")
+                        {
+                            if (msg.Length < 5)
+                            {
+                                response = "Usage: /account <list|add|del> [FirstName] [LastName] [Password] [options]";
+                            }
+                            else
+                            {
+                                UserSession newSession = new UserSession();
+                                newSession.FirstName = msg[2];
+                                newSession.LastName = msg[3];
+                                newSession.Password = msg[4];
+                                //FIXME - add passphrase, quiet, and other flags
+                                sessions.Add((uint)(sessions.Count + 1), newSession);
+                                response = "Added account: " + msg[2] + " " + msg[3];
+                            }
+                        }
+                        else if (action == "del" || action == "remove")
+                        {
+
+                        }
+                        else
+                        {
+                            response = "Usage: /account <list|add|del> [FirstName] [LastName] [Password] [options]";
+                        }
+                        break;
+                    }
                 case "anim":
                     {
                         SendAgentAnimation((LLUUID)details, true);
@@ -83,11 +113,7 @@ namespace ghetto
                     }
                 case "balance":
                     {
-                        MoneyBalanceRequestPacket req = new MoneyBalanceRequestPacket();
-                        req.AgentData.AgentID = Client.Network.AgentID;
-                        req.AgentData.SessionID = Client.Network.SessionID;
-                        req.MoneyData.TransactionID = new LLUUID();
-                        Client.Network.SendPacket(req);
+                        Client.Self.RequestBalance();
                         break;
                     }
                 case "camp":
@@ -96,7 +122,7 @@ namespace ghetto
                         if (localID > 0)
                         {
                             response = "Match found. Camping...";
-                            Client.Self.RequestSit(prims[localID].ID, new LLVector3(0, 0, 0));
+                            Client.Self.RequestSit(Session.Prims[localID].ID, new LLVector3(0, 0, 0));
                             Client.Self.Sit();
                             Client.Self.Status.Controls.FinishAnim = false;
                             Client.Self.Status.Controls.Fly = false;
@@ -133,7 +159,7 @@ namespace ghetto
                 case "drag":
                     {
                         LLUUID findID = (LLUUID)msg[1];
-                        foreach (PrimObject prim in prims.Values)
+                        foreach (PrimObject prim in Session.Prims.Values)
                         {
                             if (prim.ID != findID) continue;
                             LLVector3 targetPos = new LLVector3(prim.Position.X, prim.Position.Y, prim.Position.Z + 10);
@@ -163,7 +189,7 @@ namespace ghetto
                 case "face":
                     {
                         LLUUID findID = (LLUUID)msg[1];
-                        foreach (PrimObject prim in prims.Values)
+                        foreach (PrimObject prim in Session.Prims.Values)
                         {
                             if (prim.ID != findID) continue;
                             LLVector3 targetPos = new LLVector3(prim.Position.X, prim.Position.Y, prim.Position.Z + 10);
@@ -180,16 +206,16 @@ namespace ghetto
                     {
                         if (msg.Length == 2 && msg[1].ToLower() == "off")
                         {
-                            followName = null;
+                            Session.FollowName = null;
                             response = "Stopped following";
                         }
                         else if (msg.Length > 1)
                         {
-                            if (Follow(details)) response = "Following " + followName + "...";
+                            if (Follow(details)) response = "Following " + Session.FollowName + "...";
                             else
                             {
                                 response = "Error: Avatar not found";
-                                followName = null;
+                                Session.FollowName = null;
                             }
                         }
                     }
@@ -229,8 +255,8 @@ namespace ghetto
                         if (msg.Length < 3) response = "Usage: /goto <X> <Y> [Z]";
                         else
                         {
-                            ulong x = (ulong)regionX + ulong.Parse(msg[1]);
-                            ulong y = (ulong)regionY + ulong.Parse(msg[2]);
+                            ulong x = (ulong)Session.RegionX + ulong.Parse(msg[1]);
+                            ulong y = (ulong)Session.RegionY + ulong.Parse(msg[2]);
                             float z = Client.Self.Position.Z;
                             if (msg.Length > 3) z = float.Parse(msg[3]);
                             Client.Self.AutoPilot(x, y, z);
@@ -275,7 +301,7 @@ namespace ghetto
                     }
                 case "listen":
                     {
-                        quiet = false;
+                        Session.Quiet = false;
                         response = "Displaying object/avatar chat.";
                         break;
                     }
@@ -295,7 +321,7 @@ namespace ghetto
                     }
                 case "payme":
                     {
-                        if (console) Client.Self.GiveMoney(masterID, int.Parse(msg[1]), "");
+                        if (console) Client.Self.GiveMoney(Session.MasterID, int.Parse(msg[1]), "");
                         else Client.Self.GiveMoney(fromAgentID, int.Parse(msg[1]), "");
                         response = "Payment sent.";
                         break;
@@ -307,7 +333,7 @@ namespace ghetto
                     }
                 case "quiet":
                     {
-                        quiet = true;
+                        Session.Quiet = true;
                         response = "Stopped listening to chat.";
                         break;
                     }
@@ -315,10 +341,10 @@ namespace ghetto
                     {
                         if (msg.Length == 1)
                         {
-                            int count = imWindows.Count;
+                            int count = Session.IMSession.Count;
                             response = count + " active IM session";
                             if (count != 1) response += "s";
-                            foreach (Avatar av in imWindows.Values)
+                            foreach (Avatar av in Session.IMSession.Values)
                             {
                                 response += "\n" + av.LocalID + ". " + av.Name;
                             }
@@ -333,10 +359,10 @@ namespace ghetto
                             else
                             {
                                 uint index = (uint)(-1 + int.Parse(msg[1]));
-                                if (index < 0 || index >= imWindows.Count) response = "Invalid IM window number";
+                                if (index < 0 || index >= Session.IMSession.Count) response = "Invalid IM window number";
                                 else
                                 {
-                                    Client.Self.InstantMessage(imWindows[index].ID, details, imWindows[index].ProfileProperties.Partner);
+                                    Client.Self.InstantMessage(Session.IMSession[index].ID, details, Session.IMSession[index].ProfileProperties.Partner);
                                     response = "Message sent.";
                                 }
                             }
@@ -477,7 +503,7 @@ namespace ghetto
                 case "touch":
                     {
                         LLUUID findID = (LLUUID)msg[1];
-                        foreach (PrimObject prim in prims.Values)
+                        foreach (PrimObject prim in Session.Prims.Values)
                         {
                             if (prim.ID != findID) continue;
                             Client.Self.Touch(prim.LocalID);
@@ -519,13 +545,13 @@ namespace ghetto
                     {
                         if (msg.Length < 2) response = "Usage: /updates <on|off>";
                         else if (details == "on") {
-                            sendUpdates = true;
+                            Session.SendUpdates = true;
                             Client.Self.Status.UpdateTimer.Start();
                             response = "Update timer ON";
                         }
                         else if (details == "off")
                         {
-                            sendUpdates = false;
+                            Session.SendUpdates = false;
                             Client.Self.Status.UpdateTimer.Stop();
                             response = "Update timer OFF";
                         }
@@ -565,10 +591,10 @@ namespace ghetto
                                         position = a.Position;
                                         pos = " <" + (int)a.Position.X + "," + (int)a.Position.Y + "," + (int)a.Position.Z + ">";
                                     }
-                                    else if (prims.ContainsKey(a.SittingOn))
+                                    else if (Session.Prims.ContainsKey(a.SittingOn))
                                     {
-                                        position = prims[a.SittingOn].Position;
-                                        pos = " <" + (int)prims[a.SittingOn].Position.X + "," + (int)prims[a.SittingOn].Position.Y + "," + (int)prims[a.SittingOn].Position.Z + ">";
+                                        position = Session.Prims[a.SittingOn].Position;
+                                        pos = " <" + (int)Session.Prims[a.SittingOn].Position.X + "," + (int)Session.Prims[a.SittingOn].Position.Y + "," + (int)Session.Prims[a.SittingOn].Position.Z + ">";
                                     }
                                     else
                                     {

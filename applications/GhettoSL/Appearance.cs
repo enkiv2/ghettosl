@@ -60,7 +60,7 @@ namespace ghetto
             Console.ForegroundColor = System.ConsoleColor.DarkGray;
             Console.WriteLine("* Loaded " + fileName);
             Console.ForegroundColor = System.ConsoleColor.Gray;
-            lastAppearance = appearance;
+            Session.LastAppearance = appearance;
         }
 
         void CopyAppearance(Avatar av)
@@ -86,7 +86,7 @@ namespace ghetto
                     }
                     set.WearableData = new AgentSetAppearancePacket.WearableDataBlock[0];
                     Client.Network.SendPacket(set);
-                    lastAppearance = set;
+                    Session.LastAppearance = set;
                 }
             }
         }
@@ -95,14 +95,14 @@ namespace ghetto
         {
             lock (avatars)
             {
-                string findName = firstName.ToLower() + " " + lastName.ToLower();
+                string findName = Session.FirstName.ToLower() + " " + Session.LastName.ToLower();
                 foreach (Avatar av in avatars.Values)
                 {
                     if (av.Name.ToLower() == findName)
                     {
                         CopyAppearance(av);
                         string appearanceFile = Client.Self.FirstName + " " + Client.Self.LastName + ".appearance";
-                        SaveAppearance(appearanceFile, lastAppearance);
+                        SaveAppearance(appearanceFile, Session.LastAppearance);
                         return true;
                     }
                 }
