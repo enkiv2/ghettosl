@@ -90,7 +90,7 @@ namespace ghetto
                 char[] splitChar = { ' ' };
                 string[] args = input.ToLower().Split(splitChar);
                 string[] commandsWithArgs = { "camp", "event", "go", "goto", "if", "label", "pay", "payme", "say", "shout", "sleep", "sit", "teleport", "touch", "touchid", "updates", "wait", "whisper" };
-                string[] commandsWithoutArgs = { "die", "fly", "land", "quit", "relog", "run", "settime", "sitg", "stand", "walk" };
+                string[] commandsWithoutArgs = { "balance", "die", "fly", "land", "quit", "relog", "run", "settime", "sitg", "stand", "walk" };
                 if (Array.IndexOf(commandsWithArgs, args[0]) > -1 && args.Length < 2)
                 {
                     Console.WriteLine("Missing argument(s) for command \"{0}\" on line {1} of {2}", args[0], i + 1, scriptFile);

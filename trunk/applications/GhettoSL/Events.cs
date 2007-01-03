@@ -246,8 +246,8 @@ namespace ghetto
         {
             MoneyBalanceReplyPacket reply = (MoneyBalanceReplyPacket)packet;
             string desc = Helpers.FieldToString(reply.MoneyData.Description);
-            int changeAmount = reply.MoneyData.MoneyBalance - Session.CurrentBalance;
-            Session.CurrentBalance = reply.MoneyData.MoneyBalance;
+            int changeAmount = reply.MoneyData.MoneyBalance - Session.Balance;
+            Session.Balance = reply.MoneyData.MoneyBalance;
 
             char[] splitChar = { ' ' };
             string[] msg = desc.Split(splitChar);
@@ -269,7 +269,7 @@ namespace ghetto
                 Console.WriteLine(TimeStamp() + "* " + desc);
             }
             Console.ForegroundColor = System.ConsoleColor.Green;
-            Console.WriteLine(TimeStamp() + "* Balance: L$" + Session.CurrentBalance);
+            Console.WriteLine(TimeStamp() + "* Balance: L$" + Session.Balance);
             Console.ForegroundColor = System.ConsoleColor.Gray;
         }
 
@@ -277,6 +277,7 @@ namespace ghetto
 
         void OnTeleportFinish(Packet packet, Simulator simulator)
         {
+            avatars = new Dictionary<uint,Avatar>(); //wipe old avatar list
             Console.WriteLine(TimeStamp() + "* FINISHED TELEPORT TO REGION AT " + Session.RegionX + ", " + Session.RegionY);
             TeleportFinishPacket reply = (TeleportFinishPacket)packet;
             Session.RegionX = (int)(reply.Info.RegionHandle >> 32);

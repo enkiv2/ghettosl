@@ -71,13 +71,8 @@ namespace ghetto
                             }
                             else
                             {
-                                UserSession newSession = new UserSession();
-                                newSession.FirstName = msg[2];
-                                newSession.LastName = msg[3];
-                                newSession.Password = msg[4];
-                                //FIXME - add passphrase, quiet, and other flags
-                                sessions.Add((uint)(sessions.Count + 1), newSession);
-                                response = "Added account: " + msg[2] + " " + msg[3];
+                                //FIXME - add account to list.. this command might get renamed now too
+
                             }
                         }
                         else if (action == "del" || action == "remove")
@@ -349,22 +344,17 @@ namespace ghetto
                                 response += "\n" + av.LocalID + ". " + av.Name;
                             }
                         }
-                        else if (msg.Length == 2)
+                        else if (msg.Length > 2)
                         {
-                            int isNumeric;
-                            if (!int.TryParse(msg[1], out isNumeric))
+                            int windowNum;
+                            if (!int.TryParse(msg[1], out windowNum) || windowNum < 1 || windowNum > Session.IMSession.Count)
                             {
                                 response = "Invalid IM window number";
                             }
                             else
                             {
-                                uint index = (uint)(-1 + int.Parse(msg[1]));
-                                if (index < 0 || index >= Session.IMSession.Count) response = "Invalid IM window number";
-                                else
-                                {
-                                    Client.Self.InstantMessage(Session.IMSession[index].ID, details, Session.IMSession[index].ProfileProperties.Partner);
-                                    response = "Message sent.";
-                                }
+                                Client.Self.InstantMessage(Session.IMSession[(uint)windowNum].ID, details, Session.IMSession[(uint)windowNum].ProfileProperties.Partner);
+                                response = "Message sent.";
                             }
                         }
                         break;
@@ -507,10 +497,10 @@ namespace ghetto
                         {
                             if (prim.ID != findID) continue;
                             Client.Self.Touch(prim.LocalID);
-                            response = "TOUCHED OBJECT " + prim.LocalID;
+                            response = "Touched object " + prim.LocalID;
                             break;
                         }
-                        if (response == "") response = "NO OBJECT FOUND MATCHING " + findID;
+                        if (response == "") response = "Object not found: " + findID;
                         break;
                     }
                 case "touchid":
@@ -580,33 +570,55 @@ namespace ghetto
                             string spaces;
                             lock (avatars)
                             {
+                                LLVector3 myPos = Client.Self.Position;
+                                if (Client.Self.SittingOn > 0)
+                                {
+                                    if (Session.Prims.ContainsKey(Client.Self.SittingOn))
+                                    {
+                                        myPos.X += Session.Prims[Client.Self.SittingOn].Position.X;
+                                        myPos.Y += Session.Prims[Client.Self.SittingOn].Position.Y;
+                                        myPos.Z += Session.Prims[Client.Self.SittingOn].Position.Z;
+                                    }
+                                    else myPos = new LLVector3(0f,0f,0f);
+                                }
+
                                 foreach (Avatar a in avatars.Values)
                                 {
 
-                                    LLVector3 position;
+                                    LLVector3 avPos;
                                     string pos;
 
                                     if (a.SittingOn < 1)
                                     {
-                                        position = a.Position;
-                                        pos = " <" + (int)a.Position.X + "," + (int)a.Position.Y + "," + (int)a.Position.Z + ">";
+                                        avPos = a.Position;
+                                        pos = " <" + (int)avPos.X + "," + (int)avPos.Y + "," + (int)avPos.Z + ">";
                                     }
-                                    else if (Session.Prims.ContainsKey(a.SittingOn))
+                                    else if (!Session.Prims.ContainsKey(a.SittingOn) || !Session.Prims.ContainsKey(Client.Self.SittingOn))
                                     {
-                                        position = Session.Prims[a.SittingOn].Position;
-                                        pos = " <" + (int)Session.Prims[a.SittingOn].Position.X + "," + (int)Session.Prims[a.SittingOn].Position.Y + "," + (int)Session.Prims[a.SittingOn].Position.Z + ">";
+                                        avPos = new LLVector3(0f, 0f, 0f);
+                                        pos = " <???>";
                                     }
                                     else
                                     {
-                                        position = new LLVector3(0f,0f,0f);
-                                        pos = " <???>";
+                                        avPos = Session.Prims[a.SittingOn].Position + a.Position;
+                                        pos = " <" + (int)avPos.X + "," + (int)avPos.Y + "," + (int)avPos.Z + ">";
+                                    }
+
+                                    if (a.SittingOn > 0)
+                                    {
+                                        Console.ForegroundColor = ConsoleColor.DarkCyan;
+                                        Console.Write("~");
+                                    }
+                                    else
+                                    {
+                                        Console.Write(" ");
                                     }
 
                                     spaces = ""; for (int sc = a.Name.Length; sc < 20; sc++) spaces += " ";
                                     Console.ForegroundColor = ConsoleColor.White;
-                                    Console.Write(" " + a.Name + spaces);
+                                    Console.Write(a.Name + spaces);
 
-                                    string dist = "(" + (int)Helpers.VecDist(Client.Self.Position, position) + "m)";
+                                    string dist = "(" + (int)Helpers.VecDist(Client.Self.Position, avPos) + "m)";
                                     spaces = ""; for (int sc = dist.Length; sc < 6; sc++) spaces += " ";
                                     Console.ForegroundColor = ConsoleColor.Gray;
                                     Console.Write(" " + dist + spaces);

@@ -38,7 +38,6 @@ namespace ghetto
     partial class GhettoSL
     {
 
-        static Dictionary<uint, UserSession> sessions; //details for all accounts
         static Dictionary<uint, GhettoSL> connections;
 
         UserSession Session;
@@ -59,15 +58,15 @@ namespace ghetto
             public string PassPhrase;
             public LLUUID MasterID;
             public bool Quiet;
+            public bool SendUpdates;
             public string Script;
-            public int CurrentBalance;
+            public int Balance;
             public Dictionary<uint, PrimObject> Prims;
             public Dictionary<LLUUID, Avatar> Friends;
             public Dictionary<uint, Avatar> IMSession;
             public AgentSetAppearancePacket LastAppearance;
             public int MoneySpent;
             public int MoneyReceived;
-            public bool SendUpdates;
             public LLUUID MasterIMSession;
             public string FollowName;
             public int RegionX;
