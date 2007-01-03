@@ -73,24 +73,21 @@ namespace ghetto
 
         }
 
-
         void CreateMessageWindow(LLUUID fromAgentID, string fromAgentName, byte dialog, LLUUID imSessionID)
         {
-            bool hasWindow = false;
+            //check for existing session
             foreach (Avatar av in Session.IMSession.Values)
             {
-                if (av.ID == fromAgentID)
-                {
-                    hasWindow = true;
-                    break;
-                }
+                if (av.ID == fromAgentID) return;
             }
+            //create new session
             Avatar newAvatar = new Avatar();
             newAvatar.ID = fromAgentID;
             newAvatar.Name = fromAgentName;
             newAvatar.ProfileProperties.Partner = imSessionID; //hack - imSessionID, not PartnerID
             newAvatar.LocalID = (uint)(Session.IMSession.Count + 1); //hack - windowID, not LocalID
-            if (!hasWindow) Session.IMSession.Add((uint)Session.IMSession.Count, newAvatar);
+            Session.IMSession.Add((uint)Session.IMSession.Count, newAvatar);
+            Console.WriteLine(TimeStamp() + "* Created IM window {0} for user {1}.", newAvatar.LocalID, newAvatar.Name);
         }
 
         uint FindObjectByText(string textValue)
