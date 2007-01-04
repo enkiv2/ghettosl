@@ -97,14 +97,14 @@ namespace ghetto
 
         uint FindObjectByText(string textValue)
         {
-            Session.CampChairMatchText = textValue;
+            Session.Settings.CampChairMatchText = textValue;
             uint localID = 0;
             foreach (PrimObject prim in Session.Prims.Values)
             {
-                int len = Session.CampChairMatchText.Length;
+                int len = Session.Settings.CampChairMatchText.Length;
                 string match = prim.Text.Replace("\n", ""); //Strip newlines
                 if (match.Length < len) continue; //Text is too short to be a match
-                else if (match.Substring(0, len).ToLower() == Session.CampChairMatchText)
+                else if (match.Substring(0, len).ToLower() == Session.Settings.CampChairMatchText)
                 {
                     localID = prim.LocalID;
                     break;
@@ -121,7 +121,7 @@ namespace ghetto
                 if (av.Name.Length < findName.Length) continue; //Name is too short to be a match
                 else if (av.Name.ToLower().Substring(0, findName.Length) == findName)
                 {
-                    Session.FollowName = av.Name;
+                    Session.Settings.FollowName = av.Name;
                     if (Helpers.VecDist(av.Position, Client.Self.Position) > 4)
                     {
                         //GridRegion region = Client.Network.CurrentSim.Region.GridRegionData;
