@@ -391,7 +391,7 @@ namespace ghetto
                             {
                                 for (int lnum = 0; lnum < Session.Script.Lines.Length; lnum++)
                                 {
-                                    string lstring = ""+(lnum + 1);
+                                    string lstring = "" + (lnum + 1);
                                     while (lstring.Length < 3) lstring += " ";
                                     Console.ForegroundColor = System.ConsoleColor.Gray;
                                     Console.Write("{0}: ", lstring);
@@ -407,6 +407,7 @@ namespace ghetto
                                     Console.WriteLine(Session.Script.Lines[lnum]);                                    
                                 }
                                 Console.ForegroundColor = System.ConsoleColor.Gray;
+                                Console.WriteLine("");
                             }
                         }
                         break;
