@@ -50,7 +50,7 @@ namespace ghetto
         static uint currentSession;
         static bool logout;
 
-        public struct UserSession
+        public struct UserSettings
         {
             public string FirstName;
             public string LastName;
@@ -58,8 +58,15 @@ namespace ghetto
             public string PassPhrase;
             public LLUUID MasterID;
             public bool Quiet;
-            public bool SendUpdates;
             public string Script;
+            public bool SendUpdates;
+            public string CampChairMatchText;
+            public string FollowName;
+        }
+
+        public struct UserSession
+        {
+            public UserSettings Settings;
             public int Balance;
             public Dictionary<uint, PrimObject> Prims;
             public Dictionary<LLUUID, Avatar> Friends;
@@ -68,12 +75,9 @@ namespace ghetto
             public int MoneySpent;
             public int MoneyReceived;
             public LLUUID MasterIMSession;
-            public string FollowName;
             public int RegionX;
             public int RegionY;
-            public string CampChairMatchText;
             public uint StartTime;
-
         }
         
 
@@ -97,13 +101,13 @@ namespace ghetto
             if (args.Length > 6) scriptFile = args[6];
 
             UserSession session = new UserSession();
-            session.FirstName = args[0];
-            session.LastName = args[1];
-            session.Password = args[2];
-            session.PassPhrase = args[3];
-            session.MasterID = masterID;
-            session.Quiet = quiet;
-            session.Script = scriptFile;
+            session.Settings.FirstName = args[0];
+            session.Settings.LastName = args[1];
+            session.Settings.Password = args[2];
+            session.Settings.PassPhrase = args[3];
+            session.Settings.MasterID = masterID;
+            session.Settings.Quiet = quiet;
+            session.Settings.Script = scriptFile;
 
             connections = new Dictionary<uint, GhettoSL>();
             currentSession = 1;
@@ -157,7 +161,7 @@ namespace ghetto
             Session.LastAppearance = new AgentSetAppearancePacket();
 
             logout = false;
-            Session.SendUpdates = true;
+            Session.Settings.SendUpdates = true;
 
             avatars = new Dictionary<uint, Avatar>();
             Session.Friends = new Dictionary<LLUUID, Avatar>();
@@ -192,7 +196,7 @@ namespace ghetto
             while (!Login()) Thread.Sleep(5000);
 
             //Run script
-            if (Session.Script != "") LoadScript(Session.Script);
+            if (Session.Settings.Script != "") LoadScript(Session.Settings.Script);
 
         }
         //END OF GHETTOSL VOID ################################################
@@ -203,11 +207,11 @@ namespace ghetto
         {
             Console.Title = "GhettoSL - Logging in...";
             Console.ForegroundColor = System.ConsoleColor.White;
-            Console.WriteLine(TimeStamp() + "Logging in as " + Session.FirstName + " " + Session.LastName + "...");
+            Console.WriteLine(TimeStamp() + "Logging in as " + Session.Settings.FirstName + " " + Session.Settings.LastName + "...");
             Console.ForegroundColor = System.ConsoleColor.Gray;
 
             //Attempt to log in
-            if (!Client.Network.Login(Session.FirstName, Session.LastName, Session.Password, "GhettoSL", "ghetto@obsoleet.com"))
+            if (!Client.Network.Login(Session.Settings.FirstName, Session.Settings.LastName, Session.Settings.Password, "GhettoSL", "ghetto@obsoleet.com"))
             {
                 Console.WriteLine("Login failed.");
                 return false;

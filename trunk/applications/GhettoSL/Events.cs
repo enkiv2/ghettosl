@@ -80,7 +80,7 @@ namespace ghetto
             if (File.Exists(appearanceFile)) LoadAppearance(appearanceFile);
 
             //Enable agent updates
-            if (Session.SendUpdates) Client.Self.Status.UpdateTimer.Start();
+            if (Session.Settings.SendUpdates) Client.Self.Status.UpdateTimer.Start();
 
             //Needed for finding lots of sims
             Client.Grid.AddEstateSims();
@@ -153,7 +153,7 @@ namespace ghetto
                 string[] cmdScript = { ParseScriptVariables(pair.Value.Command, name, fromAgentID, 0, message) };
                 ParseScriptLine(cmdScript, 0);
             }
-            if (Session.Quiet || chatType > 3 || audible < 1) return;
+            if (Session.Settings.Quiet || chatType > 3 || audible < 1) return;
             char[] splitChar = { ' ' };
             string[] msg = message.Split(splitChar);
 
@@ -192,7 +192,7 @@ namespace ghetto
             }
 
             //Teleport request
-            if (dialog == (int)MainAvatar.InstantMessageDialog.RequestTeleport && (fromAgentID == Session.MasterID || message == Session.PassPhrase))
+            if (dialog == (int)MainAvatar.InstantMessageDialog.RequestTeleport && (fromAgentID == Session.Settings.MasterID || message == Session.Settings.PassPhrase))
             {
                 Console.ForegroundColor = System.ConsoleColor.Magenta;
                 Console.WriteLine(TimeStamp() + "Accepting teleport request from {0} ({1})", fromAgentName, message);
@@ -217,7 +217,7 @@ namespace ghetto
                 return;
             }
 
-            if (!Session.Quiet)
+            if (!Session.Settings.Quiet)
             {
                 CreateMessageWindow(fromAgentID, fromAgentName, dialog, imSessionID);
                 //Display IM in console
@@ -227,7 +227,7 @@ namespace ghetto
             }
 
             //Parse commands from masterID only
-            if (offline > 0 || fromAgentID != Session.MasterID) return;
+            if (offline > 0 || fromAgentID != Session.Settings.MasterID) return;
 
             //Remember IM session
             Session.MasterIMSession = imSessionID;
@@ -307,7 +307,7 @@ namespace ghetto
                 Session.RegionX = (int)(regionHandle >> 32);
                 Session.RegionY = (int)(regionHandle & 0xFFFFFFFF);
                 //}
-                if (avatars[avatar.LocalID].Name == Session.FollowName)
+                if (avatars[avatar.LocalID].Name == Session.Settings.FollowName)
                 {
                     avatars[avatar.LocalID].Position = avatar.Position;
                     avatars[avatar.LocalID].Rotation = avatar.Rotation;
@@ -431,7 +431,7 @@ namespace ghetto
         void OnRequestFriendship(Packet packet, Simulator simulator)
         {
             RequestFriendshipPacket reply = (RequestFriendshipPacket)packet;
-            if (reply.AgentData.AgentID != Session.MasterID) return;
+            if (reply.AgentData.AgentID != Session.Settings.MasterID) return;
             AcceptFriendshipPacket p = new AcceptFriendshipPacket();
             p.AgentData.AgentID = Client.Network.AgentID;
             p.AgentData.SessionID = Client.Network.SessionID;

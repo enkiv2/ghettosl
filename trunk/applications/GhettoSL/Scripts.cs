@@ -361,7 +361,7 @@ namespace ghetto
             sc = sc.Replace("$amount", amount.ToString());
             sc = sc.Replace("$earned", Session.MoneyReceived.ToString());
             sc = sc.Replace("$id", id.ToString());
-            sc = sc.Replace("$master", Session.MasterID.ToString());
+            sc = sc.Replace("$master", Session.Settings.MasterID.ToString());
             sc = sc.Replace("$message", message);
             sc = sc.Replace("$name", name);
             sc = sc.Replace("$spent", Session.MoneySpent.ToString());

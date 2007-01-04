@@ -95,7 +95,7 @@ namespace ghetto
         {
             lock (avatars)
             {
-                string findName = Session.FirstName.ToLower() + " " + Session.LastName.ToLower();
+                string findName = Session.Settings.FirstName.ToLower() + " " + Session.Settings.LastName.ToLower();
                 foreach (Avatar av in avatars.Values)
                 {
                     if (av.Name.ToLower() == findName)

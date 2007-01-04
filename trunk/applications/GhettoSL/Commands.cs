@@ -200,16 +200,16 @@ namespace ghetto
                     {
                         if (msg.Length == 2 && msg[1].ToLower() == "off")
                         {
-                            Session.FollowName = null;
+                            Session.Settings.FollowName = null;
                             response = "Stopped following";
                         }
                         else if (msg.Length > 1)
                         {
-                            if (Follow(details)) response = "Following " + Session.FollowName + "...";
+                            if (Follow(details)) response = "Following " + Session.Settings.FollowName + "...";
                             else
                             {
                                 response = "Error: Avatar not found";
-                                Session.FollowName = null;
+                                Session.Settings.FollowName = null;
                             }
                         }
                     }
@@ -295,7 +295,7 @@ namespace ghetto
                     }
                 case "listen":
                     {
-                        Session.Quiet = false;
+                        Session.Settings.Quiet = false;
                         response = "Displaying object/avatar chat.";
                         break;
                     }
@@ -315,7 +315,7 @@ namespace ghetto
                     }
                 case "payme":
                     {
-                        if (console) Client.Self.GiveMoney(Session.MasterID, int.Parse(msg[1]), "");
+                        if (console) Client.Self.GiveMoney(Session.Settings.MasterID, int.Parse(msg[1]), "");
                         else Client.Self.GiveMoney(fromAgentID, int.Parse(msg[1]), "");
                         response = "Payment sent.";
                         break;
@@ -327,7 +327,7 @@ namespace ghetto
                     }
                 case "quiet":
                     {
-                        Session.Quiet = true;
+                        Session.Settings.Quiet = true;
                         response = "Stopped listening to chat.";
                         break;
                     }
@@ -535,13 +535,13 @@ namespace ghetto
                     {
                         if (msg.Length < 2) response = "Usage: /updates <on|off>";
                         else if (details == "on") {
-                            Session.SendUpdates = true;
+                            Session.Settings.SendUpdates = true;
                             Client.Self.Status.UpdateTimer.Start();
                             response = "Update timer ON";
                         }
                         else if (details == "off")
                         {
-                            Session.SendUpdates = false;
+                            Session.Settings.SendUpdates = false;
                             Client.Self.Status.UpdateTimer.Stop();
                             response = "Update timer OFF";
                         }
