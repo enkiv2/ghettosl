@@ -38,14 +38,6 @@ namespace ghetto
     partial class GhettoSL
     {
 
-        string[] script = { };
-        int scriptStep;
-        uint scriptTime;
-        uint scriptSleepStart;
-        System.Timers.Timer scriptSleep;
-        Dictionary<string, Event> scriptEvents;
-
-
         public enum EventTypes
         {
             Chat = 0,
@@ -104,8 +96,8 @@ namespace ghetto
                 }
                 else
                 {
-                    Array.Resize(ref script, i + 1);
-                    script[i] = input;
+                    Array.Resize(ref Session.Script.Lines, i + 1);
+                    Session.Script.Lines[i] = input;
                 }
             }
             read.Close();
@@ -119,13 +111,13 @@ namespace ghetto
                 Console.WriteLine(TimeStamp() + "Running script \"{0}\"", scriptFile);
 
                 //initialize script
-                scriptStep = 0;
-                scriptEvents = new Dictionary<string, Event>();
-                scriptSleep = new System.Timers.Timer();
-                scriptSleep.AutoReset = false;
-                scriptSleep.Elapsed += new System.Timers.ElapsedEventHandler(ScriptWaitEvent);
+                Session.Script.CurrentStep = 0;
+                Session.Script.Events = new Dictionary<string, Event>();
+                Session.Script.SleepTimer = new System.Timers.Timer();
+                Session.Script.SleepTimer.AutoReset = false;
+                Session.Script.SleepTimer.Elapsed += new System.Timers.ElapsedEventHandler(ScriptWaitEvent);
                 //run until wait or break
-                while (ParseScriptLine(script, scriptStep)) scriptStep++;
+                while (ParseScriptLine(Session.Script.Lines, Session.Script.CurrentStep)) Session.Script.CurrentStep++;
 
                 return true;
             }
@@ -133,8 +125,8 @@ namespace ghetto
 
         void ScriptWaitEvent(object target, System.Timers.ElapsedEventArgs eventArgs)
         {
-            do scriptStep++;
-            while (ParseScriptLine(script, scriptStep));
+            do Session.Script.CurrentStep++;
+            while (ParseScriptLine(Session.Script.Lines, Session.Script.CurrentStep));
         }
 
         /// <summary>
@@ -193,7 +185,7 @@ namespace ghetto
                             }
                             else
                             {
-                                uint elapsed = Helpers.GetUnixTime() - scriptTime;
+                                uint elapsed = Helpers.GetUnixTime() - Session.Script.ScriptTime;
                                 if (elapsed < waitTime) fail = true;
                             }
                             preArgs++; //account for extra preArg (the number of seconds)
@@ -250,7 +242,7 @@ namespace ghetto
             {
                 case "settime":
                     {
-                        scriptTime = Helpers.GetUnixTime();
+                        Session.Script.ScriptTime = Helpers.GetUnixTime();
                         return true;
                     }
                 case "goto":
@@ -258,7 +250,7 @@ namespace ghetto
                         int findLabel = Array.IndexOf(script, "label " + cmd[1]);
                         if (findLabel > -1)
                         {
-                            scriptStep = findLabel - 1;
+                            Session.Script.CurrentStep = findLabel - 1;
                             Thread.Sleep(100); //imposed 1ms delay to prevent bad scripts from hogging cpu
                         }
                         else
@@ -278,7 +270,7 @@ namespace ghetto
                         string eventLabel = cmd[1];
                         if (cmd[2] == "off")
                         {
-                            scriptEvents.Remove(eventLabel);
+                            Session.Script.Events.Remove(eventLabel);
                             Console.WriteLine(TimeStamp() + "Removed event " + eventLabel);
                             return true;
                         }
@@ -323,7 +315,7 @@ namespace ghetto
                         Array.Copy(cmd, start, command, 0, len);
                         newEvent.Command = String.Join(" ", command);
 
-                        scriptEvents[eventLabel] = newEvent;
+                        Session.Script.Events[eventLabel] = newEvent;
 
                         Console.WriteLine(TimeStamp() + "ADDED EVENT {0} ({1}): {2}", eventLabel, newEvent.Type, newEvent.Command);
                         return true;
@@ -370,13 +362,13 @@ namespace ghetto
 
         void ScriptSleep(float seconds)
         {
-            scriptSleepStart = Helpers.GetUnixTime();
+            Session.Script.SleepingSince = Helpers.GetUnixTime();
             if (seconds <= 0) Console.WriteLine(TimeStamp() + "Invalid sleep time");
             else
             {
                 Console.WriteLine(TimeStamp() + "Sleeping {0} seconds...", seconds);
-                scriptSleep.Interval = (int)(seconds * 1000);
-                scriptSleep.Enabled = true;
+                Session.Script.SleepTimer.Interval = (int)(seconds * 1000);
+                Session.Script.SleepTimer.Enabled = true;
             }
         }
 

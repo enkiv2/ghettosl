@@ -65,11 +65,11 @@ namespace ghetto
 
         void CopyAppearance(Avatar av)
         {
-            lock (appearances)
+            lock (Session.Appearances)
             {
-                if (appearances.ContainsKey(av.ID))
+                if (Session.Appearances.ContainsKey(av.ID))
                 {
-                    AvatarAppearancePacket appearance = appearances[av.ID];
+                    AvatarAppearancePacket appearance = Session.Appearances[av.ID];
                     AgentSetAppearancePacket set = new AgentSetAppearancePacket();
                     set.AgentData.AgentID = Client.Network.AgentID;
                     set.AgentData.SessionID = Client.Network.SessionID;
@@ -93,10 +93,10 @@ namespace ghetto
 
         bool Clone(string name)
         {
-            lock (avatars)
+            lock (Session.Avatars)
             {
                 string findName = Session.Settings.FirstName.ToLower() + " " + Session.Settings.LastName.ToLower();
-                foreach (Avatar av in avatars.Values)
+                foreach (Avatar av in Session.Avatars.Values)
                 {
                     if (av.Name.ToLower() == findName)
                     {

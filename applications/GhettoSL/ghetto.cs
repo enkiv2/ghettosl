@@ -43,9 +43,6 @@ namespace ghetto
         UserSession Session;
         SecondLife Client = new SecondLife();
 
-        Dictionary<uint, Avatar> avatars;
-        Dictionary<LLUUID, AvatarAppearancePacket> appearances;
-
         string platform;
         static uint currentSession;
         static bool logout;
@@ -68,6 +65,8 @@ namespace ghetto
         {
             public UserSettings Settings;
             public int Balance;
+            public Dictionary<uint, Avatar> Avatars;
+            public Dictionary<LLUUID, AvatarAppearancePacket> Appearances;
             public Dictionary<uint, PrimObject> Prims;
             public Dictionary<LLUUID, Avatar> Friends;
             public Dictionary<uint, Avatar> IMSession;
@@ -78,6 +77,17 @@ namespace ghetto
             public int RegionX;
             public int RegionY;
             public uint StartTime;
+            public UserScript Script;
+        }
+
+        public struct UserScript
+        {
+            public string[] Lines;
+            public int CurrentStep;
+            public uint ScriptTime;
+            public uint SleepingSince;
+            public System.Timers.Timer SleepTimer;
+            public Dictionary<string, Event> Events;
         }
         
 
@@ -163,12 +173,14 @@ namespace ghetto
             logout = false;
             Session.Settings.SendUpdates = true;
 
-            avatars = new Dictionary<uint, Avatar>();
+            Session.Appearances = new Dictionary<LLUUID, AvatarAppearancePacket>();
+            Session.Avatars = new Dictionary<uint, Avatar>();
             Session.Friends = new Dictionary<LLUUID, Avatar>();
             Session.Prims = new Dictionary<uint, PrimObject>();
-            appearances = new Dictionary<LLUUID, AvatarAppearancePacket>();
+            
+            Session.Script.Events = new Dictionary<string, Event>();
+
             Stalked = new Dictionary<LLUUID, Location>();
-            scriptEvents = new Dictionary<string, Event>();
 
             // Unix timestamp of when the client was launched
             Session.StartTime = Helpers.GetUnixTime();

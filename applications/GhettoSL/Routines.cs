@@ -42,7 +42,7 @@ namespace ghetto
         {
             LLUUID agentID = new LLUUID();
             string msg = "Unable to locate " + agentName + ". Payment: L$" + amount;
-            foreach (Avatar av in avatars.Values)
+            foreach (Avatar av in Session.Avatars.Values)
             {
                 if (av.Name != agentName) continue;
                 agentID = av.ID;
@@ -62,7 +62,7 @@ namespace ghetto
             {
                 Session.MoneySpent -= amount;
             }
-            foreach (KeyValuePair<string, Event> pair in scriptEvents)
+            foreach (KeyValuePair<string, Event> pair in Session.Script.Events)
             {
                 if (pair.Value.Type == (int)EventTypes.GetMoney && amount > 0)
                 {
@@ -116,7 +116,7 @@ namespace ghetto
         bool Follow(string name)
         {
             string findName = name.ToLower();
-            foreach (Avatar av in avatars.Values)
+            foreach (Avatar av in Session.Avatars.Values)
             {
                 if (av.Name.Length < findName.Length) continue; //Name is too short to be a match
                 else if (av.Name.ToLower().Substring(0, findName.Length) == findName)
@@ -177,7 +177,7 @@ namespace ghetto
         bool RideWith(string name)
         {
             string findName = name.ToLower();
-            foreach (Avatar av in avatars.Values)
+            foreach (Avatar av in Session.Avatars.Values)
             {
 
                 if (av.Name.ToLower().Substring(0, findName.Length) == findName)
