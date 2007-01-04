@@ -66,7 +66,7 @@ namespace ghetto
         void OnConnectedEvent(object sender)
         {
             Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine(TimeStamp() + "* CONNECTED");
+            Console.WriteLine(TimeStamp() + "CONNECTED");
             Console.ForegroundColor = ConsoleColor.Gray;
 
             string appearanceFile = Client.Self.FirstName + " " + Client.Self.LastName + ".appearance";
@@ -89,7 +89,7 @@ namespace ghetto
         void OnSimDisconnectEvent(Simulator sim, NetworkManager.DisconnectType type)
         {
             Console.ForegroundColor = System.ConsoleColor.Red;
-            Console.WriteLine(TimeStamp() + "* DISCONNECTED FROM SIM: " + type.ToString());
+            Console.WriteLine(TimeStamp() + "DISCONNECTED FROM SIM: " + type.ToString());
             Console.ForegroundColor = System.ConsoleColor.Gray;
             if (logout) return;
 
@@ -107,7 +107,7 @@ namespace ghetto
             AlertMessagePacket p = (AlertMessagePacket)packet;
 
             Console.ForegroundColor = System.ConsoleColor.Cyan;
-            Console.WriteLine(TimeStamp() + "* " + Helpers.FieldToString(p.AlertData.Message));
+            Console.WriteLine(TimeStamp() + Helpers.FieldToString(p.AlertData.Message));
             Console.ForegroundColor = System.ConsoleColor.Gray;
         }
 
@@ -142,7 +142,7 @@ namespace ghetto
                 if (chatType == (int)MainAvatar.ChatType.Shout) prefix = "(shouted) ";
                 else if (chatType == (int)MainAvatar.ChatType.Whisper) prefix = "(whispered) ";
                 message = String.Join(" ", msg, 1, msg.Length - 1);
-                Console.WriteLine(TimeStamp() + "* {0}{1} {2}", prefix, name, message);
+                Console.WriteLine(TimeStamp() + "{0}{1} {2}", prefix, name, message);
             }
             Console.ForegroundColor = System.ConsoleColor.Gray;
         }
@@ -165,7 +165,7 @@ namespace ghetto
             if (dialog == (int)MainAvatar.InstantMessageDialog.RequestTeleport && (fromAgentID == Session.MasterID || message == Session.PassPhrase))
             {
                 Console.ForegroundColor = System.ConsoleColor.Magenta;
-                Console.WriteLine("* Accepting teleport request from {0} ({1})", fromAgentName, message);
+                Console.WriteLine(TimeStamp() + "Accepting teleport request from {0} ({1})", fromAgentName, message);
                 Console.ForegroundColor = System.ConsoleColor.Gray;
                 Client.Self.TeleportLureRespond(fromAgentID, true);
                 return;
@@ -174,7 +174,7 @@ namespace ghetto
             else if (dialog == (int)MainAvatar.InstantMessageDialog.GiveInventory)
             {
                 Console.ForegroundColor = System.ConsoleColor.Cyan;
-                Console.WriteLine(TimeStamp() + "* " + fromAgentName + " gave you an object named \"" + message + "\"");
+                Console.WriteLine(TimeStamp() + fromAgentName + " gave you an object named \"" + message + "\"");
                 Console.ForegroundColor = System.ConsoleColor.Gray;
                 return;
             }
@@ -182,7 +182,7 @@ namespace ghetto
             else if (dialog == (int)MainAvatar.InstantMessageDialog.GiveNotecard)
             {
                 Console.ForegroundColor = System.ConsoleColor.Cyan;
-                Console.WriteLine(TimeStamp() + "* {0} gave you a notecard named \"{1}\"", fromAgentName, message);
+                Console.WriteLine(TimeStamp() + "{0} gave you a notecard named \"{1}\"", fromAgentName, message);
                 Console.ForegroundColor = System.ConsoleColor.Gray;
                 return;
             }
@@ -254,22 +254,22 @@ namespace ghetto
             if (msg.Length == 5)
             {
                 if (!int.TryParse(msg[4].Substring(2, msg[4].Length - 3), out changeAmount))
-                    Console.WriteLine("* UNEXPECTED PAYMENT MESSAGE");
+                    Console.WriteLine(TimeStamp() + "UNEXPECTED PAYMENT MESSAGE");
                 else if (msg[0] + " " + msg[1] == "You paid")
                     AcknowledgePayment(msg[2] + " " + msg[3], changeAmount * -1);
                 else if (msg[2] + " " + msg[3] == "paid you")
                     AcknowledgePayment(msg[0] + " " + msg[1], changeAmount);
                 else
-                    Console.WriteLine("* UNEXPECTED PAYMENT MESSAGE");
+                    Console.WriteLine(TimeStamp() + "UNEXPECTED PAYMENT MESSAGE");
             }
                 
             if (desc.Length > 1)
             {
                 Console.ForegroundColor = System.ConsoleColor.Cyan;
-                Console.WriteLine(TimeStamp() + "* " + desc);
+                Console.WriteLine(TimeStamp() + desc);
             }
             Console.ForegroundColor = System.ConsoleColor.Green;
-            Console.WriteLine(TimeStamp() + "* Balance: L$" + Session.Balance);
+            Console.WriteLine(TimeStamp() + "Balance: L$" + Session.Balance);
             Console.ForegroundColor = System.ConsoleColor.Gray;
         }
 
@@ -278,7 +278,7 @@ namespace ghetto
         void OnTeleportFinish(Packet packet, Simulator simulator)
         {
             avatars = new Dictionary<uint,Avatar>(); //wipe old avatar list
-            Console.WriteLine(TimeStamp() + "* FINISHED TELEPORT TO REGION AT " + Session.RegionX + ", " + Session.RegionY);
+            Console.WriteLine(TimeStamp() + "FINISHED TELEPORT TO REGION AT " + Session.RegionX + ", " + Session.RegionY);
             TeleportFinishPacket reply = (TeleportFinishPacket)packet;
             Session.RegionX = (int)(reply.Info.RegionHandle >> 32);
             Session.RegionY = (int)(reply.Info.RegionHandle & 0xFFFFFFFF);
@@ -420,7 +420,7 @@ namespace ghetto
             //FIXME -- DETECT WHAT masterID IS GRABBING
             //if (reply.AgentData.AgentID == masterID)
             //{
-            Console.WriteLine("* Touched/grabbed object " + reply.ObjectData[0].ObjectLocalID);
+            Console.WriteLine(TimeStamp() + "Touched/grabbed object " + reply.ObjectData[0].ObjectLocalID);
             //}
         }
 

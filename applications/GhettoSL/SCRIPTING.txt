@@ -71,7 +71,9 @@ event <label> givemoney <command> .......... money paid to other objects/avatars
 EVENT IDENTIFIERS:
 
 $amount .......... Dollar amount associated with money events
+$earned .......... L$ earned since login
+$id .............. UUID associated with event
 $master .......... MasterID as defined in the command arguments
 $message ......... Message associated with event
 $name ............ Name associated with event
-$id .............. UUID associated with event
+$spent ........... L$ spent since login
