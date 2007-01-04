@@ -48,8 +48,14 @@ namespace ghetto
             Client.Network.RegisterCallback(PacketType.RequestFriendship, new NetworkManager.PacketCallback(OnRequestFriendship));
             Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(OnTeleportFinish));
             Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(OnAlertMessage));
-            //Mapstalk
+
+            //Mapstalk - FIXME - Jesse added this... I don't think it works.
             Client.Network.RegisterCallback(PacketType.FindAgent, new NetworkManager.PacketCallback(FindAgentCallback));
+
+            //Sim Crossing - FIXME - Neither of these seems to trigger
+            Client.Network.RegisterCallback(PacketType.CrossedRegion, new NetworkManager.PacketCallback(OnCrossedRegion));
+            Client.Network.RegisterCallback(PacketType.AgentToNewRegion, new NetworkManager.PacketCallback(OnAgentToNewRegion));
+
             Client.Network.OnConnected += new NetworkManager.ConnectedCallback(OnConnectedEvent);
             Client.Network.OnSimDisconnected += new NetworkManager.SimDisconnectCallback(OnSimDisconnectEvent);
             Client.Objects.OnAvatarMoved += new ObjectManager.AvatarMovedCallback(OnAvatarMovedEvent);
@@ -69,15 +75,18 @@ namespace ghetto
             Console.WriteLine(TimeStamp() + "CONNECTED");
             Console.ForegroundColor = ConsoleColor.Gray;
 
+            //Load "Avatar Name.appearance" if the file exists
             string appearanceFile = Client.Self.FirstName + " " + Client.Self.LastName + ".appearance";
             if (File.Exists(appearanceFile)) LoadAppearance(appearanceFile);
 
+            //Enable agent updates
             if (Session.SendUpdates) Client.Self.Status.UpdateTimer.Start();
 
+            //Needed for finding lots of sims
             Client.Grid.AddEstateSims();
 
-            //FIXME!!! - ADD Client.Self.RetrieveInstantMessages() TO CORE!
             //Retrieve offline IMs
+            //FIXME - Add Client.Self.RetrieveInstantMessages() TO CORE!
             RetrieveInstantMessagesPacket p = new RetrieveInstantMessagesPacket();
             p.AgentData.AgentID = Client.Network.AgentID;
             p.AgentData.SessionID = Client.Network.SessionID;
@@ -93,7 +102,7 @@ namespace ghetto
             Console.ForegroundColor = System.ConsoleColor.Gray;
             if (logout) return;
 
-            return; //FIXME - log back in after disconnect
+            return; //FIXME - Log back in after disconnect
 
             Client.Network.Logout();
             do Thread.Sleep(5000);
@@ -111,6 +120,27 @@ namespace ghetto
             Console.ForegroundColor = System.ConsoleColor.Gray;
         }
 
+        //FIXME - CROSS INTO NEW REGIONS - Neither of these triggers when pushed across a border
+        void OnCrossedRegion(Packet packet, Simulator sim)
+        {
+            CrossedRegionPacket reply = (CrossedRegionPacket)packet;
+            Console.WriteLine(TimeStamp() + "CROSSED TO NEW REGION: " + reply.RegionData.RegionHandle);
+            Client.Network.SendPacket(new DisableSimulatorPacket());
+            EnableSimulatorPacket p = new EnableSimulatorPacket();
+            p.SimulatorInfo.IP = reply.RegionData.SimIP;
+            p.SimulatorInfo.Port = reply.RegionData.SimPort;
+            p.SimulatorInfo.Handle = reply.RegionData.RegionHandle;
+        }
+        void OnAgentToNewRegion(Packet packet, Simulator sim)
+        {
+            AgentToNewRegionPacket reply = (AgentToNewRegionPacket)packet;
+            Console.WriteLine(TimeStamp() + "CROSSED TO NEW REGION: " + reply.RegionData.Handle);
+            Client.Network.SendPacket(new DisableSimulatorPacket());
+            EnableSimulatorPacket p = new EnableSimulatorPacket();
+            p.SimulatorInfo.IP = reply.RegionData.IP;
+            p.SimulatorInfo.Port = reply.RegionData.Port;
+            p.SimulatorInfo.Handle = reply.RegionData.Handle;
+        }
 
         
         void OnChatEvent(string message, byte audible, byte chatType, byte sourceType, string name, LLUUID fromAgentID, LLUUID ownerID, LLVector3 position)
@@ -207,40 +237,15 @@ namespace ghetto
             ParseCommand(false, message, fromAgentName, fromAgentID, imSessionID);
         }
 
-
+        //Friend notification
+        //FIXME - Get agent name by uuid
         void OnFriendNotificationEvent(LLUUID friendID, bool online)
         {
             Console.ForegroundColor = System.ConsoleColor.Gray;
             Console.BackgroundColor = System.ConsoleColor.DarkBlue;
-            //string name1 = Client.Avatars.GetAvatarName(friendID);
-            //string name2 = Client.Avatars.GetAvatarName(friendID);
-            //Console.WriteLine(" {0} is online ({1}) ", name1, online);
-            //Console.WriteLine(" {0} is online ({1}) ", name2, online);
-            //if (online) Console.WriteLine(" {0} is online ({1}) ", friendID, online);
-            //else Console.WriteLine(" {0} is offline ({1}) ", friendID, online);
-            //FIXME
-
-
+            Console.WriteLine(" {0} is online ({1}) ", friendID, online);
             Console.BackgroundColor = System.ConsoleColor.Black;
-
-            //FIXME!!!
-            //Client.Avatars.BeginGetAvatarName(friendID, new AvatarManager.AgentNamesCallback(AgentNamesHandler));
         }
-
-        //void AgentNamesHandler(Dictionary<LLUUID, string> agentNames)
-        //{
-        // lock(Friends)
-        //    {
-        //        foreach (KeyValuePair<LLUUID, string> agent in agentNames)
-        //        {
-        //        //FIXME!!!
-        //            //Friends[agent.Key] = agent.Value;
-        //            Console.WriteLine("AgentNames: key={0}, name={1}", agent.Key, agent.Value);
-        //        }
-        //    }
-        //}
-
-
 
         void OnMoneyBalanceReply(Packet packet, Simulator simulator)
         {
@@ -288,7 +293,7 @@ namespace ghetto
         }
 
 
-
+        //FIXME - Don't even look at this part, it needs serious rewriting
         void OnAvatarMovedEvent(Simulator simulator, AvatarUpdate avatar, ulong regionHandle, ushort timeDilation)
         {
             Avatar test;
@@ -366,13 +371,13 @@ namespace ghetto
 
         void OnFetchInventoryReply(Packet packet, Simulator sim)
         {
-            //fetch inventory item data - FIXME!!!
+            //FIXME - Fetch inventory item data
             FetchInventoryReplyPacket reply = (FetchInventoryReplyPacket)packet;
             FetchInventoryReplyPacket.InventoryDataBlock obj = new FetchInventoryReplyPacket.InventoryDataBlock();
 
             Console.WriteLine("Inventory info: " + obj.Name);
 
-            //rez object from inventory - FIXME!!!
+            //FIXME - Rez object from inventory
             RezObjectPacket p = new RezObjectPacket();
             p.AgentData.AgentID = Client.Network.AgentID;
             p.AgentData.SessionID = Client.Network.SessionID;
@@ -417,11 +422,9 @@ namespace ghetto
         void OnObjectSelect(Packet packet, Simulator sim)
         {
             ObjectSelectPacket reply = (ObjectSelectPacket)packet;
-            //FIXME -- DETECT WHAT masterID IS GRABBING
-            //if (reply.AgentData.AgentID == masterID)
-            //{
+            //FIXME -- Detect object a user is grabbing
+            //if (reply.AgentData.AgentID != masterID) return;
             Console.WriteLine(TimeStamp() + "Touched/grabbed object " + reply.ObjectData[0].ObjectLocalID);
-            //}
         }
 
         //FRIEND REQUESTS (FIXME!!!) #########################################

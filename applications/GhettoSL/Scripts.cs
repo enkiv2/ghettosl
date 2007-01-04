@@ -41,7 +41,8 @@ namespace ghetto
         string[] script = { };
         int scriptStep;
         uint scriptTime;
-        System.Timers.Timer scriptWait;
+        uint scriptSleepStart;
+        System.Timers.Timer scriptSleep;
         Dictionary<string, Event> scriptEvents;
 
 
@@ -120,9 +121,9 @@ namespace ghetto
                 //initialize script
                 scriptStep = 0;
                 scriptEvents = new Dictionary<string, Event>();
-                scriptWait = new System.Timers.Timer();
-                scriptWait.AutoReset = false;
-                scriptWait.Elapsed += new System.Timers.ElapsedEventHandler(ScriptWaitEvent);
+                scriptSleep = new System.Timers.Timer();
+                scriptSleep.AutoReset = false;
+                scriptSleep.Elapsed += new System.Timers.ElapsedEventHandler(ScriptWaitEvent);
                 //run until wait or break
                 while (ParseScriptLine(script, scriptStep)) scriptStep++;
 
@@ -369,9 +370,14 @@ namespace ghetto
 
         void ScriptSleep(float seconds)
         {
-            Console.WriteLine(TimeStamp() + "Sleeping {0} seconds...", seconds);
-            scriptWait.Interval = (int)(seconds * 1000);
-            scriptWait.Enabled = true;
+            scriptSleepStart = Helpers.GetUnixTime();
+            if (seconds <= 0) Console.WriteLine(TimeStamp() + "Invalid sleep time");
+            else
+            {
+                Console.WriteLine(TimeStamp() + "Sleeping {0} seconds...", seconds);
+                scriptSleep.Interval = (int)(seconds * 1000);
+                scriptSleep.Enabled = true;
+            }
         }
 
     }

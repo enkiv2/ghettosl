@@ -60,7 +60,7 @@ namespace ghetto
             }
             else
             {
-                Session.MoneySpent += amount;
+                Session.MoneySpent -= amount;
             }
             foreach (KeyValuePair<string, Event> pair in scriptEvents)
             {

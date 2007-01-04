@@ -71,7 +71,7 @@ namespace ghetto
                             }
                             else
                             {
-                                //FIXME - add account to list.. this command might get renamed now too
+                                //FIXME - Add account to list.. this command might get renamed now too
 
                             }
                         }
@@ -183,6 +183,7 @@ namespace ghetto
                     }
                 case "face":
                     {
+                        //FIXME - Face toward the specified object uuid
                         LLUUID findID = (LLUUID)msg[1];
                         foreach (PrimObject prim in Session.Prims.Values)
                         {
@@ -190,8 +191,6 @@ namespace ghetto
                             LLVector3 targetPos = new LLVector3(prim.Position.X, prim.Position.Y, prim.Position.Z + 10);
                             LLQuaternion between = Helpers.RotBetween(Client.Self.Position, prim.Position);
                             response = "FACING " + targetPos + " " + between;
-                            //FIXME!!!
-
                             break;
                         }
                         if (response == "") response = "NO OBJECT FOUND MATCHING " + findID;
@@ -401,8 +400,9 @@ namespace ghetto
                                     else
                                     {
                                         Console.ForegroundColor = System.ConsoleColor.White;
-                                        //FIXME!!! Display time remaining instead of time elapsed
-                                        //if (scriptWait.Enabled == true) response = "Time remaining at current step: "+(scriptWait.Interval / 1000);
+                                        uint elapsed = Helpers.GetUnixTime() - scriptSleepStart;
+                                        uint remaining = (uint)(scriptSleep.Interval / 1000) - elapsed;
+                                        if (scriptSleep.Enabled == true) response = "Time remaining at current step: " + remaining;
                                     }
                                     Console.WriteLine(script[lnum]);                                    
                                 }
