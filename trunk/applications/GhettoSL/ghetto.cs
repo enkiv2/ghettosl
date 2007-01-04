@@ -80,17 +80,6 @@ namespace ghetto
             public UserScript Script;
         }
 
-        public struct UserScript
-        {
-            public string[] Lines;
-            public int CurrentStep;
-            public uint ScriptTime;
-            public uint SleepingSince;
-            public System.Timers.Timer SleepTimer;
-            public Dictionary<string, Event> Events;
-        }
-        
-
         //BEGIN MAIN VOID #####################################################
         static void Main(string[] args)
         {
@@ -178,7 +167,7 @@ namespace ghetto
             Session.Friends = new Dictionary<LLUUID, Avatar>();
             Session.Prims = new Dictionary<uint, PrimObject>();
             
-            Session.Script.Events = new Dictionary<string, Event>();
+            Session.Script.Events = new Dictionary<string, ScriptEvent>();
 
             Stalked = new Dictionary<LLUUID, Location>();
 

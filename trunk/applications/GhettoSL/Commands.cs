@@ -169,7 +169,7 @@ namespace ghetto
                     }
                 case "events":
                     {
-                        foreach (KeyValuePair<string, Event> pair in Session.Script.Events)
+                        foreach (KeyValuePair<string, ScriptEvent> pair in Session.Script.Events)
                         {
                             Console.ForegroundColor = ConsoleColor.Cyan;
                             Console.Write(pair.Key);

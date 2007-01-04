@@ -46,7 +46,35 @@ namespace ghetto
             GiveMoney = 3
         }
 
-        public struct Event
+        public struct UserScript
+        {
+            /// <summary>
+            /// Array containing each line of the script
+            /// </summary>
+            public string[] Lines;
+            /// <summary>
+            /// Current line script step, referenced after a sleep
+            /// </summary>
+            public int CurrentStep;
+            /// <summary>
+            /// Timestamp of the last "settime" command
+            /// </summary>
+            public uint ScriptTime;
+            /// <summary>
+            /// Timestamp of the last (and currently active) sleep
+            /// </summary>
+            public uint SleepingSince;
+            /// <summary>
+            /// Timer to invoke the next command after sleeping
+            /// </summary>
+            public System.Timers.Timer SleepTimer;
+            /// <summary>
+            /// Dictionary of scripted events
+            /// </summary>
+            public Dictionary<string, ScriptEvent> Events;
+        }
+
+        public struct ScriptEvent
         {
             /// <summary>
             /// Event type, enumerated in EventTypes.*
@@ -112,7 +140,7 @@ namespace ghetto
 
                 //initialize script
                 Session.Script.CurrentStep = 0;
-                Session.Script.Events = new Dictionary<string, Event>();
+                Session.Script.Events = new Dictionary<string, ScriptEvent>();
                 Session.Script.SleepTimer = new System.Timers.Timer();
                 Session.Script.SleepTimer.AutoReset = false;
                 Session.Script.SleepTimer.Elapsed += new System.Timers.ElapsedEventHandler(ScriptWaitEvent);
@@ -275,7 +303,7 @@ namespace ghetto
                             return true;
                         }
 
-                        Event newEvent = new Event();
+                        ScriptEvent newEvent = new ScriptEvent();
 
                         if (cmd[2] == "chat") newEvent.Type = (int)EventTypes.Chat;
                         else if (cmd[2] == "im") newEvent.Type = (int)EventTypes.IM;
