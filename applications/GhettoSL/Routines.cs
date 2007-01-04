@@ -275,43 +275,41 @@ namespace ghetto
         {
             string d = "";
             uint remaining = seconds;
-            uint years = remaining % 31556926;
-            if (years > 0)
+
+            if (remaining >= 31556926)
             {
-                d += years + "y ";
-                remaining -= years * 31556926;
+                d += (int)(remaining / 31556926) + "y ";
+                remaining %= 31556926;
             }
-            uint months = remaining % 2629744;
-            if (months > 0)
+            if (remaining >= 2629744)
             {
-                d += months + "m ";
-                remaining -= months * 2629744;
+                d += (int)(remaining / 2629744) + "m ";
+                remaining %= 2629744;
             }
-            uint weeks = remaining % 604800;
-            if (weeks > 0)
+            if (remaining >= 604800)
             {
-                d += weeks + "w ";
-                remaining -= weeks % 604800;
+                d += (int)(remaining / 604800) + "w ";
+                remaining %= 604800;
             }
-            uint days = remaining % 86400;
-            if (days > 0)
+            if (remaining >= 86400)
             {
-                d += days + "d ";
-                remaining -= days * 86400;
+                d += (int)(remaining / 86400) + "d ";
+                remaining %= 86400;
             }
-            uint hours = remaining % 3600;
-            if (hours > 0)
+            if (remaining >= 3600)
             {
-                d += hours + "h ";
-                remaining -= hours * 3600;
+                d += (int)(remaining / 3600) + "h ";
+                remaining %= 3600;
             }
-            uint minutes = remaining % 60;
-            if (hours > 0)
+            if (remaining >= 60)
             {
-                d += minutes + "m ";
-                remaining -= minutes * 60;
+                d += (int)(remaining / 60) + "m ";
+                remaining %= 60;
             }
-            d += remaining + "s";
+            if (remaining >= 0)
+            {
+                d += remaining + "s";
+            }
 
             return d;
         }
