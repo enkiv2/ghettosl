@@ -169,7 +169,7 @@ namespace ghetto
                     }
                 case "events":
                     {
-                        foreach (KeyValuePair<string, Event> pair in scriptEvents)
+                        foreach (KeyValuePair<string, Event> pair in Session.Script.Events)
                         {
                             Console.ForegroundColor = ConsoleColor.Cyan;
                             Console.Write(pair.Key);
@@ -386,25 +386,25 @@ namespace ghetto
                         if (msg.Length > 1) LoadScript(msg[1] + ".script");
                         else
                         {
-                            if (script.Length == 0) response = "No script loaded";
+                            if (Session.Script.Lines.Length == 0) response = "No script loaded";
                             else
                             {
-                                for (int lnum = 0; lnum < script.Length; lnum++)
+                                for (int lnum = 0; lnum < Session.Script.Lines.Length; lnum++)
                                 {
                                     string lstring = ""+(lnum + 1);
                                     while (lstring.Length < 3) lstring += " ";
                                     Console.ForegroundColor = System.ConsoleColor.Gray;
                                     Console.Write("{0}: ", lstring);
-                                    if (lnum < scriptStep) Console.ForegroundColor = System.ConsoleColor.DarkCyan;
-                                    else if (lnum > scriptStep) Console.ForegroundColor = System.ConsoleColor.Cyan;
+                                    if (lnum < Session.Script.CurrentStep) Console.ForegroundColor = System.ConsoleColor.DarkCyan;
+                                    else if (lnum > Session.Script.CurrentStep) Console.ForegroundColor = System.ConsoleColor.Cyan;
                                     else
                                     {
                                         Console.ForegroundColor = System.ConsoleColor.White;
-                                        uint elapsed = Helpers.GetUnixTime() - scriptSleepStart;
-                                        uint remaining = (uint)(scriptSleep.Interval / 1000) - elapsed;
-                                        if (scriptSleep.Enabled == true) response = "Time remaining at current step: " + remaining;
+                                        uint elapsed = Helpers.GetUnixTime() - Session.Script.SleepingSince;
+                                        uint remaining = (uint)(Session.Script.SleepTimer.Interval / 1000) - elapsed;
+                                        if (Session.Script.SleepTimer.Enabled == true) response = "Time remaining at current step: " + remaining;
                                     }
-                                    Console.WriteLine(script[lnum]);                                    
+                                    Console.WriteLine(Session.Script.Lines[lnum]);                                    
                                 }
                                 Console.ForegroundColor = System.ConsoleColor.Gray;
                             }
@@ -560,7 +560,7 @@ namespace ghetto
                     }
                 case "who":
                     {
-                        if (avatars.Count == 0)
+                        if (Session.Avatars.Count == 0)
                         {
                             response = "No one is around";
                         }
@@ -568,7 +568,7 @@ namespace ghetto
                         {
                             HeaderWho();
                             string spaces;
-                            lock (avatars)
+                            lock (Session.Avatars)
                             {
                                 LLVector3 myPos = Client.Self.Position;
                                 if (Client.Self.SittingOn > 0)
@@ -582,7 +582,7 @@ namespace ghetto
                                     else myPos = new LLVector3(0f,0f,0f);
                                 }
 
-                                foreach (Avatar a in avatars.Values)
+                                foreach (Avatar a in Session.Avatars.Values)
                                 {
 
                                     LLVector3 avPos;

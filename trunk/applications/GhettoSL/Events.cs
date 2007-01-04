@@ -146,7 +146,7 @@ namespace ghetto
         void OnChatEvent(string message, byte audible, byte chatType, byte sourceType, string name, LLUUID fromAgentID, LLUUID ownerID, LLVector3 position)
         {
             string lowerMessage = message.ToLower();
-            foreach(KeyValuePair<string, Event> pair in scriptEvents)
+            foreach(KeyValuePair<string, Event> pair in Session.Script.Events)
             {
                 if (pair.Value.Type != (int)EventTypes.Chat) continue;
                 if (pair.Value.Text.ToLower() != lowerMessage) continue;
@@ -182,7 +182,7 @@ namespace ghetto
         void OnInstantMessageEvent(LLUUID fromAgentID, string fromAgentName, LLUUID toAgentID, uint parentEstateID, LLUUID regionID, LLVector3 position, byte dialog, bool groupIM, LLUUID imSessionID, DateTime timestamp, string message, byte offline, byte[] binaryBucket)
         {
             string lowerMessage = message.ToLower();
-            foreach (KeyValuePair<string, Event> pair in scriptEvents)
+            foreach (KeyValuePair<string, Event> pair in Session.Script.Events)
             {
                 if (pair.Value.Type == (int)EventTypes.IM && pair.Value.Text.ToLower() == lowerMessage)
                 {
@@ -282,7 +282,7 @@ namespace ghetto
 
         void OnTeleportFinish(Packet packet, Simulator simulator)
         {
-            avatars = new Dictionary<uint,Avatar>(); //wipe old avatar list
+            Session.Avatars = new Dictionary<uint,Avatar>(); //wipe old avatar list
             Console.WriteLine(TimeStamp() + "FINISHED TELEPORT TO REGION AT " + Session.RegionX + ", " + Session.RegionY);
             TeleportFinishPacket reply = (TeleportFinishPacket)packet;
             Session.RegionX = (int)(reply.Info.RegionHandle >> 32);
@@ -297,20 +297,20 @@ namespace ghetto
         void OnAvatarMovedEvent(Simulator simulator, AvatarUpdate avatar, ulong regionHandle, ushort timeDilation)
         {
             Avatar test;
-            if (!avatars.TryGetValue(avatar.LocalID, out test)) return;
-            lock (avatars)
+            if (!Session.Avatars.TryGetValue(avatar.LocalID, out test)) return;
+            lock (Session.Avatars)
             {
-                string name = avatars[avatar.LocalID].Name;
-                //if (avatars[avatar.LocalID].ID == Client.Network.AgentID)
+                string name = Session.Avatars[avatar.LocalID].Name;
+                //if (Session.Avatars[avatar.LocalID].ID == Client.Network.AgentID)
                 //{
                 //this is a temp hack to update region corner X/Y any time any av moves (not just the follow target)
                 Session.RegionX = (int)(regionHandle >> 32);
                 Session.RegionY = (int)(regionHandle & 0xFFFFFFFF);
                 //}
-                if (avatars[avatar.LocalID].Name == Session.Settings.FollowName)
+                if (Session.Avatars[avatar.LocalID].Name == Session.Settings.FollowName)
                 {
-                    avatars[avatar.LocalID].Position = avatar.Position;
-                    avatars[avatar.LocalID].Rotation = avatar.Rotation;
+                    Session.Avatars[avatar.LocalID].Position = avatar.Position;
+                    Session.Avatars[avatar.LocalID].Rotation = avatar.Rotation;
                     if (!Follow(name))
                     {
                         Client.Self.Status.SendUpdate();
@@ -323,17 +323,17 @@ namespace ghetto
 
         void OnNewAvatarEvent(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
         {
-            lock (avatars)
+            lock (Session.Avatars)
             {
-                avatars[avatar.LocalID] = avatar;
+                Session.Avatars[avatar.LocalID] = avatar;
             }
         }
         void OnAppearance(Packet packet, Simulator simulator)
         {
             AvatarAppearancePacket appearance = (AvatarAppearancePacket)packet;
-            lock (appearances)
+            lock (Session.Appearances)
             {
-                appearances[appearance.Sender.ID] = appearance;
+                Session.Appearances[appearance.Sender.ID] = appearance;
             }
         }
         void OnNewPrimEvent(Simulator simulator, PrimObject prim, ulong regionHandle, ushort timeDilation)
@@ -350,10 +350,10 @@ namespace ghetto
                 if (Session.Prims.ContainsKey(objectID))
                     Session.Prims.Remove(objectID);
             }
-            lock (avatars)
+            lock (Session.Avatars)
             {
-                if (avatars.ContainsKey(objectID))
-                    avatars.Remove(objectID);
+                if (Session.Avatars.ContainsKey(objectID))
+                    Session.Avatars.Remove(objectID);
             }
         }
         void OnPrimMovedEvent(Simulator simulator, PrimUpdate prim, ulong regionHandle, ushort timeDilation)
