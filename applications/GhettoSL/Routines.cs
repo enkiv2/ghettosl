@@ -62,7 +62,7 @@ namespace ghetto
             {
                 Session.MoneySpent -= amount;
             }
-            foreach (KeyValuePair<string, Event> pair in Session.Script.Events)
+            foreach (KeyValuePair<string, ScriptEvent> pair in Session.Script.Events)
             {
                 if (pair.Value.Type == (int)EventTypes.GetMoney && amount > 0)
                 {

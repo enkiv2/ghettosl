@@ -146,7 +146,7 @@ namespace ghetto
         void OnChatEvent(string message, byte audible, byte chatType, byte sourceType, string name, LLUUID fromAgentID, LLUUID ownerID, LLVector3 position)
         {
             string lowerMessage = message.ToLower();
-            foreach(KeyValuePair<string, Event> pair in Session.Script.Events)
+            foreach(KeyValuePair<string, ScriptEvent> pair in Session.Script.Events)
             {
                 if (pair.Value.Type != (int)EventTypes.Chat) continue;
                 if (pair.Value.Text.ToLower() != lowerMessage) continue;
@@ -182,7 +182,7 @@ namespace ghetto
         void OnInstantMessageEvent(LLUUID fromAgentID, string fromAgentName, LLUUID toAgentID, uint parentEstateID, LLUUID regionID, LLVector3 position, byte dialog, bool groupIM, LLUUID imSessionID, DateTime timestamp, string message, byte offline, byte[] binaryBucket)
         {
             string lowerMessage = message.ToLower();
-            foreach (KeyValuePair<string, Event> pair in Session.Script.Events)
+            foreach (KeyValuePair<string, ScriptEvent> pair in Session.Script.Events)
             {
                 if (pair.Value.Type == (int)EventTypes.IM && pair.Value.Text.ToLower() == lowerMessage)
                 {
