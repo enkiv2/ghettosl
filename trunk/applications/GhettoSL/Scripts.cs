@@ -79,7 +79,7 @@ namespace ghetto
         {
             if (!File.Exists(scriptFile))
             {
-                Console.WriteLine("File not found: " + scriptFile);
+                Console.WriteLine(TimeStamp() + "File not found: " + scriptFile);
                 return false;
             }
             string input;
@@ -93,12 +93,12 @@ namespace ghetto
                 string[] commandsWithoutArgs = { "balance", "die", "fly", "land", "quit", "relog", "run", "settime", "sitg", "stand", "walk" };
                 if (Array.IndexOf(commandsWithArgs, args[0]) > -1 && args.Length < 2)
                 {
-                    Console.WriteLine("Missing argument(s) for command \"{0}\" on line {1} of {2}", args[0], i + 1, scriptFile);
+                    Console.WriteLine(TimeStamp() + "Missing argument(s) for command \"{0}\" on line {1} of {2}", args[0], i + 1, scriptFile);
                     error++;
                 }
                 else if (Array.IndexOf(commandsWithArgs, args[0]) < 0 && Array.IndexOf(commandsWithoutArgs, args[0]) < 0)
                 {
-                    Console.WriteLine("Unknown command \"{0}\" on line {1} of {2}", args[0], i + 1, scriptFile);
+                    Console.WriteLine(TimeStamp() + "Unknown command \"{0}\" on line {1} of {2}", args[0], i + 1, scriptFile);
                     error++;
                 }
                 else
@@ -110,12 +110,12 @@ namespace ghetto
             read.Close();
             if (error > 0)
             {
-                Console.WriteLine("* Error loading script \"{0}\"", scriptFile);
+                Console.WriteLine("Error loading script \"{0}\"", scriptFile);
                 return false;
             }
             else
             {
-                Console.WriteLine("* Running script \"{0}\"", scriptFile);
+                Console.WriteLine(TimeStamp() + "Running script \"{0}\"", scriptFile);
 
                 //initialize script
                 scriptStep = 0;
@@ -144,7 +144,7 @@ namespace ghetto
 
             if (line >= script.Length)
             {
-                Console.WriteLine("* END OF SCRIPT");
+                Console.WriteLine(TimeStamp() + "END OF SCRIPT");
                 return false;
             }
 
@@ -182,12 +182,12 @@ namespace ghetto
 
                             if (cmd.Length < preArgs + 2)
                             {
-                                Console.WriteLine("* Script error in line " + line + ": Should be IF ELAPSED 10 COMMAND for 10 seconds since SETTIME command. (time or command missing?)");
+                                Console.WriteLine(TimeStamp() + "Script error in line " + line + ": Should be IF ELAPSED 10 COMMAND for 10 seconds since SETTIME command. (time or command missing?)");
                                 return false;
                             }
                             else if (int.TryParse(cmd[preArgs], out waitTime) == false)
                             {
-                                Console.WriteLine("* Script error in line " + line + ": Should be IF ELAPSED 10 COMMAND for 10 seconds since SETTIME command. (invalid time?)");
+                                Console.WriteLine(TimeStamp() + "Script error in line " + line + ": Should be IF ELAPSED 10 COMMAND for 10 seconds since SETTIME command. (invalid time?)");
                                 return false;
                             }
                             else
@@ -219,7 +219,7 @@ namespace ghetto
                             string[] sq = script[line].ToLower().Split(splitQuotes);
                             if (sq.Length < 3)
                             {
-                                Console.WriteLine("* Script error in line " + line + ": Should be IF REGION \"Simulator Name\" COMMAND statement (missing quotes?)");
+                                Console.WriteLine(TimeStamp() + "Script error in line " + line + ": Should be IF REGION \"Simulator Name\" COMMAND statement (missing quotes?)");
                                 return false;
                             }
                             else
@@ -262,7 +262,7 @@ namespace ghetto
                         }
                         else
                         {
-                            Console.WriteLine("* Script error: Label \"{0}\" not found on line {1}", cmd[1], line + 1);
+                            Console.WriteLine(TimeStamp() + "Script error: Label \"{0}\" not found on line {1}", cmd[1], line + 1);
                             return false;
                         }
                         return true;
@@ -278,7 +278,7 @@ namespace ghetto
                         if (cmd[2] == "off")
                         {
                             scriptEvents.Remove(eventLabel);
-                            Console.WriteLine("* Removed event " + eventLabel);
+                            Console.WriteLine(TimeStamp() + "Removed event " + eventLabel);
                             return true;
                         }
 
@@ -290,7 +290,7 @@ namespace ghetto
                         else if (cmd[2] == "givemoney") newEvent.Type = (int)EventTypes.GiveMoney;
                         else
                         {
-                            Console.WriteLine("* Script error: Invalid event description on line {0} (events supported are CHAT, IM, GETMONEY, GIVEMONEY)", line);
+                            Console.WriteLine(TimeStamp() + "Script error: Invalid event description on line {0} (events supported are CHAT, IM, GETMONEY, GIVEMONEY)", line);
                             return false;
                         }
 
@@ -300,7 +300,7 @@ namespace ghetto
                             string[] splitQuotes = script[line].Split(splitChr);
                             if (splitQuotes.Length < 3)
                             {
-                                Console.WriteLine("* Script error: Invalid event text on line {0} (missing quotations)", line);
+                                Console.WriteLine(TimeStamp() + "Script error: Invalid event text on line {0} (missing quotations)", line);
                                 return false;
                             }
                             newEvent.Text = splitQuotes[1];
@@ -324,27 +324,31 @@ namespace ghetto
 
                         scriptEvents[eventLabel] = newEvent;
 
-                        Console.WriteLine(TimeStamp() + "* ADDED EVENT {0} ({1}): {2}", eventLabel, newEvent.Type, newEvent.Command);
+                        Console.WriteLine(TimeStamp() + "ADDED EVENT {0} ({1}): {2}", eventLabel, newEvent.Type, newEvent.Command);
                         return true;
                     }
                 case "sleep":
                     {
                         float interval;
-                        if (!float.TryParse(cmd[1], out interval)) Console.WriteLine("* Invalid sleep time specified");
+                        if (cmd.Length < 2) Console.WriteLine(TimeStamp() + "No sleep time specified");
+                        else if (!float.TryParse(cmd[1], out interval)) Console.WriteLine(TimeStamp() + "Invalid sleep time specified");
                         else ScriptSleep(interval);
-                        return false; //pause script parsing
+                        return false; //pause script
                     }
                 case "wait": //same as sleep
                     {
                         float interval;
-                        if (!float.TryParse(cmd[1], out interval)) Console.WriteLine("* Invalid sleep time specified");
+                        if (cmd.Length < 2) Console.WriteLine(TimeStamp() + "No sleep time specified");
+                        if (!float.TryParse(cmd[1], out interval)) Console.WriteLine(TimeStamp() + "Invalid sleep time specified");
                         else ScriptSleep(interval);
-                        return false; //pause script parsing
+                        return false; //pause script
                     }
             }
             if (script.Length > 1)
             {
-                Console.WriteLine(TimeStamp() + "* SCRIPTED COMMAND: " + script[line]);
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine(TimeStamp() + "SCRIPTED COMMAND: " + script[line]);
+                Console.ForegroundColor = ConsoleColor.Gray;
             }
             ParseCommand(true, String.Join(" ", cmd), "", new LLUUID(), new LLUUID());
             return true;
@@ -352,18 +356,20 @@ namespace ghetto
 
         string ParseScriptVariables(string scriptCommand, string name, LLUUID id, int amount, string message)
         {
-            string sc;
-            sc = scriptCommand.Replace("$master", Session.MasterID.ToString());
-            sc = sc.Replace("$name", name);
-            sc = sc.Replace("$id", id.ToString());
+            string sc = scriptCommand;
             sc = sc.Replace("$amount", amount.ToString());
+            sc = sc.Replace("$earned", Session.MoneyReceived.ToString());
+            sc = sc.Replace("$id", id.ToString());
+            sc = sc.Replace("$master", Session.MasterID.ToString());
             sc = sc.Replace("$message", message);
+            sc = sc.Replace("$name", name);
+            sc = sc.Replace("$spent", Session.MoneySpent.ToString());
             return sc;
         }
 
         void ScriptSleep(float seconds)
         {
-            Console.WriteLine(TimeStamp() + "* Sleeping {0} seconds...", seconds);
+            Console.WriteLine(TimeStamp() + "Sleeping {0} seconds...", seconds);
             scriptWait.Interval = (int)(seconds * 1000);
             scriptWait.Enabled = true;
         }

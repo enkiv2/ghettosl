@@ -368,7 +368,7 @@ namespace ghetto
                     }
                 case "ride":
                     {
-                        if (!RideWith(details)) Console.WriteLine("* No avatars found matching \"{0}\".", details);
+                        if (!RideWith(details)) Console.WriteLine(TimeStamp() + "No avatars found matching \"{0}\".", details);
                         break;
                     }
                 case "run":
@@ -448,7 +448,7 @@ namespace ghetto
                         if (console)
                         {
                             Console.ForegroundColor = System.ConsoleColor.Magenta;
-                            Console.WriteLine(TimeStamp() + "* Teleporting to {0}...", simName);
+                            Console.WriteLine(TimeStamp() + "Teleporting to {0}...", simName);
                             Console.ForegroundColor = System.ConsoleColor.Gray;
                         }
                         else Client.Self.InstantMessage(fromAgentID, "Teleporting to {0}...", simName);
@@ -640,7 +640,7 @@ namespace ghetto
             else if (console)
             {
                 Console.ForegroundColor = System.ConsoleColor.Blue;
-                Console.WriteLine(TimeStamp() + "* " + response);
+                Console.WriteLine(TimeStamp() + response);
                 Console.ForegroundColor = System.ConsoleColor.Gray;
             }
             else Client.Self.InstantMessage(fromAgentID, response, imSessionID);

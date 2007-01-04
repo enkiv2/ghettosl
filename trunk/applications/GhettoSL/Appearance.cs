@@ -45,7 +45,7 @@ namespace ghetto
             TextWriter w = new StreamWriter(@fileName);
             s.Serialize(w, appearance);
             w.Close();
-            Console.WriteLine("* Saved " + fileName);
+            Console.WriteLine(TimeStamp() + "Saved " + fileName);
         }
 
         void LoadAppearance(string fileName)
@@ -58,7 +58,7 @@ namespace ghetto
             appearance.AgentData.SessionID = Client.Network.SessionID;
             Client.Network.SendPacket(appearance);
             Console.ForegroundColor = System.ConsoleColor.DarkGray;
-            Console.WriteLine("* Loaded " + fileName);
+            Console.WriteLine(TimeStamp() + "Loaded " + fileName);
             Console.ForegroundColor = System.ConsoleColor.Gray;
             Session.LastAppearance = appearance;
         }

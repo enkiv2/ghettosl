@@ -41,7 +41,7 @@ namespace ghetto
         void AcknowledgePayment(string agentName, int amount)
         {
             LLUUID agentID = new LLUUID();
-            string msg = "* Unable to locate " + agentName + ". Payment: L$" + amount;
+            string msg = "Unable to locate " + agentName + ". Payment: L$" + amount;
             foreach (Avatar av in avatars.Values)
             {
                 if (av.Name != agentName) continue;
@@ -50,7 +50,7 @@ namespace ghetto
                 //uncomment to whisper payment info on a secret channel
                 //Client.Self.Chat(av.Name+", "+av.ID+", "+balance, 8414263, MainAvatar.ChatType.Whisper);
 
-                msg = "* Found avatar " + av.Name + ": " + av.ID;
+                msg = "Found avatar " + av.Name + ": " + av.ID;
                 break;
             }
             if (amount > 0)
@@ -92,7 +92,7 @@ namespace ghetto
             newAvatar.ProfileProperties.Partner = imSessionID; //hack - imSessionID, not PartnerID
             newAvatar.LocalID = (uint)(Session.IMSession.Count + 1); //hack - windowID, not LocalID
             Session.IMSession.Add((uint)Session.IMSession.Count, newAvatar);
-            Console.WriteLine(TimeStamp() + "* Created IM window {0} for user {1}.", newAvatar.LocalID, newAvatar.Name);
+            Console.WriteLine(TimeStamp() + "Created IM window {0} for user {1}.", newAvatar.LocalID, newAvatar.Name);
         }
 
         uint FindObjectByText(string textValue)
@@ -184,14 +184,14 @@ namespace ghetto
                 {
                     if (av.SittingOn > 0)
                     {
-                        Console.WriteLine("* Riding with " + av.Name + ".");
+                        Console.WriteLine(TimeStamp() + "Riding with " + av.Name + ".");
                         Client.Self.RequestSit(Session.Prims[av.SittingOn].ID, new LLVector3(0, 0, 0));
                         Client.Self.Sit();
                         return true;
                     }
                     else
                     {
-                        Console.WriteLine("* " + av.Name + " is not sitting.");
+                        Console.WriteLine(TimeStamp() + av.Name + " is not sitting.");
                         return false;
                     }
                 }
