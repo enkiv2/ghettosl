@@ -144,7 +144,7 @@ namespace ghetto
                 Session.Script.SleepTimer = new System.Timers.Timer();
                 Session.Script.SleepTimer.AutoReset = false;
                 Session.Script.SleepTimer.Elapsed += new System.Timers.ElapsedEventHandler(ScriptWaitEvent);
-                //run until wait or break
+                //run until sleep or break
                 while (ParseScriptLine(Session.Script.Lines, Session.Script.CurrentStep)) Session.Script.CurrentStep++;
 
                 return true;

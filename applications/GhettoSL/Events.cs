@@ -64,6 +64,7 @@ namespace ghetto
             Client.Objects.OnPrimMoved += new ObjectManager.PrimMovedCallback(OnPrimMovedEvent);
             Client.Avatars.OnFriendNotification += new AvatarManager.FriendNotificationCallback(OnFriendNotificationEvent);
             Client.Self.OnInstantMessage += new MainAvatar.InstantMessageCallback(OnInstantMessageEvent);
+            Client.Self.OnChat += new MainAvatar.ChatCallback(OnChatEvent);
         }
 
         
@@ -75,8 +76,11 @@ namespace ghetto
             Console.ForegroundColor = ConsoleColor.Gray;
 
             //Load "Avatar Name.appearance" if the file exists
-            string appearanceFile = Client.Self.FirstName + " " + Client.Self.LastName + ".appearance";
-            if (File.Exists(appearanceFile)) LoadAppearance(appearanceFile);
+            //string appearanceFile = Client.Self.FirstName + " " + Client.Self.LastName + ".appearance";
+            //if (File.Exists(appearanceFile)) LoadAppearance(appearanceFile);
+
+            //Load stored appearance from asset server
+            UpdateAppearance();
 
             //Enable agent updates
             if (Session.Settings.SendUpdates) Client.Self.Status.UpdateTimer.Start();
