@@ -53,19 +53,24 @@ namespace ghetto
                 msg = "* Found avatar " + av.Name + ": " + av.ID;
                 break;
             }
-            if (amount > 0) Console.WriteLine(TimeStamp() + msg);
-
+            if (amount > 0)
+            {
+                Session.MoneyReceived += amount;
+                Console.WriteLine(TimeStamp() + msg);
+            }
+            else
+            {
+                Session.MoneySpent += amount;
+            }
             foreach (KeyValuePair<string, Event> pair in scriptEvents)
             {
                 if (pair.Value.Type == (int)EventTypes.GetMoney && amount > 0)
                 {
-                    Session.MoneyReceived += amount;
                     string[] cmdScript = { ParseScriptVariables(pair.Value.Command, agentName, agentID, amount, "") };
                     ParseScriptLine(cmdScript, 0);
                 }
                 else if (pair.Value.Type == (int)EventTypes.GiveMoney && amount < 0)
                 {
-                    Session.MoneySpent += amount;
                     string[] cmdScript = { ParseScriptVariables(pair.Value.Command, agentName, agentID, amount, "") };
                     ParseScriptLine(cmdScript, 0);
                 }
