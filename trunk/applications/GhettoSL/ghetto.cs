@@ -80,7 +80,7 @@ namespace ghetto
             public UserScript Script;
         }
 
-        //BEGIN MAIN VOID #####################################################
+        //Main void
         static void Main(string[] args)
         {
             //Make sure command line arguments are valid
@@ -113,20 +113,7 @@ namespace ghetto
             connections.Add(currentSession, new GhettoSL(session));
 
             //Accept commands
-            do
-            {
-                string read = Console.ReadLine();
-                if (read.Length > 0)
-                {
-                    if (read.Substring(0, 1) == "/")
-                    {
-                        read = read.Substring(1);
-                        string[] cmdScript = { read };
-                        connections[currentSession].ParseScriptLine(cmdScript, 0);
-                    }
-                    else connections[currentSession].Client.Self.Chat(read, 0, MainAvatar.ChatType.Normal);
-                }
-            }
+            do ReadCommand();
             while (!logout);
 
             connections[1].Client.Network.Logout();
@@ -136,62 +123,43 @@ namespace ghetto
 
         }
 
-        //END OF MAIN VOID ####################################################
+        //Reads one line and parses as a command or as chat
+        static void ReadCommand()
+        {
+            string read = Console.ReadLine();
+            if (read.Length > 0)
+            {
+                if (read.Substring(0, 1) == "/")
+                {
+                    read = read.Substring(1);
+                    string[] cmdScript = { read };
+                    connections[currentSession].ParseScriptLine(cmdScript, 0);
+                }
+                else connections[currentSession].Client.Self.Chat(read, 0, MainAvatar.ChatType.Normal);
+            }
+        }
 
-
-        //GHETTOSL VOID #######################################################
+        //GhettoSL Constructor
         public GhettoSL(UserSession session)
         {
-            //RotBetween Test
-            //LLVector3 a = new LLVector3(1, 0, 0);
-            //LLVector3 b = new LLVector3(0, 0, 1);
-            //Console.WriteLine("RotBetween: " + Helpers.RotBetween(Helpers.VecNorm(a), Helpers.VecNorm(b)));
-            //Console.ReadLine();
-            //return;
-
             platform = System.Convert.ToString(Environment.OSVersion.Platform);
             Console.WriteLine("\r\nRunning on platform " + platform);
 
             Random random = new Random();
             IntroArt(random.Next(1, 3));
 
-            Session = session;
-            Session.IMSession = new Dictionary<uint, Avatar>();
-            Session.LastAppearance = new AgentSetAppearancePacket();
-
-            logout = false;
-            Session.Settings.SendUpdates = true;
-
-            Session.Appearances = new Dictionary<LLUUID, AvatarAppearancePacket>();
-            Session.Avatars = new Dictionary<uint, Avatar>();
-            Session.Friends = new Dictionary<LLUUID, Avatar>();
-            Session.Prims = new Dictionary<uint, PrimObject>();
-            
-            Session.Script.Events = new Dictionary<string, ScriptEvent>();
+            Client.Debug = false;
 
             Stalked = new Dictionary<LLUUID, Location>();
 
-            // Unix timestamp of when the client was launched
-            Session.StartTime = Helpers.GetUnixTime();
-            // L$ paid out to objects/avatars since login
-            Session.MoneySpent = 0;
-            // L$ received since login (before subtracting .MoneySpent)
-            Session.MoneyReceived = 0;
-
-            Client.Debug = false;
-
-            Client.Self.Status.Camera.Far = 96.0f;
-            Client.Self.Status.Camera.CameraAtAxis = new LLVector3(0, 0, 0);
-            Client.Self.Status.Camera.CameraCenter = new LLVector3(0, 0, 0);
-            Client.Self.Status.Camera.CameraLeftAxis = new LLVector3(0, 0, 0);
-            Client.Self.Status.Camera.CameraUpAxis = new LLVector3(0, 0, 0);
-            Client.Self.Status.Camera.HeadRotation = new LLQuaternion(0, 0, 0, 1);
-            Client.Self.Status.Camera.BodyRotation = new LLQuaternion(0, 0, 0, 1);
+            //Initialize session info for this connection
+            InitializeUserSession(session);
 
             //Add callbacks for events
             InitializeCallbacks();
 
-            Client.Self.OnChat += new MainAvatar.ChatCallback(OnChatEvent);
+            //Set camera params for agent updates
+            InitializeCamera();
 
             //Attempt to login, and exit if failed
             while (!Login()) Thread.Sleep(5000);
@@ -199,49 +167,7 @@ namespace ghetto
             //Run script
             if (Session.Settings.Script != "") LoadScript(Session.Settings.Script);
 
-        }
-        //END OF GHETTOSL VOID ################################################
-
-
-        //LOGIN SEQUENCE ######################################################
-        bool Login()
-        {
-            Console.Title = "GhettoSL - Logging in...";
-            Console.ForegroundColor = System.ConsoleColor.White;
-            Console.WriteLine(TimeStamp() + "Logging in as " + Session.Settings.FirstName + " " + Session.Settings.LastName + "...");
-            Console.ForegroundColor = System.ConsoleColor.Gray;
-
-            //Attempt to log in
-            if (!Client.Network.Login(Session.Settings.FirstName, Session.Settings.LastName, Session.Settings.Password, "GhettoSL", "ghetto@obsoleet.com"))
-            {
-                Console.WriteLine("Login failed.");
-                return false;
-            }
-
-            Console.Title = Client.Self.FirstName + " " + Client.Self.LastName + " - GhettoSL";
-
-            //Succeeded - Wait for simulator name or disconnection
-            Simulator sim = Client.Network.CurrentSim;
-            while (Client.Network.Connected && (!sim.Connected || sim.Region.Name == "" || Client.Grid.SunDirection.X == 0))
-            {
-                Thread.Sleep(100);
-            }
-
-            //Halt if disconnected
-            if (!Client.Network.Connected) return false;
-
-            //We are in!
-            Console.ForegroundColor = System.ConsoleColor.White;
-            Console.WriteLine(TimeStamp() + RPGWeather());
-            Console.WriteLine(TimeStamp() + "Location: " + Client.Self.Position);
-            Console.ForegroundColor = System.ConsoleColor.Gray;
-
-            //Fix the "bot squat" animation
-            Client.Self.Status.SendUpdate();
-
-            return true;
-        }
-        //END OF LOGIN ########################################################
+        } //End of GhettoSL constructor
 
     }
 }

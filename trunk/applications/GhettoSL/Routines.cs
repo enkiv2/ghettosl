@@ -28,6 +28,7 @@
 
 using libsecondlife;
 using libsecondlife.Packets;
+using libsecondlife.AssetSystem;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -139,6 +140,70 @@ namespace ghetto
             return false;
         }
 
+        void InitializeCamera()
+        {
+            Client.Self.Status.Camera.Far = 96.0f;
+            Client.Self.Status.Camera.CameraAtAxis = new LLVector3(0, 0, 0);
+            Client.Self.Status.Camera.CameraCenter = new LLVector3(0, 0, 0);
+            Client.Self.Status.Camera.CameraLeftAxis = new LLVector3(0, 0, 0);
+            Client.Self.Status.Camera.CameraUpAxis = new LLVector3(0, 0, 0);
+            Client.Self.Status.Camera.HeadRotation = new LLQuaternion(0, 0, 0, 1);
+            Client.Self.Status.Camera.BodyRotation = new LLQuaternion(0, 0, 0, 1);
+        }
+
+        void InitializeUserSession(UserSession session)
+        {
+            Session = session;
+            Session.IMSession = new Dictionary<uint, Avatar>();
+            Session.LastAppearance = new AgentSetAppearancePacket();
+            Session.Appearances = new Dictionary<LLUUID, AvatarAppearancePacket>();
+            Session.Avatars = new Dictionary<uint, Avatar>();
+            Session.Friends = new Dictionary<LLUUID, Avatar>();
+            Session.Prims = new Dictionary<uint, PrimObject>();
+            Session.StartTime = Helpers.GetUnixTime();
+            Session.Script.Events = new Dictionary<string, ScriptEvent>();
+            Session.Settings.SendUpdates = true;
+        }
+
+
+        bool Login()
+        {
+            Console.Title = "GhettoSL - Logging in...";
+            Console.ForegroundColor = System.ConsoleColor.White;
+            Console.WriteLine(TimeStamp() + "Logging in as " + Session.Settings.FirstName + " " + Session.Settings.LastName + "...");
+            Console.ForegroundColor = System.ConsoleColor.Gray;
+
+            //Attempt to log in
+            if (!Client.Network.Login(Session.Settings.FirstName, Session.Settings.LastName, Session.Settings.Password, "GhettoSL", "ghetto@obsoleet.com"))
+            {
+                Console.WriteLine("Login failed.");
+                return false;
+            }
+
+            Console.Title = Client.Self.FirstName + " " + Client.Self.LastName + " - GhettoSL";
+
+            //Succeeded - Wait for simulator name or disconnection
+            Simulator sim = Client.Network.CurrentSim;
+            while (Client.Network.Connected && (!sim.Connected || sim.Region.Name == "" || Client.Grid.SunDirection.X == 0))
+            {
+                Thread.Sleep(100);
+            }
+
+            //Halt if disconnected
+            if (!Client.Network.Connected) return false;
+
+            //We are in!
+            Console.ForegroundColor = System.ConsoleColor.White;
+            Console.WriteLine(TimeStamp() + RPGWeather());
+            Console.WriteLine(TimeStamp() + "Location: " + Client.Self.Position);
+            Console.ForegroundColor = System.ConsoleColor.Gray;
+
+            //Fix the "bot squat" animation
+            Client.Self.Status.SendUpdate();
+
+            return true;
+        }
+
 
         void MoveAvatar(int time, bool fwd, bool back, bool left, bool right, bool up, bool down)
         {
@@ -199,6 +264,12 @@ namespace ghetto
             return false;
         }
 
+        void UpdateAppearance()
+        {
+            AppearanceManager aManager;
+            aManager = new AppearanceManager(Client);
+            aManager.SendAgentSetAppearance();
+        }
 
         string Duration(uint seconds)
         {
