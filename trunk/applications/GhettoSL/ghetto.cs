@@ -120,28 +120,12 @@ namespace ghetto
             Thread.Sleep(500);
             //Exit application
 
-
-        }
-
-        //Reads one line and parses as a command or as chat
-        static void ReadCommand()
-        {
-            string read = Console.ReadLine();
-            if (read.Length > 0)
-            {
-                if (read.Substring(0, 1) == "/")
-                {
-                    read = read.Substring(1);
-                    string[] cmdScript = { read };
-                    connections[currentSession].ParseScriptLine(cmdScript, 0);
-                }
-                else connections[currentSession].Client.Self.Chat(read, 0, MainAvatar.ChatType.Normal);
-            }
-        }
+        } //End of Main void
 
         //GhettoSL Constructor
         public GhettoSL(UserSession session)
         {
+            
             platform = System.Convert.ToString(Environment.OSVersion.Platform);
             Console.WriteLine("\r\nRunning on platform " + platform);
 

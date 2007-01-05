@@ -266,6 +266,7 @@ namespace ghetto
 
         void UpdateAppearance()
         {
+            Console.WriteLine(TimeStamp() + "Loading appearance from asset server...");
             AppearanceManager aManager;
             aManager = new AppearanceManager(Client);
             aManager.SendAgentSetAppearance();
@@ -278,37 +279,37 @@ namespace ghetto
 
             if (remaining >= 31556926)
             {
-                d += (int)(remaining / 31556926) + "y ";
+                d += (int)(remaining / 31556926) + "yr ";
                 remaining %= 31556926;
             }
             if (remaining >= 2629744)
             {
-                d += (int)(remaining / 2629744) + "m ";
+                d += (int)(remaining / 2629744) + "mo ";
                 remaining %= 2629744;
             }
             if (remaining >= 604800)
             {
-                d += (int)(remaining / 604800) + "w ";
+                d += (int)(remaining / 604800) + "wks ";
                 remaining %= 604800;
             }
             if (remaining >= 86400)
             {
-                d += (int)(remaining / 86400) + "d ";
+                d += (int)(remaining / 86400) + "days ";
                 remaining %= 86400;
             }
             if (remaining >= 3600)
             {
-                d += (int)(remaining / 3600) + "h ";
+                d += (int)(remaining / 3600) + "hrs ";
                 remaining %= 3600;
             }
             if (remaining >= 60)
             {
-                d += (int)(remaining / 60) + "m ";
+                d += (int)(remaining / 60) + "mins ";
                 remaining %= 60;
             }
             if (remaining >= 0)
             {
-                d += remaining + "s";
+                d += remaining + "secs";
             }
 
             return d;
