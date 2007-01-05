@@ -47,8 +47,8 @@ namespace ghetto
             Client.Network.RegisterCallback(PacketType.RequestFriendship, new NetworkManager.PacketCallback(OnRequestFriendship));
             Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(OnTeleportFinish));
             Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(OnAlertMessage));
+            Client.Network.RegisterCallback(PacketType.DirGroupsReply, new NetworkManager.PacketCallback(OnDirGroupsReply));
 
-            Client.Self.OnScriptDialog += new MainAvatar.ScriptDialogCallback(OnScriptDialogEvent);
 
             //Mapstalk - FIXME - Jesse added this... I don't think it works.
             Client.Network.RegisterCallback(PacketType.FindAgent, new NetworkManager.PacketCallback(FindAgentCallback));
@@ -65,8 +65,10 @@ namespace ghetto
             Client.Objects.OnObjectKilled += new ObjectManager.KillObjectCallback(OnObjectKilledEvent);
             Client.Objects.OnPrimMoved += new ObjectManager.PrimMovedCallback(OnPrimMovedEvent);
             Client.Avatars.OnFriendNotification += new AvatarManager.FriendNotificationCallback(OnFriendNotificationEvent);
-            Client.Self.OnInstantMessage += new MainAvatar.InstantMessageCallback(OnInstantMessageEvent);
             Client.Self.OnChat += new MainAvatar.ChatCallback(OnChatEvent);
+            Client.Self.OnInstantMessage += new MainAvatar.InstantMessageCallback(OnInstantMessageEvent);
+            Client.Self.OnScriptDialog += new MainAvatar.ScriptDialogCallback(OnScriptDialogEvent);
+
         }
 
         void OnScriptDialogEvent(string message, string objectName, LLUUID imageID, LLUUID objectID, string firstName, string lastName, int chatChannel, List<string> buttons)
@@ -159,7 +161,16 @@ namespace ghetto
             p.SimulatorInfo.Handle = reply.RegionData.Handle;
         }
 
-        
+        void OnDirGroupsReply(Packet packet, Simulator sim)
+        {
+            DirGroupsReplyPacket reply = (DirGroupsReplyPacket)packet;
+            DirGroupsReplyPacket.QueryRepliesBlock[] groups = reply.QueryReplies;
+            foreach (DirGroupsReplyPacket.QueryRepliesBlock g in groups)
+            {
+                Console.WriteLine(g.OpenEnrollment + " " + g.MembershipFee + " " + g.Members + " " + g.GroupName);
+            }
+        }
+
         void OnChatEvent(string message, byte audible, byte chatType, byte sourceType, string name, LLUUID fromAgentID, LLUUID ownerID, LLVector3 position)
         {
             string lowerMessage = message.ToLower();

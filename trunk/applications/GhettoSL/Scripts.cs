@@ -131,13 +131,16 @@ namespace ghetto
             read.Close();
             if (error > 0)
             {
-                Console.WriteLine("Error loading script \"{0}\"", scriptFile);
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(TimeStamp() + "Error loading script \"{0}\"", scriptFile);
+                Console.ForegroundColor = ConsoleColor.Gray;
                 return false;
             }
             else
             {
+                Console.ForegroundColor = ConsoleColor.Blue;
                 Console.WriteLine(TimeStamp() + "Running script \"{0}\"", scriptFile);
-
+                Console.ForegroundColor = ConsoleColor.Gray;
                 //initialize script
                 Session.Script.CurrentStep = 0;
                 Session.Script.Events = new Dictionary<string, ScriptEvent>();
@@ -394,7 +397,9 @@ namespace ghetto
             if (seconds <= 0) Console.WriteLine(TimeStamp() + "Invalid sleep time");
             else
             {
+                Console.ForegroundColor = ConsoleColor.Blue;
                 Console.WriteLine(TimeStamp() + "Sleeping {0} seconds...", seconds);
+                Console.ForegroundColor = ConsoleColor.Gray;
                 Session.Script.SleepTimer.Interval = (int)(seconds * 1000);
                 Session.Script.SleepTimer.Enabled = true;
             }

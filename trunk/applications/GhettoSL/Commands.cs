@@ -45,6 +45,10 @@ namespace ghetto
             {
                 bool command = false;
                 int channel = 0;
+                if (read.Substring(0, 2) == "//")
+                {
+                    read = connections[currentSession].ParseScriptVariables(read.Substring(1), "", LLUUID.Zero, 0, "");
+                }
                 if (read.Substring(0, 1) == "/")
                 {
                     read = read.Substring(1);
@@ -481,7 +485,7 @@ namespace ghetto
                     }
                 case "teleport":
                     {
-                        if (msg.Length < 2) return;
+                        if (msg.Length < 2) { Help(command); return; }
                         string simName;
                         LLVector3 tPos;
                         if (msg.Length >= 5)
@@ -507,10 +511,18 @@ namespace ghetto
                         Client.Self.Teleport(simName, tPos);
                         break;
                     }
+                case "search":
+                    {
+                        if (msg.Length < 3) { Help(command); return; }
+
+                        //FIXME - Add DirGroupQuery
+
+                        break;
+                    }
                 case "sit":
                     {
 
-                        if (msg.Length < 2) return;
+                        if (msg.Length < 2) { Help(command); return; }
                         Client.Self.RequestSit((LLUUID)details, new LLVector3());
                         Client.Self.Sit();
                         Client.Self.Status.Controls.FinishAnim = false;
