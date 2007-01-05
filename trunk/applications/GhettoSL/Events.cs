@@ -48,6 +48,8 @@ namespace ghetto
             Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(OnTeleportFinish));
             Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(OnAlertMessage));
 
+            Client.Self.OnScriptDialog += new MainAvatar.ScriptDialogCallback(OnScriptDialogEvent);
+
             //Mapstalk - FIXME - Jesse added this... I don't think it works.
             Client.Network.RegisterCallback(PacketType.FindAgent, new NetworkManager.PacketCallback(FindAgentCallback));
 
@@ -67,7 +69,19 @@ namespace ghetto
             Client.Self.OnChat += new MainAvatar.ChatCallback(OnChatEvent);
         }
 
-        
+        void OnScriptDialogEvent(string message, string objectName, LLUUID imageID, LLUUID objectID, string firstName, string lastName, int chatChannel, List<string> buttons)
+        {
+            string[] btn = buttons.ToArray();
+            string buttonList = "[" + String.Join("] [", btn) + "]";
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine(TimeStamp() + "Dialog from " + objectName);
+            Console.WriteLine(TimeStamp() + "Owner: " + firstName + " " + lastName);
+            Console.WriteLine(TimeStamp() + "Object: " + objectID);
+            Console.WriteLine(TimeStamp() + "Channel: " + chatChannel);
+            Console.WriteLine(TimeStamp() + "Message: " + message);
+            Console.WriteLine(TimeStamp() + "Choices: " + buttonList);
+            Console.ForegroundColor = ConsoleColor.Gray;
+        }        
 
         void OnConnectedEvent(object sender)
         {
