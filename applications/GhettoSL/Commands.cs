@@ -37,6 +37,37 @@ namespace ghetto
 {
     partial class GhettoSL
     {
+        //Read one line and parse as a command or as chat
+        static void ReadCommand()
+        {
+            string read = Console.ReadLine();
+            if (read.Length > 0)
+            {
+                bool command = false;
+                int channel = 0;
+                if (read.Substring(0, 1) == "/")
+                {
+                    read = read.Substring(1);
+                    string[] cmdScript = { read };
+                    connections[currentSession].ParseScriptLine(cmdScript, 0);
+                    char[] splitChar = { ' ' };
+                    string[] cmd = read.Split(splitChar);
+                    if (int.TryParse(cmd[0], out channel))
+                    {
+                        read = String.Join(" ", cmd, 1, cmd.Length - 1);
+                    }
+                    else
+                    {
+                        channel = 0;
+                        command = true;
+                    }
+                }
+
+                if (!command) connections[currentSession].Client.Self.Chat(read, channel, MainAvatar.ChatType.Normal);
+            }
+        }
+
+        //Parse the command and perform the required actions
         void ParseCommand(bool console, string commandString, string fromAgentName, LLUUID fromAgentID, LLUUID imSessionID)
         {
             if (commandString.Length == 0) return;
@@ -244,9 +275,9 @@ namespace ghetto
                         else MoveAvatar((int)(1000 * float.Parse("0" + details)), false, false, false, true, false, false);
                         break;
                     }
-                case "goto":
+                case "go":
                     {
-                        if (msg.Length < 3) response = "Usage: /goto <X> <Y> [Z]";
+                        if (msg.Length < 3) response = "Usage: /go <X> <Y> [Z]";
                         else
                         {
                             ulong x = (ulong)Session.RegionX + ulong.Parse(msg[1]);
