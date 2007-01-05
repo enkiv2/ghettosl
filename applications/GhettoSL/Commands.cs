@@ -81,7 +81,7 @@ namespace ghetto
             //Store command arguments in "details" variable
             string details = null;
             int i = 1;
-            if (command == "re" || command == "im") i++;
+            if (command == "re" || command == "im" || command == "dsay") i++;
             while (i < msg.Length)
             {
                 details += msg[i];
@@ -142,6 +142,12 @@ namespace ghetto
                         Client.Self.RequestBalance();
                         break;
                     }
+                case "break":
+                    {
+                        Session.Script.SleepTimer.Stop();
+                        response = "Script halted on line " + Session.Script.CurrentStep + ".";
+                        break;
+                    }
                 case "camp":
                     {
                         uint localID = FindObjectByText(details.ToLower());
@@ -174,6 +180,20 @@ namespace ghetto
                     {
                         logout = true;
                         response = "Shutting down...";
+                        break;
+                    }
+                case "dsay":
+                    {
+                        if (msg.Length < 3) return;
+                        ScriptDialogReplyPacket p = new ScriptDialogReplyPacket();
+                        p.AgentData.AgentID = Client.Network.AgentID;
+                        p.AgentData.SessionID = Client.Network.SessionID;
+                        p.Data.ObjectID = new LLUUID(msg[1]);
+                        p.Data.ChatChannel = 0;
+                        p.Data.ButtonIndex = 0;
+                        p.Data.ButtonLabel = Helpers.StringToField(details);
+                        Client.Network.SendPacket(p);
+                        response = "Message sent.";
                         break;
                     }
                 case "quit":

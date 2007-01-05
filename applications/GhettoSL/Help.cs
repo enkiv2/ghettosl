@@ -39,6 +39,7 @@ namespace ghetto
             Dictionary<string,string> HelpDict = new Dictionary<string, string>();
             HelpDict.Add("anim <uuid>", "Start the specified animation");
             HelpDict.Add("balance", "Show your current L$ balance");
+            HelpDict.Add("break", "Halt the currently running script");
             HelpDict.Add("camp <text>", "Find a chair with text matching the specified string");
             HelpDict.Add("clear", "Clear the console display");
             HelpDict.Add("die", "Log out and exit");
