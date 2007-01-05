@@ -89,8 +89,8 @@ namespace ghetto
             }
             else
             {
-                Console.ForegroundColor = System.ConsoleColor.DarkGray;
-                if (HelpDict.TryGetValue(topic, out result)) Console.WriteLine(topic + " - " + result);
+                Console.ForegroundColor = System.ConsoleColor.Magenta;
+                if (HelpDict.TryGetValue(topic, out result)) Console.WriteLine(TimeStamp() + "Usage: " + topic + " - " + result);
                 else Console.WriteLine("No help available for that topic. Type /help for a list of commands.");
                 Console.ForegroundColor = System.ConsoleColor.Gray;
             }
