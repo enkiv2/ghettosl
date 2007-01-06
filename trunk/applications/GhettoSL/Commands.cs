@@ -100,7 +100,8 @@ namespace ghetto
                         }
                     }
                 }
-                if (connections.ContainsKey(currentSession) && connections[currentSession].Session.Quit)
+                if (!connections.ContainsKey(currentSession)) return;
+                else if (connections[currentSession].Session.Quit)
                 {
                     connections[currentSession].Session.Script.SleepTimer.Stop();
                     connections.Remove(currentSession);

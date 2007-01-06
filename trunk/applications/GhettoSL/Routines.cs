@@ -89,12 +89,15 @@ namespace ghetto
             }
             else
             {
-                if (connections[currentSession].Client.Network.Connected)
+                if (connections.ContainsKey(currentSession))
                 {
-                    connections[currentSession].Client.Network.Logout();
-                    Thread.Sleep(3000);
+                    if (connections[currentSession].Client.Network.Connected)
+                    {
+                        connections[currentSession].Client.Network.Logout();
+                        Thread.Sleep(3000);
+                    }
+                    connections.Remove(currentSession);
                 }
-                connections.Remove(currentSession);
             }
             UserSession session = new UserSession();
             session.Settings.FirstName = firstName;
