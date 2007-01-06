@@ -43,19 +43,18 @@ namespace ghetto
             string read = Console.ReadLine();
             if (read.Length > 0)
             {
-                bool command = false;
+                bool isCommand = false;
                 int channel = 0;
-                if (read.Substring(0, 2) == "//")
+                if (read.Length > 1 && read.Substring(0, 2) == "//")
                 {
                     read = connections[currentSession].ParseScriptVariables(read.Substring(1), "", LLUUID.Zero, 0, "");
                 }
                 if (read.Substring(0, 1) == "/")
                 {
                     read = read.Substring(1);
-                    string[] cmdScript = { read };
-                    connections[currentSession].ParseScriptLine(cmdScript, 0);
                     char[] splitChar = { ' ' };
                     string[] cmd = read.Split(splitChar);
+                    string command = cmd[0].ToLower();
                     if (int.TryParse(cmd[0], out channel))
                     {
                         read = String.Join(" ", cmd, 1, cmd.Length - 1);
@@ -63,11 +62,58 @@ namespace ghetto
                     else
                     {
                         channel = 0;
-                        command = true;
+                        if (command == "login")
+                        {
+                            if (cmd.Length < 4) { connections[currentSession].Help("login"); return; }
+                            else if (cmd[1] == "-m" && cmd.Length >= 5) CreateSession(true, cmd[2], cmd[3], cmd[4]);
+                            else if (cmd.Length >= 4) CreateSession(false, cmd[1], cmd[2], cmd[3]);
+                            else connections[currentSession].Help("login");
+                            return;
+                        }
+                        else if (command == "session" || command == "s")
+                        {
+                            uint switchTo;
+                            if (!uint.TryParse(cmd[1], out switchTo) || !connections.ContainsKey(switchTo))
+                            {
+                                Console.WriteLine("* Invalid session ID");
+                            }
+                            else
+                            {
+                                currentSession = switchTo;
+                                string name = connections[switchTo].Client.Self.FirstName + " " + connections[switchTo].Client.Self.LastName;
+                                Console.WriteLine("* Switched to session {0}: {1}", switchTo, name);
+                            }
+                            return;
+                        }
+                        else if (command == "sessions")
+                        {
+                            foreach (KeyValuePair<uint, GhettoSL> c in connections)
+                            {
+                                string name = c.Value.Client.Self.FirstName + " " + c.Value.Client.Self.LastName;
+                                Console.WriteLine(c.Value.Session.ID + " - " + name);
+                            }
+                            return;
+                        }
+                        else
+                        {
+                            isCommand = true;
+                        }
                     }
                 }
-
-                if (!command) connections[currentSession].Client.Self.Chat(read, channel, MainAvatar.ChatType.Normal);
+                if (connections.ContainsKey(currentSession) && connections[currentSession].Session.Quit)
+                {
+                    connections[currentSession].Session.Script.SleepTimer.Stop();
+                    connections.Remove(currentSession);
+                }
+                else if (isCommand)
+                {
+                    string[] cmdScript = { read };
+                    connections[currentSession].ParseScriptLine(cmdScript, 0);
+                }
+                else
+                {
+                    connections[currentSession].Client.Self.Chat(read, channel, MainAvatar.ChatType.Normal);
+                }
             }
         }
 
@@ -180,12 +226,6 @@ namespace ghetto
                         else response = "Error: Avatar not found";
                         break;
                     }
-                case "die":
-                    {
-                        logout = true;
-                        response = "Shutting down...";
-                        break;
-                    }
                 case "dsay":
                     {
                         if (msg.Length < 3) return;
@@ -202,8 +242,18 @@ namespace ghetto
                     }
                 case "quit":
                     {
-                        logout = true;
-                        response = "Shutting down...";
+                        Session.Quit = true;
+                        Client.Network.Logout();
+                        Thread.Sleep(1);
+                        response = "Closing session " + Session.ID;
+                        break;
+                    }
+                case "die": //same as quit
+                    {
+                        Session.Quit = true;
+                        Client.Network.Logout();
+                        Thread.Sleep(1);
+                        response = "Closing session " + Session.ID;
                         break;
                     }
                 case "drag":
@@ -234,6 +284,12 @@ namespace ghetto
                             Console.Write("\r\n");
                             Console.ForegroundColor = ConsoleColor.Gray;
                         }
+                        break;
+                    }
+                case "exit":
+                    {
+                        exit = true;
+                        response = "Shutting down...";
                         break;
                     }
                 case "face":
@@ -416,7 +472,7 @@ namespace ghetto
                 case "relog":
                     {
                         response = "Relogging...";
-                        logout = false;
+                        exit = false;
                         Client.Network.Logout();
                         break;
                     }
@@ -514,9 +570,17 @@ namespace ghetto
                 case "search":
                     {
                         if (msg.Length < 3) { Help(command); return; }
+                        string type = msg[1].ToLower();
+                        DirFindQueryPacket p = new DirFindQueryPacket();
+                        if (type == "groups") p.QueryData.QueryFlags = 16;
+                        else response = "Unknown search type";
 
-                        //FIXME - Add DirGroupQuery
-
+                        p.AgentData.AgentID = Client.Network.AgentID;
+                        p.AgentData.SessionID = Client.Network.SessionID;
+                        p.QueryData.QueryStart = 0;
+                        p.QueryData.QueryText = Helpers.StringToField(details);
+                        p.QueryData.QueryID = LLUUID.Random();
+                        Client.Network.SendPacket(p);
                         break;
                     }
                 case "sit":

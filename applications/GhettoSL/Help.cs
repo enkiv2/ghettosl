@@ -40,25 +40,28 @@ namespace ghetto
             HelpDict.Add("anim <uuid>", "Start the specified animation");
             HelpDict.Add("balance", "Show your current L$ balance");
             HelpDict.Add("break", "Halt the currently running script");
-            HelpDict.Add("camp <text>", "Find a chair with text matching the specified string");
+            HelpDict.Add("camp <text>", "Find a seat matching the specified hover-text");
             HelpDict.Add("clear", "Clear the console display");
             HelpDict.Add("die", "Log out and exit");
             HelpDict.Add("fly", "Enable flying");
-            HelpDict.Add("follow <name|off>", "Follow the specified avatar, or \"off\" to disable");
-            HelpDict.Add("go <X> <Y> [Z]", "Move to the specified coordinates using autopilot");
+            HelpDict.Add("follow <name|off>", "Follow an avatar, or \"off\" to disable");
+            HelpDict.Add("go <X> <Y> [Z]", "Move to coordinates using autopilot");
             HelpDict.Add("land", "Disable flying");
             HelpDict.Add("listen", "Listen to local chat (on by default)");
+            HelpDict.Add("login [-m] <name> <pass>", "Login as another user, or multiple sessions");
             HelpDict.Add("quiet", "Stop listening to local chat");
             HelpDict.Add("re [# message]", "List active IM \"windows\" or reply by window ID");
             HelpDict.Add("relog", "Log out and back in");
             HelpDict.Add("ride <name>", "Sit on the same object as the specified name");
             HelpDict.Add("run", "Enable running");
+            HelpDict.Add("session <sessionID>", "Switch to another session (shortcut: /s #)");
+            HelpDict.Add("sessions", "List active sessions");
             HelpDict.Add("script <scriptName>", "Execute the specified script file");
             HelpDict.Add("shout <message>", "Shout the specified message to users within 100m");
             HelpDict.Add("sit <uuid>", "Sit on the specified UUID");
             HelpDict.Add("sitg", "Sit on the ground at current location");
             HelpDict.Add("stand", "Stand while seated on an object or on the ground");
-            HelpDict.Add("stats", "Displays statistics such as uptime and recent earnings");
+            HelpDict.Add("stats", "Displays stats such as uptime and recent earnings");
             HelpDict.Add("stopanim <uuid>", "Stop the specified animation");
             HelpDict.Add("teleport <sim> [x y z]", "Teleports to the specified destination");
             HelpDict.Add("time", "Displays time and region sun direction");
@@ -79,7 +82,7 @@ namespace ghetto
                 foreach (KeyValuePair<string, string> pair in HelpDict)
                 {
                     string spaces = "";
-                    for (int sp = pair.Key.Length; sp < 24; sp++) spaces += " ";
+                    for (int sp = pair.Key.Length; sp < 26; sp++) spaces += " ";
                     Console.ForegroundColor = System.ConsoleColor.White;
                     Console.Write(" " + pair.Key + spaces);
                     Console.ForegroundColor = System.ConsoleColor.Gray;

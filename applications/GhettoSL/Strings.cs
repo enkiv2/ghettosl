@@ -37,7 +37,7 @@ namespace ghetto
 
         string TimeStamp()
         {
-            return "[" + (DateTime.Now.Hour % 12) + ":" + DateTime.Now.Minute + "] * ";
+            return "[" + (DateTime.Now.Hour % 12) + ":" + DateTime.Now.Minute + "] (" + Session.ID + ") ";
         }
 
         string RPGWeather()
