@@ -120,7 +120,8 @@ namespace ghetto
             connections.Add(currentSession, new GhettoSL(true, session));
 
             //Accept commands
-            while (!exit) ReadCommand();
+            do ReadCommand();
+            while (!exit);
 
             connections[1].Client.Network.Logout();
             Thread.Sleep(500);
