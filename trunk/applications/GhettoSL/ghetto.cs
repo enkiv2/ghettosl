@@ -45,7 +45,9 @@ namespace ghetto
 
         string platform;
         static uint currentSession;
-        static bool logout;
+        static bool exit;
+        static LLUUID masterID;
+        static string passPhrase;
 
         public struct UserSettings
         {
@@ -63,6 +65,8 @@ namespace ghetto
 
         public struct UserSession
         {
+            public uint ID;
+            public bool Quit;
             public UserSettings Settings;
             public int Balance;
             public Dictionary<uint, Avatar> Avatars;
@@ -91,13 +95,16 @@ namespace ghetto
                 return;
             }
             bool quiet = false;
-            string passPhrase = "";
+            passPhrase = "";
             string scriptFile = "";
-            LLUUID masterID = new LLUUID();
+
+            masterID = new LLUUID();
             if (args.Length > 3) passPhrase = args[3];
             if (args.Length > 4) masterID = (LLUUID)args[4];
             if (args.Length > 5 && (args[5].ToLower() == "quiet" || args[5].ToLower() == "true")) quiet = true;
             if (args.Length > 6) scriptFile = args[6];
+
+            currentSession = 1;
 
             UserSession session = new UserSession();
             session.Settings.FirstName = args[0];
@@ -107,14 +114,13 @@ namespace ghetto
             session.Settings.MasterID = masterID;
             session.Settings.Quiet = quiet;
             session.Settings.Script = scriptFile;
+            session.ID = currentSession;
 
             connections = new Dictionary<uint, GhettoSL>();
-            currentSession = 1;
-            connections.Add(currentSession, new GhettoSL(session));
+            connections.Add(currentSession, new GhettoSL(true, session));
 
             //Accept commands
-            do ReadCommand();
-            while (!logout);
+            while (!exit) ReadCommand();
 
             connections[1].Client.Network.Logout();
             Thread.Sleep(500);
@@ -123,14 +129,16 @@ namespace ghetto
         } //End of Main void
 
         //GhettoSL Constructor
-        public GhettoSL(UserSession session)
+        public GhettoSL(bool displayArt, UserSession session)
         {
             
-            platform = System.Convert.ToString(Environment.OSVersion.Platform);
-            Console.WriteLine("\r\nRunning on platform " + platform);
-
-            Random random = new Random();
-            IntroArt(random.Next(1, 3));
+            if (displayArt)
+            {
+                platform = System.Convert.ToString(Environment.OSVersion.Platform);
+                Console.WriteLine("\r\nRunning on platform " + platform);
+                Random random = new Random();
+                IntroArt(random.Next(1, 3));
+            }
 
             Client.Debug = false;
 

@@ -119,7 +119,7 @@ namespace ghetto
             Console.ForegroundColor = System.ConsoleColor.Red;
             Console.WriteLine(TimeStamp() + "DISCONNECTED FROM SIM: " + type.ToString());
             Console.ForegroundColor = System.ConsoleColor.Gray;
-            if (logout) return;
+            if (Session.Quit) return;
 
             return; //FIXME - Log back in after disconnect
 
@@ -167,7 +167,7 @@ namespace ghetto
             DirGroupsReplyPacket.QueryRepliesBlock[] groups = reply.QueryReplies;
             foreach (DirGroupsReplyPacket.QueryRepliesBlock g in groups)
             {
-                Console.WriteLine(g.OpenEnrollment + " " + g.MembershipFee + " " + g.Members + " " + g.GroupName);
+                Console.WriteLine(g.OpenEnrollment + " " + g.MembershipFee + " " + g.Members + " " + Helpers.FieldToString(g.GroupName));
             }
         }
 

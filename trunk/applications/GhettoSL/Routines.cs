@@ -79,6 +79,38 @@ namespace ghetto
 
         }
 
+
+        static void CreateSession(bool newSession, string firstName, string lastName, string password)
+        {
+            if (newSession)
+            {
+                currentSession = 1;
+                while (connections.ContainsKey(currentSession)) currentSession++;
+            }
+            else
+            {
+                if (connections[currentSession].Client.Network.Connected)
+                {
+                    connections[currentSession].Client.Network.Logout();
+                    Thread.Sleep(3000);
+                }
+                connections.Remove(currentSession);
+            }
+            UserSession session = new UserSession();
+            session.Settings.FirstName = firstName;
+            session.Settings.LastName = lastName;
+            session.Settings.Password = password;
+            session.Settings.PassPhrase = passPhrase;
+            session.Settings.MasterID = masterID;
+            //Default new session values
+            session.Settings.SendUpdates = true;
+            session.Settings.Quiet = false;
+            session.Settings.Script = "";
+            session.ID = currentSession;
+            connections.Add(currentSession, new GhettoSL(false, session));
+        }
+
+
         void CreateMessageWindow(LLUUID fromAgentID, string fromAgentName, byte dialog, LLUUID imSessionID)
         {
             //check for existing session
@@ -162,6 +194,7 @@ namespace ghetto
             Session.Prims = new Dictionary<uint, PrimObject>();
             Session.StartTime = Helpers.GetUnixTime();
             Session.Script.Events = new Dictionary<string, ScriptEvent>();
+            Session.Script.SleepTimer = new System.Timers.Timer();
             Session.Settings.SendUpdates = true;
         }
 
