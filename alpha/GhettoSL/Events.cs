@@ -47,9 +47,11 @@ namespace ghetto
             Session.Client.Objects.OnObjectKilled += new ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
             Session.Client.Objects.OnPrimMoved += new ObjectManager.PrimMovedCallback(Objects_OnPrimMoved);
             Session.Client.Self.OnChat += new MainAvatar.ChatCallback(Self_OnChat);
+            Session.Client.Self.OnInstantMessage += new MainAvatar.InstantMessageCallback(Self_OnInstantMessage);
 
             Session.Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(Callback_AlertMessage));
             Session.Client.Network.RegisterCallback(PacketType.MoneyBalanceReply, new NetworkManager.PacketCallback(Callback_MoneyBalanceReply));
+            Session.Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(Callback_TeleportFinish));
         }
 
         void Callback_AlertMessage(Packet packet, Simulator sim)
@@ -90,6 +92,14 @@ namespace ghetto
             Display.Balance(Session.SessionNumber, reply.MoneyData.MoneyBalance, amount, name, desc);
         }
 
+        void Callback_TeleportFinish(Packet packet, Simulator sim)
+        {
+            TeleportFinishPacket p = (TeleportFinishPacket)packet;
+            Console.ForegroundColor = System.ConsoleColor.Magenta;
+            Display.Teleporting(Session.SessionNumber, "Arrived in " + sim.Region.Name + ".");
+            Console.ForegroundColor = System.ConsoleColor.Gray;
+            Session.UpdateAppearance();
+        }
 
         void Network_OnConnected(object sender)
         {
@@ -162,6 +172,17 @@ namespace ghetto
             else action = false;
             
             Display.Chat(fromName, message, action, chatType, sourceType);
+        }
+
+
+        void Self_OnInstantMessage(LLUUID fromAgentID, string fromAgentName, LLUUID toAgentID, uint parentEstateID, LLUUID regionID, LLVector3 position, byte dialog, bool groupIM, LLUUID imSessionID, DateTime timestamp, string message, byte offline, byte[] binaryBucket)
+        {
+            //FIXME - readd IM stuff
+            if (dialog == (int)MainAvatar.InstantMessageDialog.RequestTeleport)
+            {
+                Session.Client.Self.TeleportLureRespond(fromAgentID, true);
+            }
+            Display.InstantMessage(Session.SessionNumber, dialog, fromAgentName, message);
         }
 
     }

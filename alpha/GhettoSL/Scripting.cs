@@ -247,7 +247,7 @@ namespace ghetto
                 int y = 0;
                 float z = 0f;
 
-                if (cmd.Length < 3 || int.TryParse(cmd[1], out x) || int.TryParse(cmd[2], out y)) {
+                if (cmd.Length < 3 || !int.TryParse(cmd[1], out x) || !int.TryParse(cmd[2], out y)) {
                     Display.Help(command);
                     return false;
                 }
