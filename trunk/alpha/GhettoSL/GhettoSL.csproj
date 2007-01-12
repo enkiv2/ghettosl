@@ -10,8 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ghetto</RootNamespace>
     <AssemblyName>GhettoSL</AssemblyName>
-    <StartupObject>
-    </StartupObject>
+    <StartupObject>ghetto.Interface</StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -42,6 +41,7 @@
     <Compile Include="Help.cs" />
     <Compile Include="Display.cs" />
     <Compile Include="Events.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scripting.cs" />
     <Compile Include="GhettoSL.cs" />
     <Compile Include="Interface.cs" />
