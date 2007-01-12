@@ -28,6 +28,7 @@
 using libsecondlife;
 using libsecondlife.Utilities;
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -66,6 +67,47 @@ namespace ghetto
             /// Dictionary of scripted events
             /// </summary>
             public Dictionary<string, ScriptEvent> Events;
+            /// <summary>
+            /// Load the specified script file into the Lines array
+            /// </summary>
+            public bool LoadScript(string scriptFile)
+            {
+                if (!File.Exists(scriptFile)) return false;
+
+                string[] script = { };
+                string input;
+                int error = 0;
+                StreamReader read = File.OpenText(scriptFile);
+                for (int i = 0; (input = read.ReadLine()) != null; i++)
+                {
+                    char[] splitChar = { ' ' };
+                    string[] args = input.ToLower().Split(splitChar);
+                    string[] commandsWithArgs = { "camp", "event", "go", "goto", "if", "label", "login", "pay", "payme", "say", "shout", "sit", "teleport", "touch", "touchid", "updates", "wait", "whisper" };
+                    string[] commandsWithoutArgs = { "fly", "land", "listen", "quiet", "quit", "relog", "run", "sitg", "stand", "walk" };
+                    if (Array.IndexOf(commandsWithArgs, args[0]) > -1 && args.Length < 2)
+                    {
+                        Console.WriteLine("Missing argument(s) for command \"{0}\" on line {1} of {2}", args[0], i + 1, scriptFile);
+                        error++;
+                    }
+                    else if (Array.IndexOf(commandsWithArgs, args[0]) < 0 && Array.IndexOf(commandsWithoutArgs, args[0]) < 0)
+                    {
+                        Console.WriteLine("Unknown command \"{0}\" on line {1} of {2}", args[0], i + 1, scriptFile);
+                        error++;
+                    }
+                    else
+                    {
+                        Array.Resize(ref script, i + 1);
+                        script[i] = input;
+                    }
+                }
+                read.Close();
+                if (error > 0) return false;
+                else
+                {
+                    Lines = script;
+                    return true;
+                }
+            }
 
             public UserScript()
             {
@@ -149,7 +191,7 @@ namespace ghetto
                 do Interface.CurrentSession++;
                 while (Interface.Sessions.ContainsKey(Interface.CurrentSession));
 
-                Display.InfoResponse(Interface.CurrentSession, "Creating new session...");
+                Display.InfoResponse(Interface.CurrentSession, "Creating session for " + Session.Name + "...");
                 Interface.Sessions.Add(Interface.CurrentSession, Session);
                 Session.SessionNumber = Interface.CurrentSession;
 
