@@ -113,9 +113,9 @@ namespace ghetto
                     ret.Value.DisplayChat = false;
                 else if (arg == "-n" || arg == "-noupdates")
                     ret.Value.SendUpdates = false;
-                else if (!lastArg && (arg == "-m" || arg == "-master"))
+                else if (!lastArg && (arg == "-m" || arg == "-master" || arg == "-masterid"))
                     ret.Value.MasterID = new LLUUID(args[i + 1]);
-                else if (!lastArg && (arg == "-p" || arg == "-pass"))
+                else if (!lastArg && (arg == "-p" || arg == "-pass" || arg == "passphrase"))
                     ret.Value.PassPhrase = args[i + 1];
                 else if (!lastArg && (arg == "-s" || arg == "-script"))
                     ret.Value.Script = args[i + 1];

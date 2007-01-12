@@ -336,6 +336,25 @@ namespace ghetto
                 Display.InfoResponse(sessionNum, weather);
             }
 
+            else if (command == "payme")
+            {
+                int amount;
+                if (cmd.Length < 2 || !int.TryParse(cmd[1], out amount))
+                {
+                    Display.Help(command);
+                    return false;
+                }
+                else if (Session.Settings.MasterID == LLUUID.Zero)
+                {
+                    Display.Error(sessionNum, "MasterID not defined");
+                    return false;
+                }
+                else
+                {
+                    Session.Client.Self.GiveMoney(Session.Settings.MasterID, amount, "");
+                }
+            }
+
             else if (command == "quiet")
             {
                 Session.Settings.DisplayChat = false;

@@ -73,19 +73,21 @@ namespace ghetto
 
             char[] splitChar = { ' ' };
             string[] msg = desc.Split(splitChar);
-            if (msg.Length <= 4 || !int.TryParse(msg[4].Substring(1, msg[4].Length - 2), out amount))
+
+            if (msg.Length <= 4 || msg[4].Length < 4 || !int.TryParse(msg[4].Substring(2, msg[4].Length - 3), out amount))
             {
-                Display.Error(Session.SessionNumber, "Unexpected MoneyBalanceReplyPacket.MoneyDataBlock.Description");
-                return;
+                if (desc.Length > 0) Display.Error(Session.SessionNumber, "Unexpected MoneyDataBlock.Description:" + desc);
             }
 
-            if (msg[0] + " " + msg[1] == "You paid")
+            else if (msg[0] + " " + msg[1] == "You paid")
             {
+                Session.MoneySpent += amount;
                 name = msg[2] + " " + msg[3];
                 amount *= -1;
             }
             else if (msg[2] + " " + msg[3] == "paid you")
             {
+                Session.MoneyReceived += amount;
                 name = msg[0] + " " + msg[1];
             }
 
