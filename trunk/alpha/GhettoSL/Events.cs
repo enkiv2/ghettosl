@@ -103,9 +103,7 @@ namespace ghetto
 
         void Network_OnConnected(object sender)
         {
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("* CONNECTED");
-            Console.ForegroundColor = ConsoleColor.Gray;
+            Display.Connected(Session.SessionNumber);
 
             Session.UpdateAppearance();
 
