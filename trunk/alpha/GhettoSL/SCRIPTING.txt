@@ -1,0 +1,79 @@
+
+1. Basic command structure
+----------------------------
+
+Scripting in ghettoSL consists of a batch-style command sequence.
+In addition to the commands listed in /help, there are custom commands
+for defining labels and events. Some examples are as follows:
+
+Let's say you want to teleport to a certain region and say "hello".
+
+teleport "Test Region" 128 128 0
+label wait
+wait 1
+if not region "Test Region" goto wait
+say hello
+
+The above example initiates a teleport to the sim "Test Region", then
+waits for 1 second. If it is not in Test Region yet, it waits another
+second, and so on -- until the region name *is* "Test Region".
+
+
+
+2. More advanced logic
+----------------------------
+
+Obviously, this is not a perfect example. In fact, if your teleport fails,
+you could wind up stuck in a loop of waiting. To prevent this, we have
+the commands SETTIME and IF ELAPSED. They can be implemented as follows:
+
+label start
+settime
+teleport "Test Region" 128 128 0
+label wait
+wait 1
+if elapsed 60 goto fail
+if not region "Test Region" goto wait
+say hi
+goto done
+label fail
+im $master I coundn't make it to Test Region!
+label end
+
+In this improved example, we call "settime" before we teleport. Now each
+time we check with "if elapsed 60" it will go to our "fail" label after
+60 seconds of retrying. We have added the "end" label so that "fail"
+is skipped in the event that we made it successfully.
+
+
+
+3. Reference section
+----------------------------
+
+CONDITIONS:
+
+if [not] elapsed <seconds> <command> ....... if X seconds has elapsed since settime
+if [not] flying <command> .................. if the avatar is flying
+if [not] region "Region Name" <command> .... if the avatar is in the specified region
+if [not] running <command> ................. if the avatar is running
+if [not] sitting <command> ................. if the avatar is sitting on an object
+if [not] standing <command> ................ if the avatar is not flying or sitting
+
+
+EVENTS:
+
+event <label> chat "text" <command> ........ on chat from avatars and objects
+event <label> im "text" <command> .......... on instant message from avatars and objects 
+event <label> getmoney <command> ........... money paid to the avatar
+event <label> givemoney <command> .......... money paid to other objects/avatars
+
+
+EVENT IDENTIFIERS:
+
+$amount .......... Dollar amount associated with money events
+$earned .......... L$ earned since login
+$id .............. UUID associated with event
+$master .......... MasterID as defined in the command arguments
+$message ......... Message associated with event
+$name ............ Name associated with event
+$spent ........... L$ spent since login
