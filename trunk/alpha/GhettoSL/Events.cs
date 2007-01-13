@@ -180,9 +180,16 @@ namespace ghetto
             //FIXME - readd IM stuff
             if (dialog == (int)MainAvatar.InstantMessageDialog.RequestTeleport)
             {
-                Session.Client.Self.TeleportLureRespond(fromAgentID, true);
+                if (fromAgentID == Session.Settings.MasterID || message == Session.Settings.PassPhrase)
+                {
+                    Session.Client.Self.TeleportLureRespond(fromAgentID, true);
+
+                }
             }
-            Display.InstantMessage(Session.SessionNumber, dialog, fromAgentName, message);
+            else
+            {
+                Display.InstantMessage(Session.SessionNumber, dialog, fromAgentName, message);
+            }
         }
 
     }
