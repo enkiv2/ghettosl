@@ -48,7 +48,7 @@ namespace ghetto
             public int Balance;
             public SecondLife Client;
             public Dictionary<LLUUID, Avatar> Friends;
-            public Dictionary<uint, Avatar> IMSession;
+            public Dictionary<LLUUID, IMSession> IMSessions;
             public Dictionary<uint, PrimObject> Prims;
             public int MoneySpent;
             public int MoneyReceived;
@@ -104,7 +104,7 @@ namespace ghetto
                 Avatars = new AvatarTracker(Client);
                 Balance = 0;
                 Friends = new Dictionary<LLUUID, Avatar>();
-                IMSession = new Dictionary<uint, Avatar>();
+                IMSessions = new Dictionary<LLUUID, IMSession>();
                 Prims = new Dictionary<uint, PrimObject>();
                 MoneySpent = 0;
                 MoneyReceived = 0;
@@ -117,6 +117,30 @@ namespace ghetto
 
         }
 
+        /// <summary>
+        /// Used for tracking IM session details
+        /// </summary>
+        public class IMSession
+        {
+            LLUUID imSession;
+            string name;
+
+            public IMSession(LLUUID imSessionID, string fromName)
+            {
+                imSession = imSessionID; 
+                name = fromName;
+            }
+
+            public LLUUID IMSessionID
+            {
+                get { return imSession; }
+            }
+
+            public string Name
+            {
+                get { return name; }
+            }
+        }
 
         /// <summary>
         /// Settings defined at runtime
