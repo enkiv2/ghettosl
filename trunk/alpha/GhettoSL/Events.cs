@@ -96,6 +96,7 @@ namespace ghetto
 
         void Callback_TeleportFinish(Packet packet, Simulator sim)
         {
+            //FIXME - add scripted TeleportFinish event check
             TeleportFinishPacket p = (TeleportFinishPacket)packet;
             Console.ForegroundColor = System.ConsoleColor.Magenta;
             Display.Teleporting(Session.SessionNumber, "Arrived in " + sim.Region.Name + ".");
@@ -105,6 +106,9 @@ namespace ghetto
 
         void Network_OnConnected(object sender)
         {
+            //FIXME - add scriptrf Connect event check
+
+
             Display.Connected(Session.SessionNumber);
 
             Session.UpdateAppearance();
@@ -160,6 +164,12 @@ namespace ghetto
         void Self_OnChat(string message, byte audible, byte chatType, byte sourceType, string fromName, LLUUID id, LLUUID ownerid, LLVector3 position)
         {
             if (chatType > 3 || audible < 1) return;
+            //FIXME - add script chat event check
+
+
+
+            if (!Session.Settings.DisplayChat) return;
+
             char[] splitChar = { ' ' };
             string[] msg = message.Split(splitChar);
 
@@ -177,7 +187,10 @@ namespace ghetto
 
         void Self_OnInstantMessage(LLUUID fromAgentID, string fromAgentName, LLUUID toAgentID, uint parentEstateID, LLUUID regionID, LLVector3 position, byte dialog, bool groupIM, LLUUID imSessionID, DateTime timestamp, string message, byte offline, byte[] binaryBucket)
         {
-            //FIXME - readd IM stuff
+            //FIXME - add script im event check
+
+
+
             if (dialog == (int)MainAvatar.InstantMessageDialog.RequestTeleport)
             {
                 if (fromAgentID == Session.Settings.MasterID || message == Session.Settings.PassPhrase)
@@ -189,6 +202,7 @@ namespace ghetto
             else
             {
                 Display.InstantMessage(Session.SessionNumber, dialog, fromAgentName, message);
+                if (fromAgentID == Session.Settings.MasterID) Scripting.ParseCommand(Session.SessionNumber, message, false, true);
             }
         }
 

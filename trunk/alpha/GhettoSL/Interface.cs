@@ -57,6 +57,11 @@ namespace ghetto
             if (loginParams.Key == false)
             {
                 Console.WriteLine("Usage: GhettoSL <firstName> <lastName> <password> [options]");
+                Console.WriteLine("-m  -master <uuid> ..... set uuid of master to accept teleports and commands from");
+                Console.WriteLine("-n  -noupdates ......... does not send agent updates, for minimum bandwidth usage");
+                Console.WriteLine("-p  -pass <word> ....... different from account password, used for teleport requests");
+                Console.WriteLine("-q  -quiet ............. run in \"quiet mode\" (public chat is not displayed)");
+                Console.WriteLine("-s  -script <file> ..... load the specified script (for script help, /help scripts)");
                 return;
             }
 
@@ -111,11 +116,12 @@ namespace ghetto
 
                 if (arg == "-q" || arg == "-quiet")
                     ret.Value.DisplayChat = false;
-                else if (arg == "-n" || arg == "-noupdates")
-                    ret.Value.SendUpdates = false;
                 else if (!lastArg && (arg == "-m" || arg == "-master" || arg == "-masterid"))
                     ret.Value.MasterID = new LLUUID(args[i + 1]);
+                else if (arg == "-n" || arg == "-noupdates")
+                    ret.Value.SendUpdates = false;
                 else if (!lastArg && (arg == "-p" || arg == "-pass" || arg == "passphrase"))
+                    //FIXME - detect and support multi-word passphrases in quotes
                     ret.Value.PassPhrase = args[i + 1];
                 else if (!lastArg && (arg == "-s" || arg == "-script"))
                     ret.Value.Script = args[i + 1];
@@ -136,9 +142,9 @@ namespace ghetto
             if (read.Length < 1)
                 return true;
             else if (read.Length > 1 && read.Substring(0, 2) == "//")
-                Scripting.ParseCommand(CurrentSession, read.Substring(2), true);
+                Scripting.ParseCommand(CurrentSession, read.Substring(2), true, false);
             else if (read.Substring(0, 1) == "/")
-                Scripting.ParseCommand(CurrentSession, read.Substring(1), false);
+                Scripting.ParseCommand(CurrentSession, read.Substring(1), false, false);
             else
                 Sessions[CurrentSession].Client.Self.Chat(read, 0, MainAvatar.ChatType.Normal);
 

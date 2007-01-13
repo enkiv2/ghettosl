@@ -156,11 +156,16 @@ namespace ghetto
         //Used by scripted events
         public enum EventTypes
         {
-            NULL = -1,
-            Chat = 0,
-            IM = 1,
-            GetMoney = 2,
-            GiveMoney = 3
+            NULL = 0,
+            //FIXME - add support for all of these events
+            Connect = 1,
+            Disconnect = 2,
+            Chat = 3,
+            IM = 4,
+            GroupIM = 5,
+            GetMoney = 6,
+            GiveMoney = 7,
+            TeleportFinish = 8
         }
 
 
@@ -226,8 +231,10 @@ namespace ghetto
         }
 
 
-        public static bool ParseCommand(uint sessionNum, string commandToParse, bool parseVariables)
+        public static bool ParseCommand(uint sessionNum, string commandToParse, bool parseVariables, bool fromMasterIM)
         {
+            //FIXME - change display output if fromMasterIM == true
+
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
 
             char[] splitChar = { ' ' };
