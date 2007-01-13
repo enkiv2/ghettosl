@@ -49,7 +49,7 @@ namespace ghetto
             HelpDict.Add("listen", "Listen to local chat (on by default)");
             HelpDict.Add("look", "Displays time and region sun direction");
             HelpDict.Add("quiet", "Stop listening to local chat");
-            HelpDict.Add("*re [# message]", "List active IM \"windows\" or reply by window ID");
+            HelpDict.Add("*re [name] [message]", "List IM sessions or reply by partial name match");
             HelpDict.Add("relog", "Log out and back in");
             HelpDict.Add("ride <name>", "Sit on the same object as the specified name");
             HelpDict.Add("run", "Enable running");

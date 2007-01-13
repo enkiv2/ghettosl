@@ -367,6 +367,23 @@ namespace ghetto
                 Session.Settings.DisplayChat = false;
             }
 
+            else if (command == "quit")
+            {
+                Display.InfoResponse(sessionNum, "Closing session " + sessionNum + "...");
+                Session.Client.Network.Logout();
+            }
+
+            else if (command == "re")
+            {
+                if (cmd.Length == 1) Display.IMSessions(sessionNum);
+                else if (cmd.Length < 3) Display.Help(command);
+                else
+                {
+                    //FIXME - find name and reply
+
+                }
+            }
+
             else if (command == "relog")
             {
                 if (Session.Client.Network.Connected)
@@ -394,20 +411,11 @@ namespace ghetto
                 Session.Client.Self.Chat(details, 0, MainAvatar.ChatType.Normal);
             }
 
-            else if (command == "shout")
+            else if (command == "script")
             {
-                Session.Client.Self.Chat(details, 0, MainAvatar.ChatType.Shout);
-            }
+                //FIXME - load/unload script
 
-            else if (command == "stopanim")
-            {
-                if (cmd.Length < 2) { Display.Help(command); return false; }
-                Session.Client.Self.AnimationStop(new LLUUID(cmd[1]));
-            }
 
-            else if (command == "whisper")
-            {
-                Session.Client.Self.Chat(details, 0, MainAvatar.ChatType.Whisper);
             }
 
             else if (command == "s" || command == "session")
@@ -423,6 +431,11 @@ namespace ghetto
                     else Interface.CurrentSession = switchTo;
                 }
                 else Display.SessionList();
+            }
+
+            else if (command == "shout")
+            {
+                Session.Client.Self.Chat(details, 0, MainAvatar.ChatType.Shout);
             }
 
             else if (command == "sit")
@@ -455,17 +468,17 @@ namespace ghetto
                 Display.Stats(sessionNum);
             }
 
+            else if (command == "stopanim")
+            {
+                if (cmd.Length < 2) { Display.Help(command); return false; }
+                Session.Client.Self.AnimationStop(new LLUUID(cmd[1]));
+            }
+
             else if (command == "touchid")
             {
                 if (cmd.Length < 2) { Display.Help(command); return false; }
                 uint touchid;
                 if (uint.TryParse(cmd[1], out touchid)) Session.Client.Self.Touch(touchid);
-            }
-
-            else if (command == "quit")
-            {
-                Display.InfoResponse(sessionNum, "Closing session " + sessionNum + "...");
-                Session.Client.Network.Logout();
             }
 
             else if (command == "teleport")
@@ -525,6 +538,11 @@ namespace ghetto
             else if (command == "walk")
             {
                 Session.Client.Self.SetAlwaysRun(false);
+            }
+
+            else if (command == "whisper")
+            {
+                Session.Client.Self.Chat(details, 0, MainAvatar.ChatType.Whisper);
             }
 
             else if (command == "who")

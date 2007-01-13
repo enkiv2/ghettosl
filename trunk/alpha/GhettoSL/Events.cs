@@ -185,7 +185,7 @@ namespace ghetto
         }
 
 
-        void Self_OnInstantMessage(LLUUID fromAgentID, string fromAgentName, LLUUID toAgentID, uint parentEstateID, LLUUID regionID, LLVector3 position, byte dialog, bool groupIM, LLUUID imSessionID, DateTime timestamp, string message, byte offline, byte[] binaryBucket)
+        void Self_OnInstantMessage(LLUUID fromID, string fromName, LLUUID toAgentID, uint parentEstateID, LLUUID regionID, LLVector3 position, byte dialog, bool groupIM, LLUUID imSessionID, DateTime timestamp, string message, byte offline, byte[] binaryBucket)
         {
             //FIXME - add script im event check
 
@@ -193,16 +193,23 @@ namespace ghetto
 
             if (dialog == (int)MainAvatar.InstantMessageDialog.RequestTeleport)
             {
-                if (fromAgentID == Session.Settings.MasterID || message == Session.Settings.PassPhrase)
+                if (fromID == Session.Settings.MasterID || (message.Length > 0 && message == Session.Settings.PassPhrase))
                 {
-                    Session.Client.Self.TeleportLureRespond(fromAgentID, true);
-
+                    Session.Client.Self.TeleportLureRespond(fromID, true);
                 }
+            }
+            else if (dialog == (int)MainAvatar.InstantMessageDialog.MessageFromObject)
+            {
+                Display.InstantMessage(Session.SessionNumber, true, dialog, fromName, message);
             }
             else
             {
-                Display.InstantMessage(Session.SessionNumber, dialog, fromAgentName, message);
-                if (fromAgentID == Session.Settings.MasterID) Scripting.ParseCommand(Session.SessionNumber, message, false, true);
+                if (!Session.IMSessions.ContainsKey(fromID))
+                {
+                    Session.IMSessions.Add(fromID, new GhettoSL.IMSession(imSessionID, fromName));
+                }
+                Display.InstantMessage(Session.SessionNumber, false, dialog, fromName, message);
+                if (fromID == Session.Settings.MasterID) Scripting.ParseCommand(Session.SessionNumber, message, false, true);
             }
         }
 
