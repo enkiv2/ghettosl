@@ -174,6 +174,8 @@ namespace ghetto
 
         public static bool ParseLoginCommand(string[] cmd)
         {
+            //FIXME - add all the command-line options to login command
+
             if (cmd.Length < 2) { Display.Help("login");  return false; }
 
             string flag = cmd[1].ToLower();
@@ -279,7 +281,7 @@ namespace ghetto
             string[] cmd = commandToParse.Split(splitChar);
             string command = cmd[0].ToLower();
             int tok = 1;
-            if (command == "im") tok++;
+            if (command == "im" || command == "re") tok++;
             string details = "";
             for (; tok < cmd.Length; tok++)
             {
