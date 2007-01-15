@@ -426,8 +426,21 @@ namespace ghetto
                 }
                 else
                 {
-                    //FIXME - find name and reply
-                    Console.WriteLine("FIXME");
+                    LLUUID match = LLUUID.Zero;
+                    foreach (KeyValuePair<LLUUID, GhettoSL.IMSession> pair in Session.IMSessions)
+                    {
+                        if (pair.Value.Name.Length < cmd[1].Length) continue; //too short to be a match
+                        else if (pair.Value.Name.Substring(0, cmd[1].Length).ToLower() == cmd[1].ToLower())
+                        {
+                            if (match != LLUUID.Zero)
+                            {
+                                Display.Error(sessionNum, "\"" + cmd[1] + "\" could refer to more than one active IM session.");
+                                return false;
+                            }
+                            match = pair.Key;
+                        }
+                    }
+                    Session.Client.Self.InstantMessage(match, details, Session.IMSessions[match].IMSessionID);
                 }
             }
 
@@ -519,16 +532,9 @@ namespace ghetto
                 Session.Client.Self.AnimationStop(new LLUUID(cmd[1]));
             }
 
-            else if (command == "touchid")
-            {
-                if (cmd.Length < 2) { Display.Help(command); return false; }
-                uint touchid;
-                if (uint.TryParse(cmd[1], out touchid)) Session.Client.Self.Touch(touchid);
-            }
-
             else if (command == "teleport")
             {
-                if (cmd.Length < 2) return false;
+                if (cmd.Length < 2) { Display.Help(command); return false; }
                 string simName;
                 LLVector3 tPos;
                 if (cmd.Length >= 5)
@@ -552,15 +558,23 @@ namespace ghetto
             }
             else if (command == "touch")
             {
+                if (cmd.Length < 2) { Display.Help(command); return false; }
                 LLUUID findID = new LLUUID(cmd[1]);
                 foreach (PrimObject prim in Session.Prims.Values)
                 {
                     if (prim.ID != findID) continue;
                     Session.Client.Self.Touch(prim.LocalID);
-                    //FIXME - notify touched
+                    Display.InfoResponse(Session.SessionNumber, "You touch an object...");
                     break;
                 }
-                //FIXME - notify could not find
+                Display.Error(Session.SessionNumber, "Object not found");
+            }
+
+            else if (command == "touchid")
+            {
+                if (cmd.Length < 2) { Display.Help(command); return false; }
+                uint touchid;
+                if (uint.TryParse(cmd[1], out touchid)) Session.Client.Self.Touch(touchid);
             }
 
             else if (command == "updates")

@@ -62,8 +62,9 @@ namespace ghetto
             public bool Login()
             {
                 Display.InfoResponse(0, "Logging in as " + Settings.FirstName + " " + Settings.LastName + "...");
-                bool success = Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", "ghetto@obsoleet.com");
-                return success;
+                if (Settings.StartRegion == "") return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", "ghetto@obsoleet.com");
+                else return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", Settings.StartRegion, "ghetto@obsoleet.com", false);
+                
             }
 
             public void UpdateAppearance()
@@ -157,6 +158,7 @@ namespace ghetto
             public string CampChairMatchText;
             public string FollowName;
             public string Script;
+            public string StartRegion;
             public UserSessionSettings()
             {
                 FirstName = "";
@@ -166,6 +168,7 @@ namespace ghetto
                 MasterID = LLUUID.Zero;
                 DisplayChat = true;
                 SendUpdates = true;
+                StartRegion = "";
                 CampChairMatchText = "";
                 FollowName = "";
             }

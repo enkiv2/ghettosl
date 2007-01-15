@@ -113,6 +113,8 @@ namespace ghetto
 
             Display.Connected(Session.SessionNumber);
 
+            Session.Settings.StartRegion = "";
+
             Session.UpdateAppearance();
 
             Session.Client.Self.Status.UpdateTimer.Start();
