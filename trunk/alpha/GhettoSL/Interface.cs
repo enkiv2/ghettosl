@@ -29,6 +29,7 @@ using libsecondlife;
 using libsecondlife.Packets;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 
 namespace ghetto
@@ -77,6 +78,12 @@ namespace ghetto
             
             CurrentSession = 1;
             Sessions.Add(1, session);
+
+            //Load autoexec.script
+            if (File.Exists("autoexec.script"))
+            {
+                Scripts.Add("autoexec.script", new ScriptSystem.UserScript("autoexec.script"));
+            }
 
             //Make initial connection
             Sessions[CurrentSession].Login();
