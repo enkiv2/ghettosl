@@ -36,12 +36,11 @@ namespace ghetto
 
     class Interface
     {
+        public static Dictionary<string, ScriptSystem.UserScript> Scripts;
         public static Dictionary<uint, GhettoSL.UserSession> Sessions;
-        public static Dictionary<string, Scripting.UserScript> Scripts;
-        public static HelpSystem Help;
-
-        public static bool Exit;
         public static uint CurrentSession;
+        public static bool Exit;
+        public static bool NoColor;
 
         //Main void
         static void Main(string[] args)
@@ -50,6 +49,8 @@ namespace ghetto
             string platform = System.Convert.ToString(Environment.OSVersion.Platform);
             Console.WriteLine(Environment.NewLine + "Running on platform " + platform);
             Random random = new Random();
+
+
             Display.IntroArt(random.Next(1, 3));
 
             KeyValuePair<bool,GhettoSL.UserSessionSettings> loginParams = ParseCommandArguments(args);
@@ -57,6 +58,8 @@ namespace ghetto
             if (loginParams.Key == false)
             {
                 Console.WriteLine("Usage: GhettoSL <firstName> <lastName> <password> [options]");
+                Console.WriteLine("Optional flags (must be separated by spaces):");
+                Console.WriteLine("-c  -nocolor ........... no console colors will be displayed");
                 Console.WriteLine("-m  -master <uuid> ..... set uuid of master to accept teleports and commands from");
                 Console.WriteLine("-n  -noupdates ......... does not send agent updates, for minimum bandwidth usage");
                 Console.WriteLine("-p  -pass <word> ....... different from account password, used for teleport requests");
@@ -68,9 +71,8 @@ namespace ghetto
             GhettoSL.UserSession session = new GhettoSL.UserSession(1);
             session.Settings = loginParams.Value;
 
-            Sessions = new Dictionary<uint, GhettoSL.UserSession>();
-            Scripts = new Dictionary<string, Scripting.UserScript>();
-            Help = new HelpSystem();
+            Scripts = new Dictionary<string, ScriptSystem.UserScript>();
+            Sessions = new Dictionary<uint, GhettoSL.UserSession>(); //user sessions
             
             CurrentSession = 1;
             Sessions.Add(1, session);
@@ -113,8 +115,9 @@ namespace ghetto
                 if (i + 1 == args.Length) lastArg = true;
 
                 string arg = args[i].ToLower();
-
-                if (arg == "-q" || arg == "-quiet")
+                if (arg == "-c" || arg == "-nocolor" || arg == "-nocolors")
+                    Interface.NoColor = true;
+                else if (arg == "-q" || arg == "-quiet")
                     ret.Value.DisplayChat = false;
                 else if (!lastArg && (arg == "-m" || arg == "-master" || arg == "-masterid"))
                     ret.Value.MasterID = new LLUUID(args[i + 1]);
@@ -142,9 +145,9 @@ namespace ghetto
             if (read.Length < 1)
                 return true;
             else if (read.Length > 1 && read.Substring(0, 2) == "//")
-                Scripting.ParseCommand(CurrentSession, read.Substring(2), true, false);
+                ScriptSystem.ParseCommand(CurrentSession, read.Substring(2), true, false);
             else if (read.Substring(0, 1) == "/")
-                Scripting.ParseCommand(CurrentSession, read.Substring(1), false, false);
+                ScriptSystem.ParseCommand(CurrentSession, read.Substring(1), false, false);
             else
                 Sessions[CurrentSession].Client.Self.Chat(read, 0, MainAvatar.ChatType.Normal);
 

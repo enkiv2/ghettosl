@@ -34,7 +34,7 @@ using libsecondlife.Utilities;
 
 namespace ghetto
 {
-    class GhettoSL
+    public class GhettoSL
     {
 
         /// <summary>
@@ -42,6 +42,7 @@ namespace ghetto
         /// </summary>
         public class UserSession
         {
+
             public uint SessionNumber;
             public AvatarTracker Avatars;
             public EventManager Events;
@@ -114,7 +115,6 @@ namespace ghetto
                 Settings = new UserSessionSettings();
                 StartTime = Helpers.GetUnixTime();
             }
-
         }
 
         /// <summary>

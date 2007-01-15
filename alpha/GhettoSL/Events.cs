@@ -33,7 +33,7 @@ using System.Text;
 
 namespace ghetto
 {
-    class EventManager
+    public class EventManager
     {
 
         public GhettoSL.UserSession Session;
@@ -56,10 +56,11 @@ namespace ghetto
 
         void Callback_AlertMessage(Packet packet, Simulator sim)
         {
+            //FIXME - move output to Display
             AlertMessagePacket p = (AlertMessagePacket)packet;
-            Console.ForegroundColor = System.ConsoleColor.Cyan;
+            Display.SetColor(System.ConsoleColor.Cyan);
             Display.AlertMessage(Session.SessionNumber, Helpers.FieldToString(p.AlertData.Message));
-            Console.ForegroundColor = System.ConsoleColor.Gray;
+            Display.SetColor(System.ConsoleColor.Gray);
         }
 
         void Callback_MoneyBalanceReply(Packet packet, Simulator simulator)
@@ -97,10 +98,11 @@ namespace ghetto
         void Callback_TeleportFinish(Packet packet, Simulator sim)
         {
             //FIXME - add scripted TeleportFinish event check
+            //FIXME - move output to Display
             TeleportFinishPacket p = (TeleportFinishPacket)packet;
-            Console.ForegroundColor = System.ConsoleColor.Magenta;
+            Display.SetColor(System.ConsoleColor.Magenta);
             Display.Teleporting(Session.SessionNumber, "Arrived in " + sim.Region.Name + ".");
-            Console.ForegroundColor = System.ConsoleColor.Gray;
+            Display.SetColor(System.ConsoleColor.Gray);
             Session.UpdateAppearance();
         }
 
@@ -127,9 +129,10 @@ namespace ghetto
 
         void Network_OnSimDisconnected(Simulator simulator, NetworkManager.DisconnectType reason)
         {
-            Console.ForegroundColor = System.ConsoleColor.Red;
+            //FIXME - move to Display
+            Display.SetColor(System.ConsoleColor.Red);
             Console.WriteLine("* DISCONNECTED FROM SIM: " + reason.ToString());
-            Console.ForegroundColor = System.ConsoleColor.Gray;
+            Display.SetColor(System.ConsoleColor.Gray);
         }
 
         void Objects_OnPrimMoved(Simulator simulator, PrimUpdate prim, ulong regionHandle, ushort timeDilation)
@@ -209,7 +212,7 @@ namespace ghetto
                     Session.IMSessions.Add(fromID, new GhettoSL.IMSession(imSessionID, fromName));
                 }
                 Display.InstantMessage(Session.SessionNumber, false, dialog, fromName, message);
-                if (fromID == Session.Settings.MasterID) Scripting.ParseCommand(Session.SessionNumber, message, false, true);
+                if (fromID == Session.Settings.MasterID) ScriptSystem.ParseCommand(Session.SessionNumber, message, false, true);
             }
         }
 
