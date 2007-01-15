@@ -112,10 +112,20 @@ namespace ghetto
                 }
             }
 
+            public UserScript(string scriptFile)
+            {
+                CurrentStep = 0;
+                ScriptTime = Helpers.GetUnixTime();
+                SleepingSince = ScriptTime;
+                SleepTimer = new System.Timers.Timer();
+                SleepTimer.Enabled = false;
+                SleepTimer.AutoReset = false;
+                Events = new Dictionary<string, ScriptEvent>();   
+                Load(scriptFile);
+            }
+
             public UserScript()
             {
-                //Sessions = new uint[];
-                //Lines = new string[];
                 CurrentStep = 0;
                 ScriptTime = Helpers.GetUnixTime();
                 SleepingSince = ScriptTime;
@@ -133,14 +143,17 @@ namespace ghetto
             /// Event type, enumerated in EventTypes.*
             /// </summary>
             public EventTypes Type;
+
             /// <summary>
             /// Used for text-matching events, or events with messages attached
             /// </summary>
             public string Text;
+
             /// <summary>
             /// Used for events which contain a numerical value
             /// </summary>
             public int Number;
+
             /// <summary>
             /// Command to execute on the specified event
             /// </summary>
@@ -271,6 +284,12 @@ namespace ghetto
             return true;
         }
 
+        public static bool ParseConditions(string conditions)
+        {
+            //FIXME - parse conditions
+            return true;
+        }
+
         public static bool ParseCommand(uint sessionNum, string commandToParse, bool parseVariables, bool fromMasterIM)
         {
             //FIXME - change display output if fromMasterIM == true
@@ -280,13 +299,51 @@ namespace ghetto
             char[] splitChar = { ' ' };
             string[] cmd = commandToParse.Split(splitChar);
             string command = cmd[0].ToLower();
-            int tok = 1;
-            if (command == "im" || command == "re") tok++;
-            string details = "";
-            for (; tok < cmd.Length; tok++)
+            int commandStart = 0;
+
+            if (command == "if")
             {
-                details += cmd[tok];
-                if (tok + 1 < cmd.Length) details += " ";
+                string conditions = "";
+                string[] newCmd = new string[0];
+                for (int i = 1; i < cmd.Length; i++)
+                {
+                    if (commandStart > 0)
+                    {
+                        Array.Resize(ref newCmd, newCmd.Length + 1);
+                        newCmd[newCmd.Length - 1] = cmd[i];
+                    }
+                    else if (cmd[i].ToLower() == "then")
+                    {
+                        if (i >= cmd.Length - 1)
+                        {
+                            Display.Error(Session.SessionNumber, "Script error: Missing statement after THEN");
+                            return false;
+                        }
+                        commandStart = i + 1;
+                    }
+                    else if (i >= cmd.Length - 1)
+                    {
+                        Display.Error(Session.SessionNumber, "Script error: IF without THEN");
+                        return false;
+                    }
+                    else
+                    {
+                        if (conditions != "") conditions += " ";
+                        conditions += cmd[i];
+                    }
+                }
+                if (!ParseConditions(conditions)) return true; //condition failed, but no errors
+                cmd = newCmd;
+                command = cmd[0].ToLower();
+            }
+
+            int detailsStart = 1;
+            if (command == "im" || command == "re") detailsStart++;
+            string details = "";
+            for (; detailsStart < cmd.Length; detailsStart++)
+            {
+                if (details != "") details += " ";
+                details += cmd[detailsStart];                
             }
 
             if (command == "anim")
@@ -410,7 +467,7 @@ namespace ghetto
 
             else if (command == "quit")
             {
-                Display.InfoResponse(Session.SessionNumber, "Closing session " + Session.SessionNumber + "...");
+                Display.InfoResponse(Session.SessionNumber, "Disconnecting " + Session.Name + "...");
                 Session.Client.Network.Logout();
             }
 
