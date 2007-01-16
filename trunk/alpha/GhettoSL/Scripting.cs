@@ -120,7 +120,6 @@ namespace ghetto
                 SleepTimer = new System.Timers.Timer();
                 SleepTimer.Enabled = false;
                 SleepTimer.AutoReset = false;
-                Events = new Dictionary<string, ScriptEvent>();   
                 Load(scriptFile);
             }
 
