@@ -135,8 +135,10 @@ namespace ghetto
                     //FIXME - detect and support multi-word passphrases in quotes
                     ret.Value.PassPhrase = args[i + 1];
                 else if (!lastArg && (arg == "-r" || arg == "-region"))
+                    //FIXME - detect and support multi-word region names in quotes
                     ret.Value.StartRegion = args[i + 1];
                 else if (!lastArg && (arg == "-s" || arg == "-script"))
+                    //FIXME - detect and support filenames with spaces in quotes
                     ret.Value.Script = args[i + 1];
 
             }
