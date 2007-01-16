@@ -33,12 +33,12 @@ using System.Text;
 
 namespace ghetto
 {
-    public class EventManager
+    public class CallbackManager
     {
 
         public GhettoSL.UserSession Session;
 
-        public EventManager(GhettoSL.UserSession session)
+        public CallbackManager(GhettoSL.UserSession session)
         {
             Session = session;
             Session.Client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
