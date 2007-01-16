@@ -184,6 +184,9 @@ namespace ghetto
         }
 
 
+        /// <summary>
+        /// /login command
+        /// </summary>
         public static bool ParseLoginCommand(string[] cmd)
         {
             //FIXME - add all the command-line options to login command
@@ -245,6 +248,10 @@ namespace ghetto
 
         }
 
+
+        /// <summary>
+        /// /script command
+        /// </summary>
         public static bool ParseLoadScriptCommand(uint sessionNum, string[] cmd)
         {
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
@@ -259,31 +266,93 @@ namespace ghetto
             if (arg == "-u" || arg == "-unload" || arg == "unload")
             {
                 if (cmd.Length < 3) { Display.Help(arg); return false; }
-                else if (!Interface.Scripts.ContainsKey(cmd[2])) Display.InfoResponse(Session.SessionNumber, "No such script loaded. For a list of active scripts, use /scripts.");
+                else if (!Interface.Scripts.ContainsKey(cmd[2])) Display.InfoResponse(sessionNum, "No such script loaded. For a list of active scripts, use /scripts.");
                 else Interface.Scripts.Remove(cmd[2]);
             }
             else if (!File.Exists(cmd[1]))
             {
-                Display.Error(Session.SessionNumber, "File not found: " + cmd[1]);
+                Display.Error(sessionNum, "File not found: " + cmd[1]);
                 return false;
             }
             else
             {
                 if (Interface.Scripts.ContainsKey(cmd[1]))
                 {
-                    Display.InfoResponse(Session.SessionNumber, "Reloading script: " + cmd[1]);
+                    Display.InfoResponse(sessionNum, "Reloading script: " + cmd[1]);
                 }
                 else
                 {
                     Interface.Scripts.Add(cmd[1], new UserScript());
-                    Display.InfoResponse(Session.SessionNumber, "Loading script: " + cmd[1]);
+                    Display.InfoResponse(sessionNum, "Loading script: " + cmd[1]);
                 }
                 Interface.Scripts[cmd[1]].Load(cmd[1]);
             }
             return true;
         }
 
-        public static bool ParseConditions(string conditions)
+
+        /// <summary>
+        /// /event command
+        /// </summary>
+        public static bool ParseEventCommand(uint sessionNum, string[] cmd)
+        {
+            GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
+            if (cmd.Length < 3) {
+                Display.Help(cmd[0]);
+                return false;
+            }
+            else if (cmd[1] == "-r" || cmd[1] == "-remove" || cmd[1] == "remove")
+            {
+                if (cmd.Length < 3) Display.Help(cmd[0]);
+                else if (!Session.ScriptEvents.ContainsKey(cmd[2])) Display.Error(sessionNum, "No such event: " + cmd[2]);
+                else
+                {
+                    Session.ScriptEvents.Remove(cmd[2]);
+                    Display.InfoResponse(sessionNum, "Removed event: " + cmd[2]);
+                    return true;
+                }
+            }
+            else if (cmd.Length < 4) {
+                Display.Help(cmd[0]);
+            }
+            else
+            {
+                string eventLabel = cmd[1];
+                string eventType = "";
+                int eventNum = 0;
+                foreach (int e in Enum.GetValues(typeof(EventTypes)))
+                {
+                    if (((EventTypes)e).ToString().ToLower() == cmd[2].ToLower())
+                    {
+                        eventNum = e;
+                        eventType = ((EventTypes)e).ToString();
+                        break;
+                    }
+                }
+                if (eventNum == 0)
+                {
+                    Display.Error(sessionNum, "Unrecognized event type: " + cmd[2]);
+                    return false;
+                }
+
+                string eventCommand = "";
+                for (int i = 3; i < cmd.Length; i++)
+                {
+                    if (eventCommand != "") eventCommand += " ";
+                    eventCommand += cmd[i];
+                }
+
+                ScriptEvent newEvent = new ScriptEvent();
+                newEvent.Type = (EventTypes)eventNum;
+                newEvent.Command = eventCommand;
+                Session.ScriptEvents.Add(eventLabel, newEvent);
+                Display.InfoResponse(sessionNum, "Added " + eventType + " event: " + eventLabel);
+                return true;
+            }
+            return false;
+        }
+
+        public static bool ParseConditions(uint sessionNum, string conditions)
         {
             //FIXME - parse conditions
             return true;
@@ -316,14 +385,14 @@ namespace ghetto
                     {
                         if (i >= cmd.Length - 1)
                         {
-                            Display.Error(Session.SessionNumber, "Script error: Missing statement after THEN");
+                            Display.Error(sessionNum, "Script error: Missing statement after THEN");
                             return false;
                         }
                         commandStart = i + 1;
                     }
                     else if (i >= cmd.Length - 1)
                     {
-                        Display.Error(Session.SessionNumber, "Script error: IF without THEN");
+                        Display.Error(sessionNum, "Script error: IF without THEN");
                         return false;
                     }
                     else
@@ -332,7 +401,7 @@ namespace ghetto
                         conditions += cmd[i];
                     }
                 }
-                if (!ParseConditions(conditions)) return true; //condition failed, but no errors
+                if (!ParseConditions(sessionNum, conditions)) return true; //condition failed, but no errors
                 cmd = ifCmd;
                 command = cmd[0].ToLower();
             }
@@ -360,10 +429,10 @@ namespace ghetto
             else if (command == "camp")
             {
                 if (cmd.Length < 2) { Display.Help(command); return false; }
-                uint localID = FindObjectByText(Session.SessionNumber, details.ToLower());
+                uint localID = FindObjectByText(sessionNum, details.ToLower());
                 if (localID > 0)
                 {
-                    Display.InfoResponse(Session.SessionNumber, "Match found. Camping...");
+                    Display.InfoResponse(sessionNum, "Match found. Camping...");
                     Session.Client.Self.RequestSit(Session.Prims[localID].ID, LLVector3.Zero);
                     Session.Client.Self.Sit();
                     //Session.Client.Self.Status.Controls.FinishAnim = false;
@@ -372,7 +441,7 @@ namespace ghetto
                     Session.Client.Self.Status.SendUpdate();
                     return true;
                 }
-                Display.InfoResponse(Session.SessionNumber, "No matching objects found.");
+                Display.InfoResponse(sessionNum, "No matching objects found.");
                 return false; ;
             }
 
@@ -381,8 +450,28 @@ namespace ghetto
                 Console.Clear();
             }
 
+            else if (command == "event")
+            {
+                if (cmd.Length == 1) Display.EventList(sessionNum);
+                else return ParseEventCommand(sessionNum, cmd);
+            }
+
+            else if (command == "events")
+            {
+                Display.EventList(sessionNum);
+            }
+
             else if (command == "fly")
             {
+                if (Session.Client.Self.Status.Controls.Fly)
+                {
+                    Display.InfoResponse(sessionNum, "You are already flying.");
+                }
+                else
+                {
+                    Display.InfoResponse(sessionNum, "Suddenly, you feel weightless...");
+                }
+                //Send either way, for good measure
                 Session.Client.Self.Status.Controls.Fly = true;
                 Session.Client.Self.Status.SendUpdate();
             }
@@ -394,7 +483,8 @@ namespace ghetto
                 int y = 0;
                 float z = 0f;
 
-                if (cmd.Length < 3 || !int.TryParse(cmd[1], out x) || !int.TryParse(cmd[2], out y)) {
+                if (cmd.Length < 3 || !int.TryParse(cmd[1], out x) || !int.TryParse(cmd[2], out y))
+                {
                     Display.Help(command);
                     return false;
                 }
@@ -437,14 +527,14 @@ namespace ghetto
             {
                 if (!ParseLoginCommand(cmd))
                 {
-                    Display.InfoResponse(Session.SessionNumber, "Invalid login parameters");
+                    Display.InfoResponse(sessionNum, "Invalid login parameters");
                 }
             }
 
             else if (command == "look")
             {
-                string weather = Display.RPGWeather(Session.SessionNumber);
-                Display.InfoResponse(Session.SessionNumber, weather);
+                string weather = Display.RPGWeather(sessionNum);
+                Display.InfoResponse(sessionNum, weather);
             }
 
             else if (command == "payme")
@@ -457,7 +547,7 @@ namespace ghetto
                 }
                 else if (Session.Settings.MasterID == LLUUID.Zero)
                 {
-                    Display.Error(Session.SessionNumber, "MasterID not defined");
+                    Display.Error(sessionNum, "MasterID not defined");
                     return false;
                 }
                 else
@@ -473,7 +563,7 @@ namespace ghetto
 
             else if (command == "quit")
             {
-                Display.InfoResponse(Session.SessionNumber, "Disconnecting " + Session.Name + "...");
+                Display.InfoResponse(sessionNum, "Disconnecting " + Session.Name + "...");
                 Session.Client.Network.Logout();
             }
 
@@ -481,8 +571,8 @@ namespace ghetto
             {
                 if (cmd.Length == 1)
                 {
-                    if (Session.IMSessions.Count == 0) Display.InfoResponse(Session.SessionNumber, "No active IM sessions");
-                    else Display.IMSessions(Session.SessionNumber);
+                    if (Session.IMSessions.Count == 0) Display.InfoResponse(sessionNum, "No active IM sessions");
+                    else Display.IMSessions(sessionNum);
                 }
                 else if (cmd.Length < 3)
                 {
@@ -523,7 +613,7 @@ namespace ghetto
 
             else if (command == "ride")
             {
-                RideWith(Session.SessionNumber, details);
+                RideWith(sessionNum, details);
             }
 
             else if (command == "run")
@@ -538,7 +628,7 @@ namespace ghetto
 
             else if (command == "script")
             {
-                return ParseLoadScriptCommand(Session.SessionNumber, cmd);
+                return ParseLoadScriptCommand(sessionNum, cmd);
             }
 
             else if (command == "s" || command == "session")
@@ -548,7 +638,7 @@ namespace ghetto
                     uint switchTo;
                     if (!uint.TryParse(cmd[1], out switchTo) || switchTo < 1)
                     {
-                        Display.InfoResponse(Session.SessionNumber, "Invalid session number");
+                        Display.InfoResponse(sessionNum, "Invalid session number");
                         return false;
                     }
                     else Interface.CurrentSession = switchTo;
@@ -588,7 +678,7 @@ namespace ghetto
 
             else if (command == "stats")
             {
-                Display.Stats(Session.SessionNumber);
+                Display.Stats(sessionNum);
             }
 
             else if (command == "stopanim")
@@ -616,7 +706,7 @@ namespace ghetto
                     tPos = new LLVector3(128, 128, 0);
                 }
 
-                Display.Teleporting(Session.SessionNumber, simName);
+                Display.Teleporting(sessionNum, simName);
                 Session.Client.Self.Teleport(simName, tPos);
 
                 return true;
@@ -629,10 +719,10 @@ namespace ghetto
                 {
                     if (prim.ID != findID) continue;
                     Session.Client.Self.Touch(prim.LocalID);
-                    Display.InfoResponse(Session.SessionNumber, "You touch an object...");
+                    Display.InfoResponse(sessionNum, "You touch an object...");
                     break;
                 }
-                Display.Error(Session.SessionNumber, "Object not found");
+                Display.Error(sessionNum, "Object not found");
             }
 
             else if (command == "touchid")
@@ -648,12 +738,12 @@ namespace ghetto
                 string toggle = cmd[1].ToLower();
                 if (toggle == "on")
                 {
-                    Display.InfoResponse(Session.SessionNumber, "Update timer ON");
+                    Display.InfoResponse(sessionNum, "Update timer ON");
                     Session.Client.Self.Status.UpdateTimer.Start();
                 }
                 else if (toggle == "off")
                 {
-                    Display.InfoResponse(Session.SessionNumber, "Update timer OFF");
+                    Display.InfoResponse(sessionNum, "Update timer OFF");
                     Session.Client.Self.Status.UpdateTimer.Stop();
                 }
                 else { Display.Help(command); return false; }
@@ -671,7 +761,7 @@ namespace ghetto
 
             else if (command == "who")
             {
-                Display.Who(Session.SessionNumber);
+                Display.Who(sessionNum);
             }
 
             else
@@ -702,9 +792,9 @@ namespace ghetto
         }
 
 
-        public static bool RideWith(uint sessionID, string name)
+        public static bool RideWith(uint sessionNum, string name)
         {
-            GhettoSL.UserSession Session = Interface.Sessions[sessionID];
+            GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
 
             string findName = name.ToLower();
 
@@ -718,10 +808,10 @@ namespace ghetto
                         //FIXME - request if fails
                         if (!Session.Prims.ContainsKey(av.SittingOn))
                         {
-                            Display.InfoResponse(Session.SessionNumber, "Object info missing");
+                            Display.InfoResponse(sessionNum, "Object info missing");
                             return false;
                         }
-                        Display.InfoResponse(Session.SessionNumber, "Riding with " + av.Name + ".");
+                        Display.InfoResponse(sessionNum, "Riding with " + av.Name + ".");
                         Session.Client.Self.RequestSit(Session.Prims[av.SittingOn].ID, LLVector3.Zero);
                         Session.Client.Self.Sit();
                         return true;
