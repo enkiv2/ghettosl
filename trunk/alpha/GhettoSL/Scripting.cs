@@ -237,7 +237,7 @@ namespace ghetto
             if (Session.Client.Network.Connected)
             {
                 //FIXME - Add RelogTimer to UserSession, in place of this
-                Session.Client.Network.Logout();
+                if (Session != null) Session.Client.Network.Logout();
                 Thread.Sleep(1000);
             }
 
@@ -301,18 +301,19 @@ namespace ghetto
             string command = cmd[0].ToLower();
             int commandStart = 0;
 
+            //FIZME - add "else" and multi-line "if/end if" routines
             if (command == "if")
             {
                 string conditions = "";
-                string[] newCmd = new string[0];
+                string[] ifCmd = new string[0];
                 for (int i = 1; i < cmd.Length; i++)
                 {
-                    if (commandStart > 0)
+                    if (commandStart > 0) //already found THEN statement
                     {
-                        Array.Resize(ref newCmd, newCmd.Length + 1);
-                        newCmd[newCmd.Length - 1] = cmd[i];
+                        Array.Resize(ref ifCmd, ifCmd.Length + 1);
+                        ifCmd[ifCmd.Length - 1] = cmd[i];
                     }
-                    else if (cmd[i].ToLower() == "then")
+                    else if (cmd[i].ToLower() == "then") //this is our THEN statement
                     {
                         if (i >= cmd.Length - 1)
                         {
@@ -333,7 +334,7 @@ namespace ghetto
                     }
                 }
                 if (!ParseConditions(conditions)) return true; //condition failed, but no errors
-                cmd = newCmd;
+                cmd = ifCmd;
                 command = cmd[0].ToLower();
             }
 
@@ -360,7 +361,7 @@ namespace ghetto
             else if (command == "camp")
             {
                 if (cmd.Length < 2) { Display.Help(command); return false; }
-                uint localID = FindObjectByText(details.ToLower());
+                uint localID = FindObjectByText(Session.SessionNumber, details.ToLower());
                 if (localID > 0)
                 {
                     Display.InfoResponse(Session.SessionNumber, "Match found. Camping...");
@@ -400,8 +401,14 @@ namespace ghetto
                 }
 
                 if (cmd.Length < 4 || !float.TryParse(cmd[4], out z)) z = Session.Client.Self.Position.Z;
-                
-                Session.Client.Self.AutoPilotLocal(x, y, z);
+
+                //FIXME - core library returns incorrect RegionHandle, RegionX, and RegionY
+                ulong regionHandle = Session.Client.Network.CurrentSim.Region.Handle;
+                Console.WriteLine("Client.Network.CurrentSim.Region.Handle: " + regionHandle); //DEBUG
+                int regionX = (int)(regionHandle >> 32);
+                int regionY = (int)(regionHandle & 0xFFFFFFFF);
+
+                Session.Client.Self.AutoPilotLocal(regionX + x, regionY + y, z);
             }
 
             else if (command == "help")
@@ -517,7 +524,7 @@ namespace ghetto
 
             else if (command == "ride")
             {
-                RideWith(details);
+                RideWith(Session.SessionNumber, details);
             }
 
             else if (command == "run")
@@ -678,10 +685,10 @@ namespace ghetto
         }
 
 
-        public static uint FindObjectByText(string textValue)
+        public static uint FindObjectByText(uint sessionID, string textValue)
         {
             uint localID = 0;
-            foreach (PrimObject prim in Session.Prims.Values)
+            foreach (PrimObject prim in Interface.Sessions[sessionID].Prims.Values)
             {
                 int len = textValue.Length;
                 string match = prim.Text.Replace("\n", ""); //Strip newlines
@@ -696,8 +703,10 @@ namespace ghetto
         }
 
 
-        public static bool RideWith(string name)
+        public static bool RideWith(uint sessionID, string name)
         {
+            GhettoSL.UserSession Session = Interface.Sessions[sessionID];
+
             string findName = name.ToLower();
 
             foreach (Avatar av in Session.Avatars.SimLocalAvatars().Values)

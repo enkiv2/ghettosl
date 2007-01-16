@@ -56,11 +56,8 @@ namespace ghetto
 
         void Callback_AlertMessage(Packet packet, Simulator sim)
         {
-            //FIXME - move output to Display
             AlertMessagePacket p = (AlertMessagePacket)packet;
-            Display.SetColor(System.ConsoleColor.Cyan);
             Display.AlertMessage(Session.SessionNumber, Helpers.FieldToString(p.AlertData.Message));
-            Display.SetColor(System.ConsoleColor.Gray);
         }
 
         void Callback_MoneyBalanceReply(Packet packet, Simulator simulator)
@@ -98,17 +95,14 @@ namespace ghetto
         void Callback_TeleportFinish(Packet packet, Simulator sim)
         {
             //FIXME - add scripted TeleportFinish event check
-            //FIXME - move output to Display
             TeleportFinishPacket p = (TeleportFinishPacket)packet;
-            Display.SetColor(System.ConsoleColor.Magenta);
-            Display.Teleporting(Session.SessionNumber, "Arrived in " + sim.Region.Name + ".");
-            Display.SetColor(System.ConsoleColor.Gray);
+            Display.TeleportFinished(Session.SessionNumber, sim.Region.Name);
             Session.UpdateAppearance();
         }
 
         void Network_OnConnected(object sender)
         {
-            //FIXME - add scriptrf Connect event check
+            //FIXME - add scripted Connect event check
 
 
             Display.Connected(Session.SessionNumber);
@@ -131,10 +125,7 @@ namespace ghetto
 
         void Network_OnSimDisconnected(Simulator simulator, NetworkManager.DisconnectType reason)
         {
-            //FIXME - move to Display
-            Display.SetColor(System.ConsoleColor.Red);
-            Console.WriteLine("* DISCONNECTED FROM SIM: " + reason.ToString());
-            Display.SetColor(System.ConsoleColor.Gray);
+            Display.Disconnected(Session.SessionNumber, reason.ToString());
         }
 
         void Objects_OnPrimMoved(Simulator simulator, PrimUpdate prim, ulong regionHandle, ushort timeDilation)
