@@ -39,7 +39,7 @@
   -->
   <ItemGroup>
     <Compile Include="Display.cs" />
-    <Compile Include="Events.cs" />
+    <Compile Include="Callbacks.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scripting.cs" />
     <Compile Include="GhettoSL.cs" />

@@ -45,12 +45,13 @@ namespace ghetto
 
             public uint SessionNumber;
             public AvatarTracker Avatars;
-            public EventManager Events;
+            public CallbackManager Callbacks;
             public int Balance;
             public SecondLife Client;
             public Dictionary<LLUUID, Avatar> Friends;
             public Dictionary<LLUUID, IMSession> IMSessions;
             public Dictionary<uint, PrimObject> Prims;
+            public Dictionary<string, ScriptSystem.ScriptEvent> ScriptEvents;
             public int MoneySpent;
             public int MoneyReceived;
             public LLUUID MasterIMSession;
@@ -102,7 +103,7 @@ namespace ghetto
                 Client.Self.Status.Camera.HeadRotation = LLQuaternion.Identity;
                 Client.Self.Status.Camera.BodyRotation = LLQuaternion.Identity;
 
-                Events = new EventManager(this);
+                Callbacks = new CallbackManager(this);
                 Avatars = new AvatarTracker(Client);
                 Balance = 0;
                 Friends = new Dictionary<LLUUID, Avatar>();
@@ -113,6 +114,7 @@ namespace ghetto
                 MasterIMSession = LLUUID.Zero;
                 RegionX = 0;
                 RegionY = 0;
+                ScriptEvents = new Dictionary<string, ScriptSystem.ScriptEvent>();
                 Settings = new UserSessionSettings();
                 StartTime = Helpers.GetUnixTime();
             }
