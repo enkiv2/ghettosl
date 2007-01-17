@@ -94,16 +94,20 @@ namespace ghetto
 
         void Callback_TeleportFinish(Packet packet, Simulator sim)
         {
-            //FIXME - add scripted TeleportFinish event check
             TeleportFinishPacket p = (TeleportFinishPacket)packet;
             Display.TeleportFinished(Session.SessionNumber, sim.Region.Name);
-            Session.UpdateAppearance();
+            Session.UpdateAppearance(); //FIXME - this should load a locally cached appearance
+            foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
+            {
+                if (e.Value.EventType == ScriptSystem.EventTypes.TeleportFinish)
+                {
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, e.Value.Command, "", "", LLUUID.Zero, 0);
+                }
+            }
         }
 
         void Network_OnConnected(object sender)
         {
-            //FIXME - add scripted Connect event check
-
 
             Display.Connected(Session.SessionNumber);
 
@@ -121,11 +125,26 @@ namespace ghetto
             p.AgentData.AgentID = Session.Client.Network.AgentID;
             p.AgentData.SessionID = Session.Client.Network.SessionID;
             Session.Client.Network.SendPacket(p);
+
+            foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
+            {
+                if (e.Value.EventType == ScriptSystem.EventTypes.Connect)
+                {
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, e.Value.Command, "", "", LLUUID.Zero, 0);
+                }
+            }
         }
 
         void Network_OnSimDisconnected(Simulator simulator, NetworkManager.DisconnectType reason)
         {
             Display.Disconnected(Session.SessionNumber, reason.ToString());
+            foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
+            {
+                if (e.Value.EventType == ScriptSystem.EventTypes.Disconnect)
+                {
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, e.Value.Command, "", "", LLUUID.Zero, 0);
+                }
+            }
         }
 
         void Objects_OnPrimMoved(Simulator simulator, PrimUpdate prim, ulong regionHandle, ushort timeDilation)
