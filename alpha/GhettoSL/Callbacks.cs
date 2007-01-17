@@ -179,9 +179,6 @@ namespace ghetto
         void Self_OnChat(string message, byte audible, byte chatType, byte sourceType, string fromName, LLUUID id, LLUUID ownerid, LLVector3 position)
         {
             if (chatType > 3 || audible < 1) return;
-            //FIXME - add script chat event check
-
-
 
             if (!Session.Settings.DisplayChat) return;
 
@@ -197,6 +194,18 @@ namespace ghetto
             else action = false;
             
             Display.Chat(fromName, message, action, chatType, sourceType);
+
+            foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
+            {
+                if (e.Value.EventType == ScriptSystem.EventTypes.Chat)
+                {
+                    string command = e.Value.Command.Replace("$name", fromName).Replace("$message", message);
+                    command = command.Replace("$id", id.ToString()).Replace("$ownerid", ownerid.ToString());
+                    command = command.Replace("$ctype", chatType.ToString()).Replace("$stype", sourceType.ToString());
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, command, "", "", LLUUID.Zero, 0);
+                }
+            }
+
         }
 
 
