@@ -211,10 +211,6 @@ namespace ghetto
 
         void Self_OnInstantMessage(LLUUID fromID, string fromName, LLUUID toAgentID, uint parentEstateID, LLUUID regionID, LLVector3 position, byte dialog, bool groupIM, LLUUID imSessionID, DateTime timestamp, string message, byte offline, byte[] binaryBucket)
         {
-            //FIXME - add script im event check
-
-
-
             if (dialog == (int)MainAvatar.InstantMessageDialog.RequestTeleport)
             {
                 if (fromID == Session.Settings.MasterID || (message.Length > 0 && message == Session.Settings.PassPhrase))
@@ -235,7 +231,20 @@ namespace ghetto
                 Display.InstantMessage(Session.SessionNumber, false, dialog, fromName, message);
                 if (fromID == Session.Settings.MasterID) ScriptSystem.ParseCommand(Session.SessionNumber, message, false, true);
             }
-        }
 
+            foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
+            {
+                if (e.Value.EventType == ScriptSystem.EventTypes.IM)
+                {
+                    string command = e.Value.Command.Replace("$name", fromName);
+                    command = command.Replace("$message", message);
+                    command = command.Replace("$id", fromID.ToString());
+                    command = command.Replace("$dialog", dialog.ToString());
+                    
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, command, "", "", LLUUID.Zero, 0);
+                }
+            }
+
+        }
     }
 }

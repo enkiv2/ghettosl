@@ -162,14 +162,13 @@ namespace ghetto
         public enum EventTypes
         {
             NULL = 0,
-            //FIXME - add support for all of these events
             Connect = 1,
             Disconnect = 2,
             Chat = 3,
             IM = 4,
-            GroupIM = 5,
-            GetMoney = 6,
-            GiveMoney = 7,
+            GroupIM = 5, //FIXME - still missing/incorrectly handled as IM
+            GetMoney = 6, //FIXME - still missing
+            GiveMoney = 7, //FIXME - still missing
             TeleportFinish = 8
         }
 
@@ -374,6 +373,7 @@ namespace ghetto
             ret = ret.Replace("$earned", Session.MoneyReceived.ToString());
             ret = ret.Replace("$spent", Session.MoneySpent.ToString());
             ret = ret.Replace("$me", Session.Name);
+            ret = ret.Replace("$myid", Session.Client.Network.AgentID.ToString());
 
             return ret;
         }
