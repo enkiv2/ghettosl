@@ -189,7 +189,6 @@ namespace ghetto
             ParseCommand(sessionNum, command, true, false);
         }
 
-
         /// <summary>
         /// /login command
         /// </summary>
@@ -366,9 +365,26 @@ namespace ghetto
             return true;
         }
 
-        public static bool ParseCommand(uint sessionNum, string commandToParse, bool parseVariables, bool fromMasterIM)
+        public static string ParseVariables(uint sessionNum, string originalString)
+        {
+            GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
+            string ret = originalString;
+
+            ret = ret.Replace("$master", Session.Settings.MasterID.ToString());
+            ret = ret.Replace("$earned", Session.MoneyReceived.ToString());
+            ret = ret.Replace("$spent", Session.MoneySpent.ToString());
+            ret = ret.Replace("$me", Session.Name);
+
+            return ret;
+        }
+
+        public static bool ParseCommand(uint sessionNum, string commandString, bool parseVariables, bool fromMasterIM)
         {
             //FIXME - change display output if fromMasterIM == true
+
+            string commandToParse;
+            if (parseVariables) commandToParse = ParseVariables(sessionNum, commandString);
+            else commandToParse = commandString;
 
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
 
@@ -456,6 +472,13 @@ namespace ghetto
             else if (command == "clear")
             {
                 Console.Clear();
+            }
+
+            else if (command == "echo")
+            {
+                //FIXME - move to Display.Echo
+                if (cmd.Length < 1) return true;
+                Console.WriteLine(details);
             }
 
             else if (command == "event" || command == "events")
