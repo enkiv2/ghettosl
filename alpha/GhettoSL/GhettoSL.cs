@@ -62,7 +62,7 @@ namespace ghetto
 
             public bool Login()
             {
-                Display.InfoResponse(0, "Logging in as " + Settings.FirstName + " " + Settings.LastName + "...");
+                Display.InfoResponse(SessionNumber, "Logging in as " + Settings.FirstName + " " + Settings.LastName + "...");
                 if (Settings.StartRegion == "") return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", "ghetto@obsoleet.com");
                 else return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", Settings.StartRegion, "ghetto@obsoleet.com", false);
                 
@@ -70,7 +70,7 @@ namespace ghetto
 
             public void UpdateAppearance()
             {
-                Display.InfoResponse(0, "Loading appearance from asset server...");
+                Display.InfoResponse(SessionNumber, "Loading appearance from asset server...");
                 AppearanceManager aManager;
                 aManager = new AppearanceManager(Client);
                 aManager.SendAgentSetAppearance();

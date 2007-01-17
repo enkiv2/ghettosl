@@ -37,12 +37,14 @@ namespace ghetto
     public class ScriptSystem
     {
 
-        public static GhettoSL.UserSession Session;
+        //public static uint sessionNum;
 
-        public ScriptSystem(uint sessionNum)
-        {
-            Session = Interface.Sessions[sessionNum];
-        }
+        //public static GhettoSL.UserSession Session;
+
+        //public ScriptSystem(uint sessionNumber)
+        //{
+        //    sessionNum = sessionNumber;
+        //}
 
         public class UserScript
         {
@@ -141,17 +143,7 @@ namespace ghetto
             /// <summary>
             /// Event type, enumerated in EventTypes.*
             /// </summary>
-            public EventTypes Type;
-
-            /// <summary>
-            /// Used for text-matching events, or events with messages attached
-            /// </summary>
-            public string Text;
-
-            /// <summary>
-            /// Used for events which contain a numerical value
-            /// </summary>
-            public int Number;
+            public EventTypes EventType;
 
             /// <summary>
             /// Command to execute on the specified event
@@ -160,9 +152,7 @@ namespace ghetto
 
             public ScriptEvent()
             {
-                Type = EventTypes.NULL;
-                Text = "";
-                Number = 0;
+                EventType = EventTypes.NULL;
                 Command = "";
             }
         }
@@ -185,11 +175,29 @@ namespace ghetto
 
 
         /// <summary>
+        /// Triggered by callbacks for matching events
+        /// </summary>
+        /// <param name="command">Command triggered on this event</param>
+        /// <param name="name">Avatar/object name associated with event</param>
+        /// <param name="message">Message/text associated with event</param>
+        /// <param name="id">UUID associated with event</param>
+        /// <param name="amount">L$ amount associated with event</param>
+        public static void TriggerEvent(uint sessionNum, string command, string name, string message, LLUUID id, int amount)
+        {
+            //FIXME - move to Display
+            Console.WriteLine("(" + sessionNum + ") SCRIPTED COMMAND: " + command);
+            ParseCommand(sessionNum, command, true, false);
+        }
+
+
+        /// <summary>
         /// /login command
         /// </summary>
-        public static bool ParseLoginCommand(string[] cmd)
+        public static bool ParseLoginCommand(uint sessionNum, string[] cmd)
         {
             //FIXME - add all the command-line options to login command
+
+            GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
 
             if (cmd.Length < 2) { Display.Help("login");  return false; }
 
@@ -343,7 +351,7 @@ namespace ghetto
                 }
 
                 ScriptEvent newEvent = new ScriptEvent();
-                newEvent.Type = (EventTypes)eventNum;
+                newEvent.EventType = (EventTypes)eventNum;
                 newEvent.Command = eventCommand;
                 Session.ScriptEvents.Add(eventLabel, newEvent);
                 Display.InfoResponse(sessionNum, "Added " + eventType + " event: " + eventLabel);
@@ -450,15 +458,10 @@ namespace ghetto
                 Console.Clear();
             }
 
-            else if (command == "event")
+            else if (command == "event" || command == "events")
             {
                 if (cmd.Length == 1) Display.EventList(sessionNum);
                 else return ParseEventCommand(sessionNum, cmd);
-            }
-
-            else if (command == "events")
-            {
-                Display.EventList(sessionNum);
             }
 
             else if (command == "fly")
@@ -478,7 +481,6 @@ namespace ghetto
 
             else if (command == "go")
             {
-                //FIXME - readd autopilot
                 int x = 0;
                 int y = 0;
                 float z = 0f;
@@ -525,7 +527,7 @@ namespace ghetto
 
             else if (command == "login")
             {
-                if (!ParseLoginCommand(cmd))
+                if (!ParseLoginCommand(sessionNum, cmd))
                 {
                     Display.InfoResponse(sessionNum, "Invalid login parameters");
                 }
