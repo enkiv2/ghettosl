@@ -223,6 +223,7 @@ namespace ghetto
             if (cmd.Length < 2) { Display.Help("login");  return false; }
 
             string flag = cmd[1].ToLower();
+            int index = 0;
 
             if (flag == "-r")
             {
@@ -233,6 +234,7 @@ namespace ghetto
                     Session.Settings.FirstName = cmd[2];
                     Session.Settings.LastName = cmd[3];
                     Session.Settings.Password = cmd[4];
+                    index = 5;
                 }
             }
 
@@ -243,18 +245,21 @@ namespace ghetto
                 do Interface.CurrentSession++;
                 while (Interface.Sessions.ContainsKey(Interface.CurrentSession));
 
-                Display.InfoResponse(Interface.CurrentSession, "Creating session for " + Session.Name + "...");
-                Interface.Sessions.Add(Interface.CurrentSession, Session);
-                Session.SessionNumber = Interface.CurrentSession;
+                Interface.Sessions.Add(Interface.CurrentSession, new GhettoSL.UserSession(Interface.CurrentSession));
 
-                Session = Interface.Sessions[Interface.CurrentSession];                
+                Session = Interface.Sessions[Interface.CurrentSession];
+                Session.SessionNumber = Interface.CurrentSession;                
                 Session.Settings.FirstName = cmd[2];
                 Session.Settings.LastName = cmd[3];
                 Session.Settings.Password = cmd[4];
+                Display.InfoResponse(Interface.CurrentSession, "Creating session for " + Session.Name + "...");
+
+                index = 5;
             }
 
             else if (cmd.Length < 4)
             {
+                //no flags, but we should still have the command + 3 args
                 return false;
             }
 
@@ -263,6 +268,28 @@ namespace ghetto
                 Session.Settings.FirstName = cmd[1];
                 Session.Settings.LastName = cmd[2];
                 Session.Settings.Password = cmd[3];
+                index = 4;
+            }
+
+            for (bool lastArg = false; index < cmd.Length; index++ , lastArg = false)
+            {
+                string arg = cmd[index];
+                if (index >= cmd.Length) lastArg = true;
+                if (arg == "-q" || arg == "-quiet")
+                    Session.Settings.DisplayChat = false;
+                else if (!lastArg && (arg == "-m" || arg == "-master" || arg == "-masterid"))
+                    Session.Settings.MasterID = new LLUUID(cmd[index + 1]);
+                else if (arg == "-n" || arg == "-noupdates")
+                    Session.Settings.SendUpdates = false;
+                else if (!lastArg && (arg == "-p" || arg == "-pass" || arg == "-passphrase"))
+                    Session.Settings.PassPhrase = ScriptSystem.QuoteArg(cmd, index + 1);
+                else if (!lastArg && (arg == "-s" || arg == "-script"))
+                    Session.Settings.Script = ScriptSystem.QuoteArg(cmd, index + 1);
+                else if (arg.Length > 13 && arg.Substring(0, 13) == "secondlife://")
+                {
+                    string url = ScriptSystem.QuoteArg(cmd, index);
+                    Session.Settings.URI = url.Substring(13, arg.Length - 13).Replace("%20", " ").Replace("/", "&");
+                }
             }
 
             if (Session.Client.Network.Connected)

@@ -65,7 +65,6 @@ namespace ghetto
                 Console.WriteLine("-n  -noupdates ......... does not send agent updates, for minimum bandwidth usage");
                 Console.WriteLine("-p  -pass <word> ....... different from account password, used for teleport requests");
                 Console.WriteLine("-q  -quiet ............. run in \"quiet mode\" (public chat is not displayed)");
-                Console.WriteLine("-r  -region <name> ..... start in the specified region when you first log in");
                 Console.WriteLine("-s  -script <file> ..... load the specified script (for script help, /help scripts)");
                 return;
             }
@@ -131,16 +130,15 @@ namespace ghetto
                     ret.Value.MasterID = new LLUUID(args[i + 1]);
                 else if (arg == "-n" || arg == "-noupdates")
                     ret.Value.SendUpdates = false;
-                else if (!lastArg && (arg == "-p" || arg == "-pass" || arg == "passphrase"))
+                else if (!lastArg && (arg == "-p" || arg == "-pass" || arg == "-passphrase"))
                     ret.Value.PassPhrase = ScriptSystem.QuoteArg(args, i + 1);
-                //else if (!lastArg && (arg == "-r" || arg == "-region"))
+                else if (!lastArg && (arg == "-s" || arg == "-script"))
+                    ret.Value.Script = ScriptSystem.QuoteArg(args, i + 1);
                 else if (arg.Length > 13 && arg.Substring(0, 13) == "secondlife://")
                 {
                     string url = ScriptSystem.QuoteArg(args, i);
                     ret.Value.URI = url.Substring(13, arg.Length - 13).Replace("%20", " ").Replace("/", "&");
                 }
-                else if (!lastArg && (arg == "-s" || arg == "-script"))
-                    ret.Value.Script = ScriptSystem.QuoteArg(args, i + 1);
 
             }
 
