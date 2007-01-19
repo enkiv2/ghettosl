@@ -60,12 +60,17 @@ namespace ghetto
             public UserSessionSettings Settings;
             public uint StartTime;
 
-            public bool Login()
+             public bool Login()
             {
                 Display.InfoResponse(SessionNumber, "Logging in as " + Settings.FirstName + " " + Settings.LastName + "...");
-                if (Settings.StartRegion == "") return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", "ghetto@obsoleet.com");
-                else return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", Settings.StartRegion, "ghetto@obsoleet.com", false);
-                
+                //Dictionary<string, object> loginParams = DefaultLoginValues(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", "root66@gmail.com");
+                if (Settings.URI == "") return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", "last", "root66@gmail.com", false);
+                else
+                {
+                    string start = "uri:" + Settings.URI;
+                    Console.WriteLine(start); //debug
+                    return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", start, "root66@gmail.com", false);
+                }
             }
 
             public void UpdateAppearance()
@@ -160,7 +165,7 @@ namespace ghetto
             public string CampChairMatchText;
             public string FollowName;
             public string Script;
-            public string StartRegion;
+            public string URI;
             public UserSessionSettings()
             {
                 FirstName = "";
@@ -170,7 +175,7 @@ namespace ghetto
                 MasterID = LLUUID.Zero;
                 DisplayChat = true;
                 SendUpdates = true;
-                StartRegion = "";
+                URI = "";
                 CampChairMatchText = "";
                 FollowName = "";
             }
