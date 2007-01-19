@@ -273,7 +273,10 @@ namespace ghetto
             {
                 string arg = cmd[index];
                 if (index >= cmd.Length) lastArg = true;
-                if (arg == "-q" || arg == "-quiet")
+
+                if (arg == "-here")
+                    Session.Settings.URI = "uri:" + Session.Client.Network.CurrentSim.Region.Name + "&" + (int)Session.Client.Self.Position.X + "&" + (int)Session.Client.Self.Position.Y + "&" + (int)Session.Client.Self.Position.Z;
+                else if (arg == "-q" || arg == "-quiet")
                     Session.Settings.DisplayChat = false;
                 else if (!lastArg && (arg == "-m" || arg == "-master" || arg == "-masterid"))
                     Session.Settings.MasterID = new LLUUID(cmd[index + 1]);
@@ -482,7 +485,7 @@ namespace ghetto
             }
 
             int detailsStart = 1;
-            if (command == "im" || command == "re") detailsStart++;
+            if (command == "im" || command == "re" || command == "s" || command == "session") detailsStart++;
             string details = "";
             for (; detailsStart < cmd.Length; detailsStart++)
             {
@@ -712,12 +715,20 @@ namespace ghetto
                 if (cmd.Length > 1)
                 {
                     uint switchTo;
-                    if (!uint.TryParse(cmd[1], out switchTo) || switchTo < 1)
+                    if (!uint.TryParse(cmd[1], out switchTo) || switchTo < 1 || !Interface.Sessions.ContainsKey(switchTo))
                     {
-                        Display.InfoResponse(sessionNum, "Invalid session number");
+                        Display.Error(sessionNum, "Invalid session number");
                         return false;
                     }
-                    else Interface.CurrentSession = switchTo;
+                    else if (cmd.Length == 2)
+                    {
+                        Interface.CurrentSession = switchTo;
+                        Display.InfoResponse(sessionNum, "Switched to session "+switchTo);
+                    }
+                    else
+                    {
+                        ParseCommand(switchTo, details, true, false);
+                    }
                 }
                 else Display.SessionList();
             }

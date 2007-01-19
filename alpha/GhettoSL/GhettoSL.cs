@@ -67,7 +67,7 @@ namespace ghetto
                 if (Settings.URI == "") return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", "last", "root66@gmail.com", false);
                 else
                 {
-                    string start = "uri:" + Settings.URI;
+                    string start = Settings.URI;
                     Console.WriteLine(start); //debug
                     return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", start, "root66@gmail.com", false);
                 }
