@@ -216,8 +216,6 @@ namespace ghetto
         /// </summary>
         public static bool ParseLoginCommand(uint sessionNum, string[] cmd)
         {
-            //FIXME - add all the command-line options to login command
-
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
 
             if (cmd.Length < 2) { Display.Help("login");  return false; }
@@ -790,6 +788,7 @@ namespace ghetto
                 return true;
             }
 
+            //FIXME - move to /teleport and just check for ulong
             else if (command == "teleporth")
             {
                 ulong handle;
@@ -805,12 +804,15 @@ namespace ghetto
             {
                 if (cmd.Length < 2) { Display.Help(command); return false; }
                 LLUUID findID = new LLUUID(cmd[1]);
-                foreach (PrimObject prim in Session.Prims.Values)
+                lock (Session.Prims)
                 {
-                    if (prim.ID != findID) continue;
-                    Session.Client.Self.Touch(prim.LocalID);
-                    Display.InfoResponse(sessionNum, "You touch an object...");
-                    break;
+                    foreach (PrimObject prim in Session.Prims.Values)
+                    {
+                        if (prim.ID != findID) continue;
+                        Session.Client.Self.Touch(prim.LocalID);
+                        Display.InfoResponse(sessionNum, "You touch an object...");
+                        break;
+                    }
                 }
                 Display.Error(sessionNum, "Object not found");
             }
@@ -867,16 +869,22 @@ namespace ghetto
         public static uint FindObjectByText(uint sessionID, string textValue)
         {
             uint localID = 0;
-            foreach (PrimObject prim in Interface.Sessions[sessionID].Prims.Values)
+
+            lock (Interface.Sessions[sessionID].Prims)
             {
-                int len = textValue.Length;
-                string match = prim.Text.Replace("\n", ""); //Strip newlines
-                if (match.Length < len) continue; //Text is too short to be a match
-                else if (match.Substring(0, len).ToLower() == textValue)
+
+                foreach (PrimObject prim in Interface.Sessions[sessionID].Prims.Values)
                 {
-                    localID = prim.LocalID;
-                    break;
+                    int len = textValue.Length;
+                    string match = prim.Text.Replace("\n", ""); //Strip newlines
+                    if (match.Length < len) continue; //Text is too short to be a match
+                    else if (match.Substring(0, len).ToLower() == textValue)
+                    {
+                        localID = prim.LocalID;
+                        break;
+                    }
                 }
+
             }
             return localID;
         }

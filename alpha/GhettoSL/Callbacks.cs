@@ -219,6 +219,8 @@ namespace ghetto
             
             Display.Chat(Session.SessionNumber, fromName, message, action, chatType, sourceType);
 
+            if (id == Session.Client.Network.AgentID) return;
+
             foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
             {
                 if (e.Value.EventType == ScriptSystem.EventTypes.Chat)
