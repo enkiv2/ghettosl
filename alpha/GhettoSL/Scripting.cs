@@ -167,8 +167,8 @@ namespace ghetto
             Chat = 3,
             IM = 4,
             GroupIM = 5, //FIXME - still missing/incorrectly handled as IM
-            GetMoney = 6, //FIXME - still missing
-            GiveMoney = 7, //FIXME - still missing
+            GetMoney = 6,
+            GiveMoney = 7,
             TeleportFinish = 8
         }
 
@@ -187,6 +187,29 @@ namespace ghetto
             Console.WriteLine("(" + sessionNum + ") SCRIPTED COMMAND: " + command);
             ParseCommand(sessionNum, command, true, false);
         }
+
+
+        /// <summary>
+        /// Returns a multi-word (quoted) argument from a command array with quotations stripped
+        /// </summary>
+        /// <param name="cmd">Command string (split by spaces)</param>
+        /// <param name="start">Position in cmd array where quoted argument starts</param>
+        /// <returns></returns>
+        public static string QuoteArg(string[] args, int start)
+        {
+            if (start >= args.Length) return "";
+            else if (args[start].Substring(0, 1) != "\"") return args[start];
+            else if (args[start].Substring(args.Length - 1, 1) == "\"") return args[start].Replace("\"", "");
+
+            string ret = args[start];
+            for (int i = start + 1; i < args.Length; i++)
+            {
+                ret += " " + args[i];
+                if (args[i].Substring(args.Length - 1, 1) == "\"") break;
+            }
+            return ret.Replace("\"", "");
+        }
+
 
         /// <summary>
         /// /login command
@@ -360,6 +383,9 @@ namespace ghetto
 
         public static bool ParseConditions(uint sessionNum, string conditions)
         {
+            string[] splitBy = { "&&", "and", "AND" };
+            
+
             //FIXME - parse conditions
             return true;
         }
@@ -368,12 +394,12 @@ namespace ghetto
         {
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
             string ret = originalString;
-
+            ret = ret.Replace("$me", Session.Name);
+            ret = ret.Replace("$myid", Session.Client.Network.AgentID.ToString());
             ret = ret.Replace("$master", Session.Settings.MasterID.ToString());
             ret = ret.Replace("$earned", Session.MoneyReceived.ToString());
             ret = ret.Replace("$spent", Session.MoneySpent.ToString());
-            ret = ret.Replace("$me", Session.Name);
-            ret = ret.Replace("$myid", Session.Client.Network.AgentID.ToString());
+            ret = ret.Replace("$here", Session.Client.Network.CurrentSim.Region.Name);
 
             return ret;
         }
@@ -736,6 +762,18 @@ namespace ghetto
 
                 return true;
             }
+
+            else if (command == "teleporth")
+            {
+                ulong handle;
+                if (cmd.Length < 2 || !ulong.TryParse(cmd[1], out handle))
+                {
+                    Display.Help(command);
+                    return false;
+                }
+                Session.Client.Self.Teleport(handle, new LLVector3(128, 128, 0));
+            }
+
             else if (command == "touch")
             {
                 if (cmd.Length < 2) { Display.Help(command); return false; }

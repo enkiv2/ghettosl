@@ -132,14 +132,15 @@ namespace ghetto
                 else if (arg == "-n" || arg == "-noupdates")
                     ret.Value.SendUpdates = false;
                 else if (!lastArg && (arg == "-p" || arg == "-pass" || arg == "passphrase"))
-                    //FIXME - detect and support multi-word passphrases in quotes
-                    ret.Value.PassPhrase = args[i + 1];
-                else if (!lastArg && (arg == "-r" || arg == "-region"))
-                    //FIXME - detect and support multi-word region names in quotes
-                    ret.Value.StartRegion = args[i + 1];
+                    ret.Value.PassPhrase = ScriptSystem.QuoteArg(args, i + 1);
+                //else if (!lastArg && (arg == "-r" || arg == "-region"))
+                else if (arg.Length > 13 && arg.Substring(0, 13) == "secondlife://")
+                {
+                    string url = ScriptSystem.QuoteArg(args, i);
+                    ret.Value.URI = url.Substring(13, arg.Length - 13).Replace("%20", " ").Replace("/", "&");
+                }
                 else if (!lastArg && (arg == "-s" || arg == "-script"))
-                    //FIXME - detect and support filenames with spaces in quotes
-                    ret.Value.Script = args[i + 1];
+                    ret.Value.Script = ScriptSystem.QuoteArg(args, i + 1);
 
             }
 

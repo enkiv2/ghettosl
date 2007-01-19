@@ -60,7 +60,7 @@ namespace ghetto
             Display.AlertMessage(Session.SessionNumber, Helpers.FieldToString(p.AlertData.Message));
         }
 
-        void Callback_MoneyBalanceReply(Packet packet, Simulator simulator)
+        void Callback_MoneyBalanceReply(Packet packet, Simulator sim)
         {
             MoneyBalanceReplyPacket reply = (MoneyBalanceReplyPacket)packet;
             string desc = Helpers.FieldToString(reply.MoneyData.Description);
@@ -75,21 +75,43 @@ namespace ghetto
             if (msg.Length <= 4 || msg[4].Length < 4 || !int.TryParse(msg[4].Substring(2, msg[4].Length - 3), out amount))
             {
                 if (desc.Length > 0) Display.Error(Session.SessionNumber, "Unexpected MoneyDataBlock.Description:" + desc);
+                return;
             }
-
-            else if (msg[0] + " " + msg[1] == "You paid")
+            else
+            {
+                Display.Balance(Session.SessionNumber, reply.MoneyData.MoneyBalance, amount, name, desc);
+            }
+            if (msg[0] + " " + msg[1] == "You paid")
             {
                 Session.MoneySpent += amount;
                 name = msg[2] + " " + msg[3];
-                amount *= -1;
+
+                foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
+                {
+                    if (e.Value.EventType == ScriptSystem.EventTypes.GiveMoney)
+                    {
+                        //FIXME - try to get id
+                        ScriptSystem.TriggerEvent(Session.SessionNumber, e.Value.Command, name, "", LLUUID.Zero, amount);
+                    }
+                }
+
+                amount *= -1; //you paid
             }
             else if (msg[2] + " " + msg[3] == "paid you")
             {
                 Session.MoneyReceived += amount;
                 name = msg[0] + " " + msg[1];
-            }
 
-            Display.Balance(Session.SessionNumber, reply.MoneyData.MoneyBalance, amount, name, desc);
+                foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
+                {
+                    if (e.Value.EventType == ScriptSystem.EventTypes.GetMoney)
+                    {
+                        //FIXME - try to get id
+                        ScriptSystem.TriggerEvent(Session.SessionNumber, e.Value.Command, name, desc, LLUUID.Zero, amount);
+                    }
+                }
+
+            }
         }
 
         void Callback_TeleportFinish(Packet packet, Simulator sim)
@@ -101,7 +123,8 @@ namespace ghetto
             {
                 if (e.Value.EventType == ScriptSystem.EventTypes.TeleportFinish)
                 {
-                    ScriptSystem.TriggerEvent(Session.SessionNumber, e.Value.Command, "", "", LLUUID.Zero, 0);
+                    string command = e.Value.Command.Replace("$region", sim.Region.Name);
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, command, "", "", LLUUID.Zero, 0);
                 }
             }
         }
@@ -111,13 +134,14 @@ namespace ghetto
 
             Display.Connected(Session.SessionNumber);
 
-            Session.Settings.StartRegion = "";
+            Session.Settings.URI = "";
 
             Session.UpdateAppearance();
 
             Session.Client.Self.Status.UpdateTimer.Start();
 
-            Session.Client.Grid.AddEstateSims();
+            //FIXME - readd when libsl is fixed
+            //Session.Client.Grid.AddEstateSims();
 
             //Retrieve offline IMs
             //FIXME - Add Client.Self.RetrieveInstantMessages() to core
@@ -193,7 +217,7 @@ namespace ghetto
             }
             else action = false;
             
-            Display.Chat(fromName, message, action, chatType, sourceType);
+            Display.Chat(Session.SessionNumber, fromName, message, action, chatType, sourceType);
 
             foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
             {
@@ -211,6 +235,7 @@ namespace ghetto
 
         void Self_OnInstantMessage(LLUUID fromID, string fromName, LLUUID toAgentID, uint parentEstateID, LLUUID regionID, LLVector3 position, byte dialog, bool groupIM, LLUUID imSessionID, DateTime timestamp, string message, byte offline, byte[] binaryBucket)
         {
+
             if (dialog == (int)MainAvatar.InstantMessageDialog.RequestTeleport)
             {
                 if (fromID == Session.Settings.MasterID || (message.Length > 0 && message == Session.Settings.PassPhrase))
@@ -221,6 +246,10 @@ namespace ghetto
             else if (dialog == (int)MainAvatar.InstantMessageDialog.MessageFromObject)
             {
                 Display.InstantMessage(Session.SessionNumber, true, dialog, fromName, message);
+            }
+            else if (dialog == (int)MainAvatar.InstantMessageDialog.InventoryOffered)
+            {
+                Console.WriteLine(Helpers.FieldToHexString(binaryBucket, ""));
             }
             else
             {
