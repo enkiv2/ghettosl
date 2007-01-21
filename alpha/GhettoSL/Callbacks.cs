@@ -132,7 +132,7 @@ namespace ghetto
         void Network_OnConnected(object sender)
         {
 
-            Display.Connected(Session.SessionNumber);
+            Display.Connected(Session.SessionNumber, Session.Name);
 
             Session.Settings.URI = "";
 
@@ -141,7 +141,7 @@ namespace ghetto
             Session.Client.Self.Status.UpdateTimer.Start();
 
             //FIXME - readd when libsl is fixed
-            //Session.Client.Grid.AddEstateSims();
+            Session.Client.Grid.AddEstateSims();
 
             //Retrieve offline IMs
             //FIXME - Add Client.Self.RetrieveInstantMessages() to core
@@ -240,6 +240,7 @@ namespace ghetto
 
             if (dialog == (int)MainAvatar.InstantMessageDialog.RequestTeleport)
             {
+                Display.InfoResponse(Session.SessionNumber, "Teleport lure received from " + fromName + ": " + message);
                 if (fromID == Session.Settings.MasterID || (message.Length > 0 && message == Session.Settings.PassPhrase))
                 {
                     Session.Client.Self.TeleportLureRespond(fromID, true);

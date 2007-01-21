@@ -114,6 +114,14 @@ namespace ghetto
                 }
             }
 
+            public void ScriptTimerHandler(object target, System.Timers.ElapsedEventArgs args)
+            {
+                //FIXME - execute script line
+
+
+                CurrentStep++;
+            }
+
             public UserScript(string scriptFile)
             {
                 CurrentStep = 0;
@@ -122,18 +130,22 @@ namespace ghetto
                 SleepTimer = new System.Timers.Timer();
                 SleepTimer.Enabled = false;
                 SleepTimer.AutoReset = false;
+                SleepTimer.Elapsed += new System.Timers.ElapsedEventHandler(ScriptTimerHandler);
+                SleepTimer.Enabled = false;
                 Load(scriptFile);
             }
 
             public UserScript()
             {
                 CurrentStep = 0;
+                Events = new Dictionary<string, ScriptEvent>();
                 ScriptTime = Helpers.GetUnixTime();
                 SleepingSince = ScriptTime;
                 SleepTimer = new System.Timers.Timer();
                 SleepTimer.Enabled = false;
                 SleepTimer.AutoReset = false;
-                Events = new Dictionary<string,ScriptEvent>();
+                SleepTimer.Elapsed += new System.Timers.ElapsedEventHandler(ScriptTimerHandler);
+                SleepTimer.Enabled = false;
             }
         }
 
@@ -217,6 +229,7 @@ namespace ghetto
         public static bool ParseLoginCommand(uint sessionNum, string[] cmd)
         {
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
+            uint newSession = sessionNum;
 
             if (cmd.Length < 2) { Display.Help("login");  return false; }
 
@@ -240,17 +253,17 @@ namespace ghetto
             {
                 if (cmd.Length < 5) return false;
 
-                do Interface.CurrentSession++;
-                while (Interface.Sessions.ContainsKey(Interface.CurrentSession));
+                do newSession++;
+                while (Interface.Sessions.ContainsKey(newSession));
 
-                Interface.Sessions.Add(Interface.CurrentSession, new GhettoSL.UserSession(Interface.CurrentSession));
+                Interface.Sessions.Add(newSession, new GhettoSL.UserSession(Interface.CurrentSession));
 
-                Session = Interface.Sessions[Interface.CurrentSession];
-                Session.SessionNumber = Interface.CurrentSession;                
+                Session = Interface.Sessions[newSession];
+                Session.SessionNumber = sessionNum;                
                 Session.Settings.FirstName = cmd[2];
                 Session.Settings.LastName = cmd[3];
                 Session.Settings.Password = cmd[4];
-                Display.InfoResponse(Interface.CurrentSession, "Creating session for " + Session.Name + "...");
+                Display.InfoResponse(newSession, "Creating session for " + Session.Name + "...");
 
                 index = 5;
             }
@@ -274,9 +287,7 @@ namespace ghetto
                 string arg = cmd[index];
                 if (index >= cmd.Length) lastArg = true;
 
-                if (arg == "-here")
-                    Session.Settings.URI = "uri:" + Session.Client.Network.CurrentSim.Region.Name + "&" + (int)Session.Client.Self.Position.X + "&" + (int)Session.Client.Self.Position.Y + "&" + (int)Session.Client.Self.Position.Z;
-                else if (arg == "-q" || arg == "-quiet")
+                if (arg == "-q" || arg == "-quiet")
                     Session.Settings.DisplayChat = false;
                 else if (!lastArg && (arg == "-m" || arg == "-master" || arg == "-masterid"))
                     Session.Settings.MasterID = new LLUUID(cmd[index + 1]);
@@ -286,6 +297,11 @@ namespace ghetto
                     Session.Settings.PassPhrase = ScriptSystem.QuoteArg(cmd, index + 1);
                 else if (!lastArg && (arg == "-s" || arg == "-script"))
                     Session.Settings.Script = ScriptSystem.QuoteArg(cmd, index + 1);
+                else if (arg == "-here")
+                {
+                    SecondLife fromClient = Interface.Sessions[sessionNum].Client;
+                    Session.Settings.URI = "uri:" + fromClient.Network.CurrentSim.Region.Name + "&" + (int)fromClient.Self.Position.X + "&" + (int)fromClient.Self.Position.Y + "&" + (int)fromClient.Self.Position.Z;
+                }
                 else if (arg.Length > 13 && arg.Substring(0, 13) == "secondlife://")
                 {
                     string url = ScriptSystem.QuoteArg(cmd, index);
@@ -293,6 +309,8 @@ namespace ghetto
                 }
             }
 
+            Interface.CurrentSession = newSession;
+            
             if (Session.Client.Network.Connected)
             {
                 //FIXME - Add RelogTimer to UserSession, in place of this
@@ -427,7 +445,11 @@ namespace ghetto
             ret = ret.Replace("$master", Session.Settings.MasterID.ToString());
             ret = ret.Replace("$earned", Session.MoneyReceived.ToString());
             ret = ret.Replace("$spent", Session.MoneySpent.ToString());
-            ret = ret.Replace("$here", Session.Client.Network.CurrentSim.Region.Name);
+
+            string regionName;
+            if (Session.Client.Network.Connected) regionName = Session.Client.Network.CurrentSim.Region.Name;
+            else regionName = "";
+            ret = ret.Replace("$here", regionName);
 
             return ret;
         }
@@ -612,8 +634,13 @@ namespace ghetto
 
             else if (command == "look")
             {
-                string weather = Display.RPGWeather(sessionNum);
+                string weather = Display.RPGWeather(sessionNum, Session.Client.Network.CurrentSim.Region.Name, Session.Client.Grid.SunDirection);
                 Display.InfoResponse(sessionNum, weather);
+                int countText = 0;
+                foreach (KeyValuePair<uint, PrimObject> pair in Session.Prims) {
+                    if (pair.Value.Text != "") countText++;
+                }
+                Display.InfoResponse(sessionNum, "There are " + countText + " objects with text nearby.");
             }
 
             else if (command == "payme")
@@ -723,7 +750,9 @@ namespace ghetto
                     else if (cmd.Length == 2)
                     {
                         Interface.CurrentSession = switchTo;
-                        Display.InfoResponse(sessionNum, "Switched to session "+switchTo);
+                        string name = Interface.Sessions[switchTo].Name;
+                        Display.InfoResponse(switchTo, "Switched to " + name);
+                        Console.Title = name + " - GhettoSL";
                     }
                     else
                     {
@@ -781,11 +810,21 @@ namespace ghetto
                 LLVector3 tPos;
                 if (cmd.Length >= 5)
                 {
-                    simName = String.Join(" ", cmd, 1, cmd.Length - 4);
-                    float x = float.Parse(cmd[cmd.Length - 3]);
-                    float y = float.Parse(cmd[cmd.Length - 2]);
-                    float z = float.Parse(cmd[cmd.Length - 1]);
-                    tPos = new LLVector3(x, y, z);
+                    if (cmd.Length > 5)
+                    {
+                        simName = String.Join(" ", cmd, 1, cmd.Length - 4);
+                        tPos.X = float.Parse(cmd[cmd.Length - 3]);
+                        tPos.Y = float.Parse(cmd[cmd.Length - 2]);
+                        tPos.Z = float.Parse(cmd[cmd.Length - 1]);
+                    }
+                    else
+                    {
+                        simName = String.Join(" ", cmd, 1, cmd.Length - 3);
+                        tPos.X = float.Parse(cmd[cmd.Length - 2]);
+                        tPos.Y = float.Parse(cmd[cmd.Length - 1]);
+                        tPos.Z = Session.Client.Self.Position.Z;
+                    }
+
                 }
                 else
                 {
