@@ -48,6 +48,7 @@ namespace ghetto
 
         public class UserScript
         {
+            public uint SessionNumber;
             /// <summary>
             /// Array containing each line of the script
             /// </summary>
@@ -114,16 +115,25 @@ namespace ghetto
                 }
             }
 
-            public void ScriptTimerHandler(object target, System.Timers.ElapsedEventArgs args)
+            public void Step(int stepNum)
             {
-                //FIXME - execute script line
-
-
-                CurrentStep++;
+                if (stepNum < Lines.Length)
+                {
+                    CurrentStep = stepNum;
+                    while (CurrentStep < Lines.Length && ParseCommand(SessionNumber, Lines[CurrentStep], true, false))
+                        CurrentStep++;
+                }
             }
 
-            public UserScript(string scriptFile)
+            public void ScriptTimerHandler(object target, System.Timers.ElapsedEventArgs args)
             {
+                CurrentStep++;
+                Step(CurrentStep);
+            }
+
+            public UserScript(uint sessionNum, string scriptFile)
+            {
+                SessionNumber = sessionNum;
                 CurrentStep = 0;
                 ScriptTime = Helpers.GetUnixTime();
                 SleepingSince = ScriptTime;
@@ -132,11 +142,12 @@ namespace ghetto
                 SleepTimer.AutoReset = false;
                 SleepTimer.Elapsed += new System.Timers.ElapsedEventHandler(ScriptTimerHandler);
                 SleepTimer.Enabled = false;
-                Load(scriptFile);
+                if (Load(scriptFile)) Step(0);
             }
 
-            public UserScript()
+            public UserScript(uint sessionNum)
             {
+                SessionNumber = sessionNum;
                 CurrentStep = 0;
                 Events = new Dictionary<string, ScriptEvent>();
                 ScriptTime = Helpers.GetUnixTime();
@@ -259,7 +270,7 @@ namespace ghetto
                 Interface.Sessions.Add(newSession, new GhettoSL.UserSession(Interface.CurrentSession));
 
                 Session = Interface.Sessions[newSession];
-                Session.SessionNumber = sessionNum;                
+                Session.SessionNumber = newSession;                
                 Session.Settings.FirstName = cmd[2];
                 Session.Settings.LastName = cmd[3];
                 Session.Settings.Password = cmd[4];
@@ -357,10 +368,10 @@ namespace ghetto
                 }
                 else
                 {
-                    Interface.Scripts.Add(cmd[1], new UserScript());
+                    Interface.Scripts.Add(cmd[1], new UserScript(sessionNum));
                     Display.InfoResponse(sessionNum, "Loading script: " + cmd[1]);
                 }
-                Interface.Scripts[cmd[1]].Load(cmd[1]);
+                if (Interface.Scripts[cmd[1]].Load(cmd[1])) Interface.Scripts[cmd[1]].Step(0);
             }
             return true;
         }
@@ -441,7 +452,8 @@ namespace ghetto
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
             string ret = originalString;
             ret = ret.Replace("$me", Session.Name);
-            ret = ret.Replace("$myid", Session.Client.Network.AgentID.ToString());
+            if (Session.Client.Network.Connected) ret = ret.Replace("$myid", Session.Client.Network.AgentID.ToString());
+            else ret = ret.Replace("$myid", LLUUID.Zero.ToString());
             ret = ret.Replace("$master", Session.Settings.MasterID.ToString());
             ret = ret.Replace("$earned", Session.MoneyReceived.ToString());
             ret = ret.Replace("$spent", Session.MoneySpent.ToString());
@@ -526,6 +538,11 @@ namespace ghetto
                 Session.Client.Self.RequestBalance();
             }
 
+            else if (command == "break")
+            {
+                return false;
+            }
+
             else if (command == "camp")
             {
                 if (cmd.Length < 2) { Display.Help(command); return false; }
@@ -542,7 +559,6 @@ namespace ghetto
                     return true;
                 }
                 Display.InfoResponse(sessionNum, "No matching objects found.");
-                return false; ;
             }
 
             else if (command == "clear")
@@ -637,7 +653,8 @@ namespace ghetto
                 string weather = Display.RPGWeather(sessionNum, Session.Client.Network.CurrentSim.Region.Name, Session.Client.Grid.SunDirection);
                 Display.InfoResponse(sessionNum, weather);
                 int countText = 0;
-                foreach (KeyValuePair<uint, PrimObject> pair in Session.Prims) {
+                foreach (KeyValuePair<uint, PrimObject> pair in Session.Prims)
+                {
                     if (pair.Value.Text != "") countText++;
                 }
                 Display.InfoResponse(sessionNum, "There are " + countText + " objects with text nearby.");
