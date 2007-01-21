@@ -134,8 +134,6 @@ namespace ghetto
 
             Display.Connected(Session.SessionNumber, Session.Name);
 
-            Session.Settings.URI = "";
-
             Session.UpdateAppearance();
 
             Session.Client.Self.Status.UpdateTimer.Start();

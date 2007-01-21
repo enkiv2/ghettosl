@@ -310,8 +310,15 @@ namespace ghetto
                     Session.Settings.Script = ScriptSystem.QuoteArg(cmd, index + 1);
                 else if (arg == "-here")
                 {
-                    SecondLife fromClient = Interface.Sessions[sessionNum].Client;
-                    Session.Settings.URI = "uri:" + fromClient.Network.CurrentSim.Region.Name + "&" + (int)fromClient.Self.Position.X + "&" + (int)fromClient.Self.Position.Y + "&" + (int)fromClient.Self.Position.Z;
+                    GhettoSL.UserSession fromSession = Interface.Sessions[sessionNum];
+                    if (Session.Client.Network.Connected)
+                    {
+                        Session.Settings.URI = "uri:" + fromSession.Client.Network.CurrentSim.Region.Name + "&" + (int)fromSession.Client.Self.Position.X + "&" + (int)fromSession.Client.Self.Position.Y + "&" + (int)fromSession.Client.Self.Position.Z;
+                    }
+                    else
+                    {
+                        Session.Settings.URI = fromSession.Settings.URI;
+                    }
                 }
                 else if (arg.Length > 13 && arg.Substring(0, 13) == "secondlife://")
                 {
@@ -734,6 +741,11 @@ namespace ghetto
                 Session.Login();
             }
 
+            else if (command == "reseturi")
+            {
+                Session.Settings.URI = "last";
+            }
+
             else if (command == "ride")
             {
                 RideWith(sessionNum, details);
@@ -758,6 +770,13 @@ namespace ghetto
             {
                 if (cmd.Length > 1)
                 {
+                    if (cmd[1] == "-a" || cmd[1] == "*")
+                    {
+                        foreach (KeyValuePair<uint, GhettoSL.UserSession> pair in Interface.Sessions)
+                        {
+                            ParseCommand(pair.Key, details, parseVariables, fromMasterIM);
+                        }
+                    }
                     uint switchTo;
                     if (!uint.TryParse(cmd[1], out switchTo) || switchTo < 1 || !Interface.Sessions.ContainsKey(switchTo))
                     {
@@ -773,7 +792,7 @@ namespace ghetto
                     }
                     else
                     {
-                        ParseCommand(switchTo, details, true, false);
+                        ParseCommand(switchTo, details, parseVariables, fromMasterIM);
                     }
                 }
                 else Display.SessionList();
