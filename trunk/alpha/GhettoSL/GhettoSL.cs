@@ -175,7 +175,7 @@ namespace ghetto
                 MasterID = LLUUID.Zero;
                 DisplayChat = true;
                 SendUpdates = true;
-                URI = "";
+                URI = "last";
                 CampChairMatchText = "";
                 FollowName = "";
             }
