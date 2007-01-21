@@ -81,7 +81,7 @@ namespace ghetto
             //Load autoexec.script
             if (File.Exists("autoexec.script"))
             {
-                Scripts.Add("autoexec.script", new ScriptSystem.UserScript("autoexec.script"));
+                Scripts.Add("autoexec.script", new ScriptSystem.UserScript(1, "autoexec.script"));
             }
 
             //Make initial connection
