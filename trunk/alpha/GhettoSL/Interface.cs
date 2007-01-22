@@ -156,9 +156,9 @@ namespace ghetto
             if (read.Length < 1)
                 return true;
             else if (read.Length > 1 && read.Substring(0, 2) == "//")
-                ScriptSystem.ParseCommand(CurrentSession, read.Substring(2), true, false);
+                ScriptSystem.ParseCommand(CurrentSession, "", read.Substring(2), true, false);
             else if (read.Substring(0, 1) == "/")
-                ScriptSystem.ParseCommand(CurrentSession, read.Substring(1), false, false);
+                ScriptSystem.ParseCommand(CurrentSession, "", read.Substring(1), false, false);
             else
                 Sessions[CurrentSession].Client.Self.Chat(read, 0, MainAvatar.ChatType.Normal);
 
