@@ -49,6 +49,7 @@ namespace ghetto
         public class UserScript
         {
             public uint SessionNumber;
+            public string ScriptName;
             /// <summary>
             /// Array containing each line of the script
             /// </summary>
@@ -83,12 +84,13 @@ namespace ghetto
                 string[] script = { };
                 string input;
                 int error = 0;
+                //FIXME - display file access error if file is in use
                 StreamReader read = File.OpenText(scriptFile);
                 for (int i = 0; (input = read.ReadLine()) != null; i++)
                 {
                     char[] splitChar = { ' ' };
                     string[] args = input.ToLower().Split(splitChar);
-                    string[] commandsWithArgs = { "camp", "event", "go", "goto", "if", "label", "login", "pay", "payme", "say", "shout", "sit", "teleport", "touch", "touchid", "updates", "wait", "whisper" };
+                    string[] commandsWithArgs = { "camp", "event", "go", "goto", "if", "label", "login", "pay", "payme", "say", "shout", "sit", "sleep", "teleport", "touch", "touchid", "updates", "wait", "whisper" };
                     string[] commandsWithoutArgs = { "fly", "land", "listen", "quiet", "quit", "relog", "run", "sitg", "stand", "walk" };
                     if (Array.IndexOf(commandsWithArgs, args[0]) > -1 && args.Length < 2)
                     {
@@ -115,12 +117,20 @@ namespace ghetto
                 }
             }
 
+            public void Sleep(float seconds)
+            {
+                SleepingSince = Helpers.GetUnixTime();
+                Display.InfoResponse(SessionNumber, "Sleeping " + seconds + " seconds...");
+                SleepTimer.Interval = (int)(seconds * 1000);
+                SleepTimer.Enabled = true;
+            }
+
             public void Step(int stepNum)
             {
                 if (stepNum < Lines.Length)
                 {
                     CurrentStep = stepNum;
-                    while (CurrentStep < Lines.Length && ParseCommand(SessionNumber, Lines[CurrentStep], true, false))
+                    while (CurrentStep < Lines.Length && ParseCommand(SessionNumber, ScriptName, Lines[CurrentStep], true, false))
                         CurrentStep++;
                 }
             }
@@ -134,22 +144,8 @@ namespace ghetto
             public UserScript(uint sessionNum, string scriptFile)
             {
                 SessionNumber = sessionNum;
+                ScriptName = scriptFile;
                 CurrentStep = 0;
-                ScriptTime = Helpers.GetUnixTime();
-                SleepingSince = ScriptTime;
-                SleepTimer = new System.Timers.Timer();
-                SleepTimer.Enabled = false;
-                SleepTimer.AutoReset = false;
-                SleepTimer.Elapsed += new System.Timers.ElapsedEventHandler(ScriptTimerHandler);
-                SleepTimer.Enabled = false;
-                if (Load(scriptFile)) Step(0);
-            }
-
-            public UserScript(uint sessionNum)
-            {
-                SessionNumber = sessionNum;
-                CurrentStep = 0;
-                Events = new Dictionary<string, ScriptEvent>();
                 ScriptTime = Helpers.GetUnixTime();
                 SleepingSince = ScriptTime;
                 SleepTimer = new System.Timers.Timer();
@@ -158,6 +154,7 @@ namespace ghetto
                 SleepTimer.Elapsed += new System.Timers.ElapsedEventHandler(ScriptTimerHandler);
                 SleepTimer.Enabled = false;
             }
+
         }
 
 
@@ -208,7 +205,8 @@ namespace ghetto
         {
             //FIXME - move to Display
             Console.WriteLine("(" + sessionNum + ") SCRIPTED COMMAND: " + command);
-            ParseCommand(sessionNum, command, true, false);
+            //FIXME - change "" to the script name from which the event originated?
+            ParseCommand(sessionNum, "", command, true, false);
         }
 
 
@@ -351,15 +349,19 @@ namespace ghetto
 
             if (cmd.Length == 1 || cmd[1] == "help")
             {
+                //FIXME - add more verbose script help to Display
                 Display.Help(cmd[0]);
                 return false;
             }
 
             string arg = cmd[1].ToLower();
+            string scriptFile = cmd[1];
+
             if (arg == "-u" || arg == "-unload" || arg == "unload")
             {
                 if (cmd.Length < 3) { Display.Help(arg); return false; }
-                else if (!Interface.Scripts.ContainsKey(cmd[2])) Display.InfoResponse(sessionNum, "No such script loaded. For a list of active scripts, use /scripts.");
+                scriptFile = cmd[2];
+                if (!Interface.Scripts.ContainsKey(cmd[2])) Display.InfoResponse(sessionNum, "No such script loaded. For a list of active scripts, use /scripts.");
                 else Interface.Scripts.Remove(cmd[2]);
             }
             else if (!File.Exists(cmd[1]))
@@ -369,16 +371,23 @@ namespace ghetto
             }
             else
             {
-                if (Interface.Scripts.ContainsKey(cmd[1]))
+                if (Interface.Scripts.ContainsKey(scriptFile))
                 {
-                    Display.InfoResponse(sessionNum, "Reloading script: " + cmd[1]);
+                    //scriptFile is already loaded. refresh.
+                    Display.InfoResponse(sessionNum, "Reloading script: " + scriptFile);
                 }
                 else
                 {
-                    Interface.Scripts.Add(cmd[1], new UserScript(sessionNum));
-                    Display.InfoResponse(sessionNum, "Loading script: " + cmd[1]);
+                    //add entry for scriptFile
+                    Display.InfoResponse(sessionNum, "Loading script: " + scriptFile);
+                    Interface.Scripts.Add(scriptFile, new UserScript(sessionNum, scriptFile));
                 }
-                if (Interface.Scripts[cmd[1]].Load(cmd[1])) Interface.Scripts[cmd[1]].Step(0);
+
+                if (Interface.Scripts[scriptFile].Load(scriptFile))
+                {
+                    //start the script
+                    Interface.Scripts[scriptFile].Step(0);
+                }
             }
             return true;
         }
@@ -468,12 +477,12 @@ namespace ghetto
             string regionName;
             if (Session.Client.Network.Connected) regionName = Session.Client.Network.CurrentSim.Region.Name;
             else regionName = "";
-            ret = ret.Replace("$here", regionName);
+            ret = ret.Replace("$region", regionName);
 
             return ret;
         }
 
-        public static bool ParseCommand(uint sessionNum, string commandString, bool parseVariables, bool fromMasterIM)
+        public static bool ParseCommand(uint sessionNum, string scriptName, string commandString, bool parseVariables, bool fromMasterIM)
         {
             //FIXME - change display output if fromMasterIM == true
 
@@ -774,7 +783,7 @@ namespace ghetto
                     {
                         foreach (KeyValuePair<uint, GhettoSL.UserSession> pair in Interface.Sessions)
                         {
-                            ParseCommand(pair.Key, details, parseVariables, fromMasterIM);
+                            ParseCommand(pair.Key, "", details, parseVariables, fromMasterIM);
                         }
                     }
                     uint switchTo;
@@ -792,7 +801,7 @@ namespace ghetto
                     }
                     else
                     {
-                        ParseCommand(switchTo, details, parseVariables, fromMasterIM);
+                        ParseCommand(switchTo, "", details, parseVariables, fromMasterIM);
                     }
                 }
                 else Display.SessionList();
@@ -818,6 +827,18 @@ namespace ghetto
                 Session.Client.Self.Status.Controls.SitOnGround = true;
                 Session.Client.Self.Status.SendUpdate();
                 Session.Client.Self.Status.Controls.SitOnGround = false;
+            }
+
+            else if (command == "sleep")
+            {
+                float interval;
+                if (cmd.Length < 2 || scriptName == "" || !float.TryParse(cmd[1], out interval))
+                {
+                    Display.Help(command);
+                    return false;
+                }
+                Interface.Scripts[scriptName].Sleep(interval);
+                return false; //pause script
             }
 
             else if (command == "stand")

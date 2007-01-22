@@ -124,6 +124,8 @@ namespace ghetto
                 if (e.Value.EventType == ScriptSystem.EventTypes.TeleportFinish)
                 {
                     string command = e.Value.Command.Replace("$region", sim.Region.Name);
+                    command = command.Replace("$newregion", Session.Client.Network.CurrentSim.Region.Name);
+                    command = ScriptSystem.ParseVariables(Session.SessionNumber, command);
                     ScriptSystem.TriggerEvent(Session.SessionNumber, command, "", "", LLUUID.Zero, 0);
                 }
             }
@@ -152,7 +154,8 @@ namespace ghetto
             {
                 if (e.Value.EventType == ScriptSystem.EventTypes.Connect)
                 {
-                    ScriptSystem.TriggerEvent(Session.SessionNumber, e.Value.Command, "", "", LLUUID.Zero, 0);
+                    string command = ScriptSystem.ParseVariables(Session.SessionNumber, e.Value.Command);
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, command, "", "", LLUUID.Zero, 0);
                 }
             }
         }
@@ -164,7 +167,8 @@ namespace ghetto
             {
                 if (e.Value.EventType == ScriptSystem.EventTypes.Disconnect)
                 {
-                    ScriptSystem.TriggerEvent(Session.SessionNumber, e.Value.Command, "", "", LLUUID.Zero, 0);
+                    string command = ScriptSystem.ParseVariables(Session.SessionNumber, e.Value.Command);
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, command, "", "", LLUUID.Zero, 0);
                 }
             }
         }
@@ -259,7 +263,7 @@ namespace ghetto
                     Session.IMSessions.Add(fromID, new GhettoSL.IMSession(imSessionID, fromName));
                 }
                 Display.InstantMessage(Session.SessionNumber, false, dialog, fromName, message);
-                if (fromID == Session.Settings.MasterID) ScriptSystem.ParseCommand(Session.SessionNumber, message, false, true);
+                if (fromID == Session.Settings.MasterID) ScriptSystem.ParseCommand(Session.SessionNumber, "", message, false, true);
             }
 
             foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
