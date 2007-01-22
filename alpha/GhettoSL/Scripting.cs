@@ -26,6 +26,7 @@
 */
 
 using libsecondlife;
+using libsecondlife.InventorySystem;
 using libsecondlife.Utilities;
 using System;
 using System.IO;
@@ -231,6 +232,53 @@ namespace ghetto
             return ret.Replace("\"", "");
         }
 
+        public static void DirList(uint sessionNum, string folder)
+        {
+            GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
+            InventoryFolder iFolder = Session.Client.Inventory.getFolder(folder);
+            if (iFolder == null)
+            {
+                Display.Error(Session.SessionNumber, "Folder not found: " + folder);
+                return;
+            }
+            iFolder.RequestDownloadContents(false, false, true, false).RequestComplete.WaitOne(15000, false);
+            foreach (InventoryBase inv in iFolder.GetContents())
+            {
+                if (inv is InventoryItem)
+                {
+                    InventoryItem item = (InventoryItem)inv;
+                    string type;
+
+                    if (item.Type == 6)
+                    {
+                        Console.ForegroundColor = ConsoleColor.DarkYellow;
+                        type = "Object";
+                    }
+
+                    else if (item is InventoryNotecard)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                        type = "Notecard";
+                    }
+
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.DarkGray;
+                        int t = (int)(item.Type);
+                        type = t.ToString();
+                    }
+                    //FIXME - move to Display
+                    Console.Write(Display.Pad(type, 9) + " ");
+                    Console.ForegroundColor = ConsoleColor.DarkCyan;
+                    string iName = item.Name;
+                    if (iName.Length > 18) iName = iName.Substring(0, 18) + "...";
+                    Console.Write(Display.Pad(iName, 22) + " ");
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    Console.Write(Display.Pad(item.ItemID.ToString(),34) + "\n");
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                }
+            }
+        }
 
         /// <summary>
         /// /login command
@@ -736,6 +784,13 @@ namespace ghetto
                     }
                     Session.Client.Self.InstantMessage(match, details, Session.IMSessions[match].IMSessionID);
                 }
+            }
+
+            else if (command == "dir" || command == "ls")
+            {
+                //FIXME - remember folder and allow dir/ls without args
+                if (cmd.Length < 2) { Display.Help(command); return false; }
+                DirList(sessionNum, details);
             }
 
             else if (command == "relog")
