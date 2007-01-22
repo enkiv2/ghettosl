@@ -128,11 +128,16 @@ namespace ghetto
 
             public void Step(int stepNum)
             {
+                char[] splitChar = { ' ' };
                 if (stepNum < Lines.Length)
                 {
                     CurrentStep = stepNum;
-                    while (CurrentStep < Lines.Length && ParseCommand(SessionNumber, ScriptName, Lines[CurrentStep], true, false))
+                    string[] cmd = Lines[stepNum].Trim().Split(splitChar);
+                    while (cmd.Length < 1 || cmd[0].Substring(cmd.Length - 1, 1) == ":" || ParseCommand(SessionNumber, ScriptName, Lines[CurrentStep], true, false))
+                    {
                         CurrentStep++;
+                        if (CurrentStep >= Lines.Length) break;
+                    }
                 }
             }
 
@@ -241,42 +246,59 @@ namespace ghetto
                 Display.Error(Session.SessionNumber, "Folder not found: " + folder);
                 return;
             }
-            iFolder.RequestDownloadContents(false, false, true, false).RequestComplete.WaitOne(15000, false);
+            iFolder.RequestDownloadContents(false, true, true, false).RequestComplete.WaitOne(15000, false);
             foreach (InventoryBase inv in iFolder.GetContents())
             {
-                if (inv is InventoryItem)
+                if (!(inv is InventoryItem)) return;
+
+                InventoryItem item = (InventoryItem)inv;
+                string type;
+
+                if (inv is InventoryNotecard)
                 {
-                    InventoryItem item = (InventoryItem)inv;
-                    string type;
-
-                    if (item.Type == 6)
-                    {
-                        Console.ForegroundColor = ConsoleColor.DarkYellow;
-                        type = "Object";
-                    }
-
-                    else if (item is InventoryNotecard)
-                    {
-                        Console.ForegroundColor = ConsoleColor.Gray;
-                        type = "Notecard";
-                    }
-
-                    else
-                    {
-                        Console.ForegroundColor = ConsoleColor.DarkGray;
-                        int t = (int)(item.Type);
-                        type = t.ToString();
-                    }
-                    //FIXME - move to Display
-                    Console.Write(Display.Pad(type, 9) + " ");
-                    Console.ForegroundColor = ConsoleColor.DarkCyan;
-                    string iName = item.Name;
-                    if (iName.Length > 18) iName = iName.Substring(0, 18) + "...";
-                    Console.Write(Display.Pad(iName, 22) + " ");
-                    Console.ForegroundColor = ConsoleColor.DarkGray;
-                    Console.Write(Display.Pad(item.ItemID.ToString(),34) + "\n");
                     Console.ForegroundColor = ConsoleColor.Gray;
+                    type = "Notecard";
                 }
+
+                else if (inv is InventoryImage)
+                {
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    type = "Image";
+                }
+
+                else if (inv is InventoryScript)
+                {
+                    Console.ForegroundColor = ConsoleColor.Magenta;
+                    type = "Script";
+                }
+
+                else if (inv is InventoryWearable)
+                {
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    type = "Wearable";
+                }
+
+                else if (item.Type == 6)
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkYellow;
+                    type = "Object";
+                }
+
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    int t = (int)(item.Type);
+                    type = t.ToString();
+                }
+                //FIXME - move to Display
+                Console.Write(Display.Pad(type, 9) + " ");
+                Console.ForegroundColor = ConsoleColor.DarkCyan;
+                string iName = item.Name;
+                if (iName.Length > 18) iName = iName.Substring(0, 18) + "...";
+                Console.Write(Display.Pad(iName, 22) + " ");
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.Write(Display.Pad(item.ItemID.ToString(), 34) + "\n");
+                Console.ForegroundColor = ConsoleColor.Gray;
             }
         }
 
@@ -504,11 +526,51 @@ namespace ghetto
 
         public static bool ParseConditions(uint sessionNum, string conditions)
         {
-            string[] splitBy = { "&&", "and", "AND" };
-            
+            bool pass = true;
 
-            //FIXME - parse conditions
-            return true;
+            string[] splitAnd = { "and", "AND", "&&" };
+            string[] splitOr = { "or", "OR", "||" };
+            string[] splitEq = { "==" };
+            string[] splitNot = { "!=" , "<>" };
+
+            string[] condOr = ParseVariables(sessionNum, conditions.Trim()).Split(splitOr, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string or in condOr)
+            {
+                pass = true;
+
+                string[] condAnd = or.Trim().Split(splitAnd, StringSplitOptions.RemoveEmptyEntries);
+                foreach (string and in condAnd)
+                {
+                    //important to split not before eq because != contains =
+                    string[] not = and.ToLower().Split(splitNot, StringSplitOptions.RemoveEmptyEntries);
+                    string[] eq = and.ToLower().Split(splitEq, StringSplitOptions.RemoveEmptyEntries);
+
+                    //only one term
+                    if (eq.Length == 1 && not.Length == 1)
+                    {
+                        if (eq[0].Trim() == "$false" || eq[0].Trim() == "0") pass = false;
+                        break;
+                    }
+
+                    //check ==
+                    if (eq.Length > 1 && eq[0].Trim() != eq[1].Trim())
+                    {
+                        pass = false;
+                        break;
+                    }
+
+                    //check !=
+                    if (not.Length > 1 && not[0].Trim() == not[1].Trim())
+                    {
+                        pass = false;
+                        break;
+                    }
+
+                }
+            }
+
+            return pass;
         }
 
         public static string ParseVariables(uint sessionNum, string originalString)
@@ -541,7 +603,7 @@ namespace ghetto
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
 
             char[] splitChar = { ' ' };
-            string[] cmd = commandToParse.Split(splitChar);
+            string[] cmd = commandToParse.Trim().Split(splitChar);
             string command = cmd[0].ToLower();
             int commandStart = 0;
 
@@ -628,6 +690,13 @@ namespace ghetto
             else if (command == "clear")
             {
                 Console.Clear();
+            }
+
+            else if (command == "dir" || command == "ls")
+            {
+                //FIXME - remember folder and allow dir/ls without args
+                if (cmd.Length < 2) { Display.Help(command); return false; }
+                DirList(sessionNum, details);
             }
 
             else if (command == "echo")
@@ -786,13 +855,6 @@ namespace ghetto
                 }
             }
 
-            else if (command == "dir" || command == "ls")
-            {
-                //FIXME - remember folder and allow dir/ls without args
-                if (cmd.Length < 2) { Display.Help(command); return false; }
-                DirList(sessionNum, details);
-            }
-
             else if (command == "relog")
             {
                 if (Session.Client.Network.Connected)
@@ -808,6 +870,11 @@ namespace ghetto
             else if (command == "reseturi")
             {
                 Session.Settings.URI = "last";
+            }
+
+            else if (command == "rez")
+            {
+                Console.WriteLine("FIXME");
             }
 
             else if (command == "ride")
