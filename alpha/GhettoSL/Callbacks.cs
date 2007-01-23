@@ -74,6 +74,8 @@ namespace ghetto
 
         void Self_OnScriptDialog(string message, string objectName, LLUUID imageID, LLUUID objectID, string firstName, string lastName, int chatChannel, List<string> buttons)
         {
+            Session.LastDialogID = objectID;
+            Session.LastDialogChannel = chatChannel;
             foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
             {
                 if (e.Value.EventType == ScriptSystem.EventTypes.ScriptDialog)
@@ -153,6 +155,7 @@ namespace ghetto
         {
             TeleportFinishPacket p = (TeleportFinishPacket)packet;
             Display.TeleportFinished(Session.SessionNumber, sim.Region.Name);
+            Session.Prims = new Dictionary<uint, PrimObject>();
             Session.UpdateAppearance(); //FIXME - this should load a locally cached appearance
             foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
             {

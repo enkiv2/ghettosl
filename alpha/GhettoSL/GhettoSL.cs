@@ -52,6 +52,8 @@ namespace ghetto
             public Dictionary<LLUUID, IMSession> IMSessions;
             public Dictionary<uint, PrimObject> Prims;
             public Dictionary<string, ScriptSystem.ScriptEvent> ScriptEvents;
+            public LLUUID LastDialogID;
+            public int LastDialogChannel;
             public int MoneySpent;
             public int MoneyReceived;
             public LLUUID MasterIMSession;
@@ -114,6 +116,8 @@ namespace ghetto
                 Friends = new Dictionary<LLUUID, Avatar>();
                 IMSessions = new Dictionary<LLUUID, IMSession>();
                 Prims = new Dictionary<uint, PrimObject>();
+                LastDialogChannel = -1;
+                LastDialogID = LLUUID.Zero;
                 MoneySpent = 0;
                 MoneyReceived = 0;
                 MasterIMSession = LLUUID.Zero;
