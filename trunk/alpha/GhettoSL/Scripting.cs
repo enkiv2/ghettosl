@@ -256,49 +256,49 @@ namespace ghetto
 
                 if (inv is InventoryNotecard)
                 {
-                    Console.ForegroundColor = ConsoleColor.Gray;
+                    Display.SetColor(ConsoleColor.Gray);
                     type = "Notecard";
                 }
 
                 else if (inv is InventoryImage)
                 {
-                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Display.SetColor(ConsoleColor.Cyan);
                     type = "Image";
                 }
 
                 else if (inv is InventoryScript)
                 {
-                    Console.ForegroundColor = ConsoleColor.Magenta;
+                    Display.SetColor(ConsoleColor.Magenta);
                     type = "Script";
                 }
 
                 else if (inv is InventoryWearable)
                 {
-                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Display.SetColor(ConsoleColor.Blue);
                     type = "Wearable";
                 }
 
                 else if (item.Type == 6)
                 {
-                    Console.ForegroundColor = ConsoleColor.DarkYellow;
+                    Display.SetColor(ConsoleColor.DarkYellow);
                     type = "Object";
                 }
 
                 else
                 {
-                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    Display.SetColor(ConsoleColor.DarkGray);
                     int t = (int)(item.Type);
                     type = t.ToString();
                 }
                 //FIXME - move to Display
                 Console.Write(Display.Pad(type, 9) + " ");
-                Console.ForegroundColor = ConsoleColor.DarkCyan;
+                Display.SetColor(ConsoleColor.DarkCyan);
                 string iName = item.Name;
                 if (iName.Length > 18) iName = iName.Substring(0, 18) + "...";
                 Console.Write(Display.Pad(iName, 22) + " ");
-                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Display.SetColor(ConsoleColor.DarkGray);
                 Console.Write(Display.Pad(item.ItemID.ToString(), 34) + "\n");
-                Console.ForegroundColor = ConsoleColor.Gray;
+                Display.SetColor(ConsoleColor.Gray);
             }
         }
 
@@ -542,7 +542,6 @@ namespace ghetto
                 string[] condAnd = or.Trim().Split(splitAnd, StringSplitOptions.RemoveEmptyEntries);
                 foreach (string and in condAnd)
                 {
-                    //important to split not before eq because != contains =
                     string[] not = and.ToLower().Split(splitNot, StringSplitOptions.RemoveEmptyEntries);
                     string[] eq = and.ToLower().Split(splitEq, StringSplitOptions.RemoveEmptyEntries);
 
