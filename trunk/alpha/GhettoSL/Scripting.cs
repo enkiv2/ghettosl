@@ -92,15 +92,19 @@ namespace ghetto
                 for (int i = 0; (input = read.ReadLine()) != null; i++)
                 {
                     char[] splitChar = { ' ' };
-                    string[] args = input.ToLower().Split(splitChar);
-                    string[] commandsWithArgs = { "camp", "event", "go", "goto", "if", "label", "login", "pay", "payme", "say", "shout", "sit", "sleep", "teleport", "touch", "touchid", "updates", "wait", "whisper" };
-                    string[] commandsWithoutArgs = { "fly", "land", "listen", "quiet", "quit", "relog", "run", "sitg", "stand", "walk" };
-                    if (Array.IndexOf(commandsWithArgs, args[0]) > -1 && args.Length < 2)
+                    string[] args = input.ToLower().Trim().Split(splitChar);
+                    string[] commandsWithArgs = { "camp", "echo", "event", "go", "goto", "if", "label", "login", "pay", "payme", "say", "shout", "sit", "sleep", "teleport", "touch", "touchid", "updates", "wait", "whisper" };
+                    string[] commandsWithoutArgs = { "break", "fly", "land", "listen", "quiet", "quit", "relog", "run", "sitg", "stand", "walk" };
+
+                    bool skip = false;
+                    if (args.Length == 1 && (args[0] == "" || args[0].Substring(args[0].Length - 1, 1) == ":")) skip = true;
+
+                    if (!skip && Array.IndexOf(commandsWithArgs, args[0]) > -1 && args.Length < 2)
                     {
                         Console.WriteLine("Missing argument(s) for command \"{0}\" on line {1} of {2}", args[0], i + 1, scriptFile);
                         error++;
                     }
-                    else if (Array.IndexOf(commandsWithArgs, args[0]) < 0 && Array.IndexOf(commandsWithoutArgs, args[0]) < 0)
+                    else if (!skip && Array.IndexOf(commandsWithArgs, args[0]) < 0 && Array.IndexOf(commandsWithoutArgs, args[0]) < 0)
                     {
                         Console.WriteLine("Unknown command \"{0}\" on line {1} of {2}", args[0], i + 1, scriptFile);
                         error++;
@@ -135,7 +139,7 @@ namespace ghetto
                 {
                     CurrentStep = stepNum;
                     string[] cmd = Lines[stepNum].Trim().Split(splitChar);
-                    while (cmd.Length < 1 || cmd[0].Substring(cmd.Length - 1, 1) == ":" || ParseCommand(SessionNumber, ScriptName, Lines[CurrentStep], true, false))
+                    while (Lines[stepNum].Trim() == "" || (cmd[0].Substring(cmd[0].Length - 1, 1) == ":") || ParseCommand(SessionNumber, ScriptName, Lines[CurrentStep], true, false))
                     {
                         CurrentStep++;
                         if (CurrentStep >= Lines.Length) break;
@@ -216,7 +220,7 @@ namespace ghetto
             //DEBUG
             //Console.WriteLine("(" + sessionNum + ") SCRIPTED COMMAND: " + command);
 
-            //FIXME - change "" to the script name from which the event originated?
+            //FIXME - change "" to the script name from which the event originated!!!!!!
             ParseCommand(sessionNum, "", command, true, false);
         }
 
@@ -525,8 +529,17 @@ namespace ghetto
                 ScriptEvent newEvent = new ScriptEvent();
                 newEvent.EventType = (EventTypes)eventNum;
                 newEvent.Command = eventCommand;
-                Session.ScriptEvents.Add(eventLabel, newEvent);
-                Display.InfoResponse(sessionNum, "Added " + eventType + " event: " + eventLabel);
+                if (Session.ScriptEvents.ContainsKey(eventLabel))
+                {
+                    Session.ScriptEvents.Remove(eventLabel);
+                    Session.ScriptEvents.Add(eventLabel, newEvent);
+                    Display.InfoResponse(sessionNum, "Replaced " + eventType + " event: " + eventLabel);
+                }
+                else
+                {
+                    Session.ScriptEvents.Add(eventLabel, newEvent);
+                    Display.InfoResponse(sessionNum, "Added " + eventType + " event: " + eventLabel);
+                }
                 return true;
             }
             return false;
@@ -593,7 +606,7 @@ namespace ghetto
         {
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
             string ret = originalString;
-            ret = ret.Replace("$me", Session.Name);
+            ret = ret.Replace("$myname", Session.Name).Replace("$myid", Session.Client.Network.AgentID.ToString());
             if (Session.Client.Network.Connected) ret = ret.Replace("$myid", Session.Client.Network.AgentID.ToString());
             else ret = ret.Replace("$myid", LLUUID.Zero.ToString());
             ret = ret.Replace("$master", Session.Settings.MasterID.ToString());
@@ -681,6 +694,11 @@ namespace ghetto
                 Session.Client.Self.AnimationStart(anim);
             }
 
+            else if (command == "answer")
+            {
+                
+            }
+
             else if (command == "balance")
             {
                 Session.Client.Self.RequestBalance();
@@ -723,14 +741,7 @@ namespace ghetto
                     Display.Help(command);
                     return false;
                 }
-                ScriptDialogReplyPacket reply = new ScriptDialogReplyPacket();
-                reply.AgentData.AgentID = Session.Client.Network.AgentID;
-                reply.AgentData.SessionID = Session.Client.Network.SessionID;
-                reply.Data.ButtonIndex = 0;
-                reply.Data.ChatChannel = channel;
-                reply.Data.ObjectID = objectid;
-                reply.Data.ButtonLabel = Helpers.StringToField(details);
-                Session.Client.Network.SendPacket(reply);
+                SendDialog(sessionNum, channel, objectid, details);
             }
 
             else if (command == "dir" || command == "ls")
@@ -749,6 +760,7 @@ namespace ghetto
 
             else if (command == "event" || command == "events")
             {
+                //FIXME - add -b flag to block events that occur after this one?
                 if (cmd.Length == 1) Display.EventList(sessionNum);
                 else return ParseEventCommand(sessionNum, cmd);
             }
@@ -789,6 +801,21 @@ namespace ghetto
                 int regionY = (int)(regionHandle & 0xFFFFFFFF);
 
                 Session.Client.Self.AutoPilotLocal(regionX + x, regionY + y, z);
+            }
+
+            else if (command == "goto")
+            {
+                if (scriptName == "") return false;
+                int i = 0;
+                foreach (string line in Interface.Scripts[scriptName].Lines)
+                {
+                    if (line.Trim() == cmd[1] + ":")
+                    {
+                        Interface.Scripts[scriptName].Step(i + 1);
+                        break;
+                    }
+                    i++;
+                }
             }
 
             else if (command == "help")
@@ -1015,7 +1042,8 @@ namespace ghetto
             else if (command == "sit")
             {
                 LLUUID target;
-                if (cmd.Length < 2 || LLUUID.TryParse(cmd[1], out target)) {
+                if (cmd.Length < 2 || LLUUID.TryParse(cmd[1], out target))
+                {
                     Display.Help(command);
                     return false;
                 }
@@ -1061,7 +1089,8 @@ namespace ghetto
             else if (command == "stopanim")
             {
                 LLUUID anim;
-                if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out anim)) {
+                if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out anim))
+                {
                     Display.Help(command);
                     return false;
                 }
@@ -1118,10 +1147,11 @@ namespace ghetto
             else if (command == "touch")
             {
                 LLUUID findID;
-                if (cmd.Length < 2 || LLUUID.TryParse(cmd[1], out findID)) {
+                if (cmd.Length < 2 || LLUUID.TryParse(cmd[1], out findID))
+                {
                     Display.Help(command);
                     return false;
-                } 
+                }
                 lock (Session.Prims)
                 {
                     foreach (PrimObject prim in Session.Prims.Values)
@@ -1240,6 +1270,18 @@ namespace ghetto
             return false;
         }
 
+        public static void SendDialog(uint sessionNum, int channel, LLUUID objectid, string message)
+        {
+            GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
+            ScriptDialogReplyPacket reply = new ScriptDialogReplyPacket();
+            reply.AgentData.AgentID = Session.Client.Network.AgentID;
+            reply.AgentData.SessionID = Session.Client.Network.SessionID;
+            reply.Data.ButtonIndex = 0;
+            reply.Data.ChatChannel = channel;
+            reply.Data.ObjectID = objectid;
+            reply.Data.ButtonLabel = Helpers.StringToField(message);
+            Session.Client.Network.SendPacket(reply);
+        }
 
     }
 }
