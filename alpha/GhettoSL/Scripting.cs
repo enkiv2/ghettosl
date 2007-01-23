@@ -563,7 +563,7 @@ namespace ghetto
                     }
 
                     //check "like"
-                    if (like.Length > 1 && !Regex.IsMatch(like[0].Trim(), like[1].Trim()))
+                    if (like.Length > 1 && !Regex.IsMatch(like[0].Trim(), like[1].Trim(), RegexOptions.IgnoreCase))
                     {
                         pass = false;
                         break;
@@ -833,11 +833,30 @@ namespace ghetto
                 string weather = Display.RPGWeather(sessionNum, Session.Client.Network.CurrentSim.Region.Name, Session.Client.Grid.SunDirection);
                 Display.InfoResponse(sessionNum, weather);
                 int countText = 0;
-                foreach (KeyValuePair<uint, PrimObject> pair in Session.Prims)
+
+                if (cmd.Length == 1)
                 {
-                    if (pair.Value.Text != "") countText++;
+                    foreach (KeyValuePair<uint, PrimObject> pair in Session.Prims)
+                    {
+                        if (pair.Value.Text != "") countText++;
+                    }
+                    Display.InfoResponse(sessionNum, "There are " + countText + " objects with text nearby.");
                 }
-                Display.InfoResponse(sessionNum, "There are " + countText + " objects with text nearby.");
+
+                else
+                {
+                    foreach (KeyValuePair<uint, PrimObject> pair in Session.Prims)
+                    {
+                        if (Regex.IsMatch(pair.Value.Text, details, RegexOptions.IgnoreCase))
+                        {
+                            //FIXME - move to Display
+                            Console.WriteLine(pair.Value.LocalID + " " + pair.Value.ID + " " + pair.Value.Text);
+                            countText++;
+                        }
+                    }
+                    Display.InfoResponse(sessionNum, "There are " + countText + " objects matching your query.");
+                }
+
             }
 
             else if (command == "pay")
@@ -1171,19 +1190,17 @@ namespace ghetto
 
             lock (Interface.Sessions[sessionID].Prims)
             {
-
                 foreach (PrimObject prim in Interface.Sessions[sessionID].Prims.Values)
                 {
                     int len = textValue.Length;
                     string match = prim.Text.Replace("\n", ""); //Strip newlines
                     if (match.Length < len) continue; //Text is too short to be a match
-                    else if (match.Substring(0, len).ToLower() == textValue)
+                    else if (Regex.IsMatch(match.Substring(0, len).ToLower(), textValue, RegexOptions.IgnoreCase))
                     {
                         localID = prim.LocalID;
                         break;
                     }
                 }
-
             }
             return localID;
         }
