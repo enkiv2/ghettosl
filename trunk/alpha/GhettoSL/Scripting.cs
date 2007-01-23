@@ -26,11 +26,13 @@
 */
 
 using libsecondlife;
+using libsecondlife.Packets;
 using libsecondlife.InventorySystem;
 using libsecondlife.Utilities;
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace ghetto
@@ -211,8 +213,9 @@ namespace ghetto
         /// <param name="amount">L$ amount associated with event</param>
         public static void TriggerEvent(uint sessionNum, string command)
         {
-            //FIXME - move to Display
-            Console.WriteLine("(" + sessionNum + ") SCRIPTED COMMAND: " + command);
+            //DEBUG
+            //Console.WriteLine("(" + sessionNum + ") SCRIPTED COMMAND: " + command);
+
             //FIXME - change "" to the script name from which the event originated?
             ParseCommand(sessionNum, "", command, true, false);
         }
@@ -530,6 +533,7 @@ namespace ghetto
         {
             bool pass = true;
 
+            string[] splitLike = { "like", "LIKE" };
             string[] splitAnd = { "and", "AND", "&&" };
             string[] splitOr = { "or", "OR", "||" };
             string[] splitEq = { "==" };
@@ -546,11 +550,19 @@ namespace ghetto
                 {
                     string[] not = and.ToLower().Split(splitNot, StringSplitOptions.RemoveEmptyEntries);
                     string[] eq = and.ToLower().Split(splitEq, StringSplitOptions.RemoveEmptyEntries);
+                    string[] like = and.ToLower().Split(splitLike, StringSplitOptions.RemoveEmptyEntries);
 
                     //only one term
-                    if (eq.Length == 1 && not.Length == 1)
+                    if (eq.Length == 1 && not.Length == 1 && like.Length == 1)
                     {
                         if (eq[0].Trim() == "$false" || eq[0].Trim() == "0") pass = false;
+                        break;
+                    }
+
+                    //check "like"
+                    if (like.Length > 1 && !Regex.IsMatch(like[0].Trim(), like[1].Trim()))
+                    {
+                        pass = false;
                         break;
                     }
 
@@ -645,9 +657,11 @@ namespace ghetto
                 command = cmd[0].ToLower();
             }
 
+            string details = "";
             int detailsStart = 1;
             if (command == "im" || command == "re" || command == "s" || command == "session") detailsStart++;
-            string details = "";
+            else if (command == "dialog") detailsStart += 2;
+            
             for (; detailsStart < cmd.Length; detailsStart++)
             {
                 if (details != "") details += " ";
@@ -691,6 +705,26 @@ namespace ghetto
             else if (command == "clear")
             {
                 Console.Clear();
+            }
+
+            else if (command == "dialog")
+            {
+                int channel;
+                LLUUID objectid;
+                if (cmd.Length <= 3 || !int.TryParse(cmd[1], out channel) || new LLUUID(cmd[2]) == null)
+                {
+                    Display.Help(command);
+                    return false;
+                }
+                objectid = new LLUUID(cmd[2]);
+                ScriptDialogReplyPacket reply = new ScriptDialogReplyPacket();
+                reply.AgentData.AgentID = Session.Client.Network.AgentID;
+                reply.AgentData.SessionID = Session.Client.Network.SessionID;
+                reply.Data.ButtonIndex = 0;
+                reply.Data.ChatChannel = channel;
+                reply.Data.ObjectID = objectid;
+                reply.Data.ButtonLabel = Helpers.StringToField(details);
+                Session.Client.Network.SendPacket(reply);
             }
 
             else if (command == "dir" || command == "ls")
@@ -794,6 +828,18 @@ namespace ghetto
                 Display.InfoResponse(sessionNum, "There are " + countText + " objects with text nearby.");
             }
 
+            else if (command == "pay")
+            {
+                int amount;
+                if (cmd.Length < 3 || new LLUUID(cmd[2]) == null || !int.TryParse(cmd[1], out amount))
+                {
+                    Display.Help(command);
+                    return false;
+                }
+                LLUUID id = new LLUUID(cmd[2]);
+                Session.Client.Self.GiveMoney(id, amount, "");
+            }
+
             else if (command == "payme")
             {
                 int amount;
@@ -809,7 +855,7 @@ namespace ghetto
                 }
                 else
                 {
-                    Session.Client.Self.GiveMoney(Session.Settings.MasterID, amount, "");
+                    Session.Client.Self.GiveMoney(Session.Settings.MasterID, amount, "Payment to master");
                 }
             }
 
@@ -852,7 +898,7 @@ namespace ghetto
                             match = pair.Key;
                         }
                     }
-                    Session.Client.Self.InstantMessage(match, details, Session.IMSessions[match].IMSessionID);
+                    if (match != LLUUID.Zero) Session.Client.Self.InstantMessage(match, details, Session.IMSessions[match].IMSessionID);
                 }
             }
 
