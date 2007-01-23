@@ -190,12 +190,14 @@ namespace ghetto
             NULL = 0,
             Connect = 1,
             Disconnect = 2,
-            Chat = 3,
-            IM = 4,
-            GroupIM = 5, //FIXME - still missing/incorrectly handled as IM
-            GetMoney = 6,
-            GiveMoney = 7,
-            TeleportFinish = 8
+            TeleportFinish = 3,
+            Chat = 4,
+            IM = 5,
+            GroupIM = 6, //FIXME - still missing/incorrectly handled as IM
+            ScriptDialog = 7,
+            GetMoney = 8,
+            GiveMoney = 9,
+            GetItem = 10
         }
 
 
@@ -207,7 +209,7 @@ namespace ghetto
         /// <param name="message">Message/text associated with event</param>
         /// <param name="id">UUID associated with event</param>
         /// <param name="amount">L$ amount associated with event</param>
-        public static void TriggerEvent(uint sessionNum, string command, string name, string message, LLUUID id, int amount)
+        public static void TriggerEvent(uint sessionNum, string command)
         {
             //FIXME - move to Display
             Console.WriteLine("(" + sessionNum + ") SCRIPTED COMMAND: " + command);

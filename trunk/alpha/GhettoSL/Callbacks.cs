@@ -50,13 +50,40 @@ namespace ghetto
             Session.Client.Self.OnScriptDialog += new MainAvatar.ScriptDialogCallback(Self_OnScriptDialog);
             Session.Client.Self.OnInstantMessage += new MainAvatar.InstantMessageCallback(Self_OnInstantMessage);
 
+            Session.Client.Inventory.OnInventoryItemReceived += new libsecondlife.InventorySystem.InventoryManager.On_InventoryItemReceived(Inventory_OnInventoryItemReceived);
+
             Session.Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(Callback_AlertMessage));
             Session.Client.Network.RegisterCallback(PacketType.MoneyBalanceReply, new NetworkManager.PacketCallback(Callback_MoneyBalanceReply));
             Session.Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(Callback_TeleportFinish));
         }
 
+        void Inventory_OnInventoryItemReceived(LLUUID fromAgentID, string fromAgentName, uint parentEstateID, LLUUID regionID, LLVector3 position, DateTime timestamp, libsecondlife.InventorySystem.InventoryItem item)
+        {
+            foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
+            {
+                if (e.Value.EventType == ScriptSystem.EventTypes.GetItem)
+                {
+                    //FIXME - add $identifiers for everything else
+                    string command = e.Value.Command.Replace("$name", fromAgentName).Replace("$id", fromAgentID.ToString());
+                    command = command.Replace("$item", item.Name).Replace("$itemid", item.ItemID.ToString());
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, command);
+                }
+            }
+            Display.InventoryItemReceived(Session.SessionNumber, fromAgentID, fromAgentName, parentEstateID, regionID, position, timestamp, item);
+        }
+
         void Self_OnScriptDialog(string message, string objectName, LLUUID imageID, LLUUID objectID, string firstName, string lastName, int chatChannel, List<string> buttons)
         {
+            foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
+            {
+                if (e.Value.EventType == ScriptSystem.EventTypes.ScriptDialog)
+                {
+                    //FIXME - add $identifiers for everything else
+                    string command = e.Value.Command.Replace("$name", objectName).Replace("$id", objectID.ToString());
+                    command = command.Replace("$channel", chatChannel.ToString()).Replace("$message", message);
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, command);
+                }
+            }
             Display.ScriptDialog(Session.SessionNumber, message, objectName, imageID, objectID, firstName, lastName, chatChannel, buttons);
         }
 
@@ -97,7 +124,8 @@ namespace ghetto
                     if (e.Value.EventType == ScriptSystem.EventTypes.GiveMoney)
                     {
                         //FIXME - try to get id
-                        ScriptSystem.TriggerEvent(Session.SessionNumber, e.Value.Command, name, "", LLUUID.Zero, amount);
+                        string command = e.Value.Command.Replace("$name", name).Replace("$amount", amount.ToString());
+                        ScriptSystem.TriggerEvent(Session.SessionNumber, e.Value.Command);
                     }
                 }
 
@@ -113,7 +141,8 @@ namespace ghetto
                     if (e.Value.EventType == ScriptSystem.EventTypes.GetMoney)
                     {
                         //FIXME - try to get id
-                        ScriptSystem.TriggerEvent(Session.SessionNumber, e.Value.Command, name, desc, LLUUID.Zero, amount);
+                        string command = e.Value.Command.Replace("$name", name).Replace("$amount", amount.ToString());
+                        ScriptSystem.TriggerEvent(Session.SessionNumber, command);
                     }
                 }
 
@@ -132,7 +161,7 @@ namespace ghetto
                     string command = e.Value.Command.Replace("$region", sim.Region.Name);
                     command = command.Replace("$newregion", Session.Client.Network.CurrentSim.Region.Name);
                     command = ScriptSystem.ParseVariables(Session.SessionNumber, command);
-                    ScriptSystem.TriggerEvent(Session.SessionNumber, command, "", "", LLUUID.Zero, 0);
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, command);
                 }
             }
         }
@@ -161,7 +190,7 @@ namespace ghetto
                 if (e.Value.EventType == ScriptSystem.EventTypes.Connect)
                 {
                     string command = ScriptSystem.ParseVariables(Session.SessionNumber, e.Value.Command);
-                    ScriptSystem.TriggerEvent(Session.SessionNumber, command, "", "", LLUUID.Zero, 0);
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, command);
                 }
             }
         }
@@ -174,7 +203,7 @@ namespace ghetto
                 if (e.Value.EventType == ScriptSystem.EventTypes.Disconnect)
                 {
                     string command = ScriptSystem.ParseVariables(Session.SessionNumber, e.Value.Command);
-                    ScriptSystem.TriggerEvent(Session.SessionNumber, command, "", "", LLUUID.Zero, 0);
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, command);
                 }
             }
         }
@@ -236,7 +265,7 @@ namespace ghetto
                     string command = e.Value.Command.Replace("$name", fromName).Replace("$message", message);
                     command = command.Replace("$id", id.ToString()).Replace("$ownerid", ownerid.ToString());
                     command = command.Replace("$ctype", chatType.ToString()).Replace("$stype", sourceType.ToString());
-                    ScriptSystem.TriggerEvent(Session.SessionNumber, command, "", "", LLUUID.Zero, 0);
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, command);
                 }
             }
 
@@ -260,7 +289,7 @@ namespace ghetto
             }
             else if (dialog == (int)MainAvatar.InstantMessageDialog.InventoryOffered)
             {
-                Console.WriteLine(Helpers.FieldToHexString(binaryBucket, ""));
+                //handled by Inventory_OnInventoryItemReceived
             }
             else
             {
@@ -281,7 +310,7 @@ namespace ghetto
                     command = command.Replace("$id", fromID.ToString());
                     command = command.Replace("$dialog", dialog.ToString());
                     
-                    ScriptSystem.TriggerEvent(Session.SessionNumber, command, "", "", LLUUID.Zero, 0);
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, command);
                 }
             }
 
