@@ -374,7 +374,10 @@ namespace ghetto
                 if (arg == "-q" || arg == "-quiet")
                     Session.Settings.DisplayChat = false;
                 else if (!lastArg && (arg == "-m" || arg == "-master" || arg == "-masterid"))
-                    Session.Settings.MasterID = new LLUUID(cmd[index + 1]);
+                {
+                    LLUUID master;
+                    if (LLUUID.TryParse(cmd[index + 1], out master)) Session.Settings.MasterID = master;
+                }
                 else if (arg == "-n" || arg == "-noupdates")
                     Session.Settings.SendUpdates = false;
                 else if (!lastArg && (arg == "-p" || arg == "-pass" || arg == "-passphrase"))
@@ -670,8 +673,12 @@ namespace ghetto
 
             if (command == "anim")
             {
-                if (cmd.Length < 2) { Display.Help(command); return false; }
-                Session.Client.Self.AnimationStart(new LLUUID(cmd[1]));
+                LLUUID anim;
+                if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out anim)) {
+                    Display.Help(command);
+                    return false;
+                }
+                Session.Client.Self.AnimationStart(anim);
             }
 
             else if (command == "balance")
@@ -711,12 +718,11 @@ namespace ghetto
             {
                 int channel;
                 LLUUID objectid;
-                if (cmd.Length <= 3 || !int.TryParse(cmd[1], out channel) || new LLUUID(cmd[2]) == null)
+                if (cmd.Length <= 3 || !int.TryParse(cmd[1], out channel) || !LLUUID.TryParse(cmd[2], out objectid))
                 {
                     Display.Help(command);
                     return false;
                 }
-                objectid = new LLUUID(cmd[2]);
                 ScriptDialogReplyPacket reply = new ScriptDialogReplyPacket();
                 reply.AgentData.AgentID = Session.Client.Network.AgentID;
                 reply.AgentData.SessionID = Session.Client.Network.SessionID;
@@ -794,7 +800,13 @@ namespace ghetto
 
             else if (command == "im")
             {
-                Session.Client.Self.InstantMessage(new LLUUID(cmd[1]), details);
+                LLUUID target;
+                if (cmd.Length < 2 || LLUUID.TryParse(cmd[1], out target))
+                {
+                    Display.Help(command);
+                    return false;
+                }
+                Session.Client.Self.InstantMessage(target, details);
             }
 
             else if (command == "land")
@@ -830,13 +842,13 @@ namespace ghetto
 
             else if (command == "pay")
             {
+                LLUUID id;
                 int amount;
-                if (cmd.Length < 3 || new LLUUID(cmd[2]) == null || !int.TryParse(cmd[1], out amount))
+                if (cmd.Length < 3 || !int.TryParse(cmd[1], out amount) || !LLUUID.TryParse(cmd[2], out id))
                 {
                     Display.Help(command);
                     return false;
                 }
-                LLUUID id = new LLUUID(cmd[2]);
                 Session.Client.Self.GiveMoney(id, amount, "");
             }
 
@@ -983,10 +995,14 @@ namespace ghetto
 
             else if (command == "sit")
             {
-                if (cmd.Length < 2) { Display.Help(command); return false; }
+                LLUUID target;
+                if (cmd.Length < 2 || LLUUID.TryParse(cmd[1], out target)) {
+                    Display.Help(command);
+                    return false;
+                }
                 Session.Client.Self.Status.Controls.SitOnGround = false;
                 Session.Client.Self.Status.Controls.StandUp = false;
-                Session.Client.Self.RequestSit(new LLUUID(cmd[1]), LLVector3.Zero);
+                Session.Client.Self.RequestSit(target, LLVector3.Zero);
                 Session.Client.Self.Sit();
                 Session.Client.Self.Status.SendUpdate();
             }
@@ -1025,8 +1041,12 @@ namespace ghetto
 
             else if (command == "stopanim")
             {
-                if (cmd.Length < 2) { Display.Help(command); return false; }
-                Session.Client.Self.AnimationStop(new LLUUID(cmd[1]));
+                LLUUID anim;
+                if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out anim)) {
+                    Display.Help(command);
+                    return false;
+                }
+                Session.Client.Self.AnimationStop(anim);
             }
 
             else if (command == "teleport")
@@ -1078,8 +1098,11 @@ namespace ghetto
 
             else if (command == "touch")
             {
-                if (cmd.Length < 2) { Display.Help(command); return false; }
-                LLUUID findID = new LLUUID(cmd[1]);
+                LLUUID findID;
+                if (cmd.Length < 2 || LLUUID.TryParse(cmd[1], out findID)) {
+                    Display.Help(command);
+                    return false;
+                } 
                 lock (Session.Prims)
                 {
                     foreach (PrimObject prim in Session.Prims.Values)

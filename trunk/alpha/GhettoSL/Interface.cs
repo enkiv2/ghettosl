@@ -117,7 +117,6 @@ namespace ghetto
 
             for (int i = 3; i < args.Length; i++)
             {
-
                 bool lastArg = false;
                 if (i + 1 == args.Length) lastArg = true;
 
@@ -127,7 +126,10 @@ namespace ghetto
                 else if (arg == "-q" || arg == "-quiet")
                     ret.Value.DisplayChat = false;
                 else if (!lastArg && (arg == "-m" || arg == "-master" || arg == "-masterid"))
-                    ret.Value.MasterID = new LLUUID(args[i + 1]);
+                {
+                    LLUUID master;
+                    if (LLUUID.TryParse(args[i + 1], out master)) ret.Value.MasterID = master;
+                }
                 else if (arg == "-n" || arg == "-noupdates")
                     ret.Value.SendUpdates = false;
                 else if (!lastArg && (arg == "-p" || arg == "-pass" || arg == "-passphrase"))
