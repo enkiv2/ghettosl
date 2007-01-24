@@ -78,6 +78,10 @@ namespace ghetto
             /// </summary>
             public Dictionary<string, ScriptEvent> Events;
             /// <summary>
+            /// Variables accessed with /set %var value, and %var
+            /// </summary>
+            public Dictionary<string, string> Variables;
+            /// <summary>
             /// Load the specified script file into the Lines array
             /// </summary>
             public bool Load(string scriptFile)
@@ -182,8 +186,14 @@ namespace ghetto
             /// </summary>
             public string Command;
 
-            public ScriptEvent()
+            /// <summary>
+            /// Script name attached to the event, if any
+            /// </summary>
+            public string ScriptName;
+
+            public ScriptEvent(string scriptName)
             {
+                ScriptName = scriptName;
                 EventType = EventTypes.NULL;
                 Command = "";
             }
@@ -215,11 +225,8 @@ namespace ghetto
         /// <param name="message">Message/text associated with event</param>
         /// <param name="id">UUID associated with event</param>
         /// <param name="amount">L$ amount associated with event</param>
-        public static void TriggerEvent(uint sessionNum, string command)
+        public static void TriggerEvent(uint sessionNum, string command, string scriptName)
         {
-            //DEBUG
-            //Console.WriteLine("(" + sessionNum + ") SCRIPTED COMMAND: " + command);
-
             //FIXME - change "" to the script name from which the event originated!!!!!!
             ParseCommand(sessionNum, "", command, true, false);
         }
@@ -478,7 +485,7 @@ namespace ghetto
         /// <summary>
         /// /event command
         /// </summary>
-        public static bool ParseEventCommand(uint sessionNum, string[] cmd)
+        public static bool ParseEventCommand(uint sessionNum, string[] cmd, string scriptName)
         {
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
             if (cmd.Length < 3) {
@@ -526,7 +533,7 @@ namespace ghetto
                     eventCommand += cmd[i];
                 }
 
-                ScriptEvent newEvent = new ScriptEvent();
+                ScriptEvent newEvent = new ScriptEvent(scriptName);
                 newEvent.EventType = (EventTypes)eventNum;
                 newEvent.Command = eventCommand;
                 if (Session.ScriptEvents.ContainsKey(eventLabel))
@@ -549,9 +556,9 @@ namespace ghetto
         {
             bool pass = true;
 
-            string[] splitLike = { "like", "LIKE" };
-            string[] splitAnd = { "and", "AND", "&&" };
-            string[] splitOr = { "or", "OR", "||" };
+            string[] splitLike = { "like", "LIKE", "Like" };
+            string[] splitAnd = { "and", "AND", "And", "&&" };
+            string[] splitOr = { "or", "OR", "Or", "||" };
             string[] splitEq = { "==" };
             string[] splitNot = { "!=" , "<>" };
 
@@ -575,8 +582,9 @@ namespace ghetto
                         break;
                     }
 
-                    //check "like"
-                    if (like.Length > 1 && !Regex.IsMatch(like[0].Trim(), like[1].Trim(), RegexOptions.IgnoreCase))
+                    //check "like" (wildcards, which are converted to regex)
+                    string regex = "^" + Regex.Escape(like[1].Trim()).Replace("\\*", ".*").Replace("\\?", ".") + "$";
+                    if (like.Length > 1 && !Regex.IsMatch(like[0].Trim(), regex, RegexOptions.IgnoreCase))
                     {
                         pass = false;
                         break;
@@ -623,6 +631,10 @@ namespace ghetto
 
         public static bool ParseCommand(uint sessionNum, string scriptName, string commandString, bool parseVariables, bool fromMasterIM)
         {
+
+            //DEBUG - testing scriptName value
+            if (scriptName != "") Console.WriteLine("({0}) [{1}] SCRIPTED COMMAND: {2}", sessionNum, scriptName, commandString);
+
             //FIXME - change display output if fromMasterIM == true
 
             string commandToParse;
@@ -762,7 +774,7 @@ namespace ghetto
             {
                 //FIXME - add -b flag to block events that occur after this one?
                 if (cmd.Length == 1) Display.EventList(sessionNum);
-                else return ParseEventCommand(sessionNum, cmd);
+                else return ParseEventCommand(sessionNum, cmd, scriptName);
             }
 
             else if (command == "fly")
@@ -794,18 +806,19 @@ namespace ghetto
 
                 if (cmd.Length < 4 || !float.TryParse(cmd[4], out z)) z = Session.Client.Self.Position.Z;
 
-                //FIXME - core library returns incorrect RegionHandle, RegionX, and RegionY
-                ulong regionHandle = Session.Client.Network.CurrentSim.Region.Handle;
-                Console.WriteLine("Client.Network.CurrentSim.Region.Handle: " + regionHandle); //DEBUG
-                int regionX = (int)(regionHandle >> 32);
-                int regionY = (int)(regionHandle & 0xFFFFFFFF);
+                //FIXME - core library returns incorrect RegionHandle, RegionX, and RegionY?
+                //ulong regionHandle = Session.Client.Network.CurrentSim.Region.Handle;
+                //Console.WriteLine("Client.Network.CurrentSim.Region.Handle: " + regionHandle); //DEBUG
+                //int regionX = (int)(regionHandle >> 32);
+                //int regionY = (int)(regionHandle & 0xFFFFFFFF);
 
-                Session.Client.Self.AutoPilotLocal(regionX + x, regionY + y, z);
+                Session.Client.Self.AutoPilotLocal(x, y, z);
             }
 
             else if (command == "goto")
             {
-                if (scriptName == "") return false;
+                if (scriptName == "")
+                    return false;
                 int i = 0;
                 foreach (string line in Interface.Scripts[scriptName].Lines)
                 {
@@ -1102,9 +1115,9 @@ namespace ghetto
                 if (cmd.Length < 2) { Display.Help(command); return false; }
                 string simName;
                 LLVector3 tPos;
-                if (cmd.Length >= 5)
+                if (cmd.Length >= 4)
                 {
-                    if (cmd.Length > 5)
+                    if (cmd.Length > 4)
                     {
                         simName = String.Join(" ", cmd, 1, cmd.Length - 4);
                         tPos.X = float.Parse(cmd[cmd.Length - 3]);

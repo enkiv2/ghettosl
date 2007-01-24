@@ -50,11 +50,19 @@ namespace ghetto
             Session.Client.Self.OnScriptDialog += new MainAvatar.ScriptDialogCallback(Self_OnScriptDialog);
             Session.Client.Self.OnInstantMessage += new MainAvatar.InstantMessageCallback(Self_OnInstantMessage);
 
+            Session.Client.Network.OnCurrentSimChanged += new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
+
             Session.Client.Inventory.OnInventoryItemReceived += new libsecondlife.InventorySystem.InventoryManager.On_InventoryItemReceived(Inventory_OnInventoryItemReceived);
 
             Session.Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(Callback_AlertMessage));
             Session.Client.Network.RegisterCallback(PacketType.MoneyBalanceReply, new NetworkManager.PacketCallback(Callback_MoneyBalanceReply));
             Session.Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(Callback_TeleportFinish));
+        }
+
+        void Network_OnCurrentSimChanged(Simulator PreviousSimulator)
+        {
+            //FIXME - add event?
+            Display.SimChanged(Session.SessionNumber, PreviousSimulator, Session.Client.Network.CurrentSim);
         }
 
         void Inventory_OnInventoryItemReceived(LLUUID fromAgentID, string fromAgentName, uint parentEstateID, LLUUID regionID, LLVector3 position, DateTime timestamp, libsecondlife.InventorySystem.InventoryItem item)
@@ -66,7 +74,7 @@ namespace ghetto
                     //FIXME - add $identifiers for everything else
                     string command = e.Value.Command.Replace("$name", fromAgentName).Replace("$id", fromAgentID.ToString());
                     command = command.Replace("$item", item.Name).Replace("$itemid", item.ItemID.ToString());
-                    ScriptSystem.TriggerEvent(Session.SessionNumber, command);
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
                 }
             }
             Display.InventoryItemReceived(Session.SessionNumber, fromAgentID, fromAgentName, parentEstateID, regionID, position, timestamp, item);
@@ -83,7 +91,7 @@ namespace ghetto
                     //FIXME - add $identifiers for everything else
                     string command = e.Value.Command.Replace("$name", objectName).Replace("$id", objectID.ToString());
                     command = command.Replace("$channel", chatChannel.ToString()).Replace("$message", message);
-                    ScriptSystem.TriggerEvent(Session.SessionNumber, command);
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
                 }
             }
             Display.ScriptDialog(Session.SessionNumber, message, objectName, imageID, objectID, firstName, lastName, chatChannel, buttons);
@@ -127,7 +135,7 @@ namespace ghetto
                     {
                         //FIXME - try to get id
                         string command = e.Value.Command.Replace("$name", name).Replace("$amount", amount.ToString());
-                        ScriptSystem.TriggerEvent(Session.SessionNumber, e.Value.Command);
+                        ScriptSystem.TriggerEvent(Session.SessionNumber, e.Value.Command, e.Value.ScriptName);
                     }
                 }
 
@@ -144,7 +152,7 @@ namespace ghetto
                     {
                         //FIXME - try to get id
                         string command = e.Value.Command.Replace("$name", name).Replace("$amount", amount.ToString());
-                        ScriptSystem.TriggerEvent(Session.SessionNumber, command);
+                        ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
                     }
                 }
 
@@ -164,7 +172,7 @@ namespace ghetto
                     string command = e.Value.Command.Replace("$region", sim.Region.Name);
                     command = command.Replace("$newregion", Session.Client.Network.CurrentSim.Region.Name);
                     command = ScriptSystem.ParseVariables(Session.SessionNumber, command);
-                    ScriptSystem.TriggerEvent(Session.SessionNumber, command);
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
                 }
             }
         }
@@ -193,7 +201,7 @@ namespace ghetto
                 if (e.Value.EventType == ScriptSystem.EventTypes.Connect)
                 {
                     string command = ScriptSystem.ParseVariables(Session.SessionNumber, e.Value.Command);
-                    ScriptSystem.TriggerEvent(Session.SessionNumber, command);
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
                 }
             }
         }
@@ -206,7 +214,7 @@ namespace ghetto
                 if (e.Value.EventType == ScriptSystem.EventTypes.Disconnect)
                 {
                     string command = ScriptSystem.ParseVariables(Session.SessionNumber, e.Value.Command);
-                    ScriptSystem.TriggerEvent(Session.SessionNumber, command);
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
                 }
             }
         }
@@ -268,7 +276,7 @@ namespace ghetto
                     string command = e.Value.Command.Replace("$name", fromName).Replace("$message", message);
                     command = command.Replace("$id", id.ToString()).Replace("$ownerid", ownerid.ToString());
                     command = command.Replace("$ctype", chatType.ToString()).Replace("$stype", sourceType.ToString());
-                    ScriptSystem.TriggerEvent(Session.SessionNumber, command);
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
                 }
             }
 
@@ -313,7 +321,7 @@ namespace ghetto
                     command = command.Replace("$id", fromID.ToString());
                     command = command.Replace("$dialog", dialog.ToString());
                     
-                    ScriptSystem.TriggerEvent(Session.SessionNumber, command);
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
                 }
             }
 
