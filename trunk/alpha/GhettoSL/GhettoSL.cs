@@ -80,7 +80,7 @@ namespace ghetto
                 Display.InfoResponse(SessionNumber, "Loading appearance from asset server...");
                 AppearanceManager aManager;
                 aManager = new AppearanceManager(Client);
-                aManager.SendAgentSetAppearance();
+                aManager.BeginAgentSendAppearance();
             }
 
             public string Name
