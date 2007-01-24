@@ -554,6 +554,7 @@ namespace ghetto
             bool pass = true;
 
             string[] splitLike = { "like", "LIKE", "Like" };
+            string[] splitMatch = { "match", "MATCH", "Match" };
             string[] splitAnd = { "and", "AND", "And", "&&" };
             string[] splitOr = { "or", "OR", "Or", "||" };
             string[] splitEq = { "==" };
@@ -571,17 +572,28 @@ namespace ghetto
                     string[] not = and.ToLower().Split(splitNot, StringSplitOptions.RemoveEmptyEntries);
                     string[] eq = and.ToLower().Split(splitEq, StringSplitOptions.RemoveEmptyEntries);
                     string[] like = and.ToLower().Split(splitLike, StringSplitOptions.RemoveEmptyEntries);
+                    string[] match = and.ToLower().Split(splitMatch, StringSplitOptions.RemoveEmptyEntries);
 
                     //only one term
-                    if (eq.Length == 1 && not.Length == 1 && like.Length == 1)
+                    if (eq.Length == 1 && not.Length == 1 && like.Length == 1 && match.Length == 1)
                     {
                         if (eq[0].Trim() == "$false" || eq[0].Trim() == "0") pass = false;
                         break;
                     }
 
                     //check "like" (wildcards, which are converted to regex)
-                    string regex = "^" + Regex.Escape(like[1].Trim()).Replace("\\*", ".*").Replace("\\?", ".") + "$";
-                    if (like.Length > 1 && !Regex.IsMatch(like[0].Trim(), regex, RegexOptions.IgnoreCase))
+                    if (like.Length > 1)
+                    {
+                        string regex = "^" + Regex.Escape(like[1].Trim()).Replace("\\*", ".*").Replace("\\?", ".") + "$";
+                        if (like.Length > 1 && !Regex.IsMatch(like[0].Trim(), regex, RegexOptions.IgnoreCase))
+                        {
+                            pass = false;
+                            break;
+                        }
+                    }
+
+                    //compare regex
+                    if (match.Length > 1 && !Regex.IsMatch(match[0].Trim(), match[1].Trim(), RegexOptions.IgnoreCase))
                     {
                         pass = false;
                         break;
@@ -873,22 +885,28 @@ namespace ghetto
 
                 if (cmd.Length == 1)
                 {
-                    foreach (KeyValuePair<uint, PrimObject> pair in Session.Prims)
+                    lock (Session.Prims)
                     {
-                        if (pair.Value.Text != "") countText++;
+                        foreach (KeyValuePair<uint, PrimObject> pair in Session.Prims)
+                        {
+                            if (pair.Value.Text != "") countText++;
+                        }
                     }
                     Display.InfoResponse(sessionNum, "There are " + countText + " objects with text nearby.");
                 }
 
                 else
                 {
-                    foreach (KeyValuePair<uint, PrimObject> pair in Session.Prims)
+                    lock (Session.Prims)
                     {
-                        if (Regex.IsMatch(pair.Value.Text, details, RegexOptions.IgnoreCase))
+                        foreach (KeyValuePair<uint, PrimObject> pair in Session.Prims)
                         {
-                            //FIXME - move to Display
-                            Console.WriteLine(pair.Value.LocalID + " " + pair.Value.ID + " " + pair.Value.Text);
-                            countText++;
+                            if (Regex.IsMatch(pair.Value.Text, details, RegexOptions.IgnoreCase))
+                            {
+                                //FIXME - move to Display
+                                Console.WriteLine(pair.Value.LocalID + " " + pair.Value.ID + " " + pair.Value.Text);
+                                countText++;
+                            }
                         }
                     }
                     Display.InfoResponse(sessionNum, "There are " + countText + " objects matching your query.");
@@ -1292,6 +1310,8 @@ namespace ghetto
             reply.Data.ButtonLabel = Helpers.StringToField(message);
             Session.Client.Network.SendPacket(reply);
         }
+
+
 
     }
 }
