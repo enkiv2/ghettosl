@@ -553,11 +553,11 @@ namespace ghetto
         {
             bool pass = true;
 
-            string[] splitLike = { "like", "LIKE", "Like" };
-            string[] splitMatch = { "match", "MATCH", "Match" };
-            string[] splitAnd = { "and", "AND", "And", "&&" };
-            string[] splitOr = { "or", "OR", "Or", "||" };
-            string[] splitEq = { "==" };
+            string[] splitLike = { " like ", " LIKE ", " Like " };
+            string[] splitMatch = { " match ", " MATCH ", " Match " };
+            string[] splitAnd = { " and ", " AND ", " And ", "&&" };
+            string[] splitOr = { " or ", " OR ", " Or ", "||" };
+            string[] splitEq = { "==" , " = "};
             string[] splitNot = { "!=" , "<>" };
 
             string[] condOr = ParseVariables(sessionNum, conditions.Trim()).Split(splitOr, StringSplitOptions.RemoveEmptyEntries);
@@ -584,7 +584,10 @@ namespace ghetto
                     //check "like" (wildcards, which are converted to regex)
                     if (like.Length > 1)
                     {
-                        string regex = "^" + Regex.Escape(like[1].Trim()).Replace("\\*", ".*").Replace("\\?", ".") + "$";
+                        string v1 = like[0].Trim();
+                        string v2 = like[1].Trim();
+                        Console.WriteLine("Comparing {0} LIKE {1}", v1, v2); //DEBUG
+                        string regex = "^" + Regex.Escape(v1).Replace("\\*", ".*").Replace("\\?", ".") + "$";
                         if (like.Length > 1 && !Regex.IsMatch(like[0].Trim(), regex, RegexOptions.IgnoreCase))
                         {
                             pass = false;
@@ -592,11 +595,17 @@ namespace ghetto
                         }
                     }
 
-                    //compare regex
-                    if (match.Length > 1 && !Regex.IsMatch(match[0].Trim(), match[1].Trim(), RegexOptions.IgnoreCase))
+                    //check "match" (regex)
+                    if (match.Length > 1)
                     {
-                        pass = false;
-                        break;
+                        string v1 = match[0].Trim();
+                        string v2 = match[1].Trim();
+                        Console.WriteLine("Comparing {0} MATCH {1}", v1, v2); //DEBUG
+                        if (!Regex.IsMatch(v1, v2, RegexOptions.IgnoreCase))
+                        {
+                            pass = false;
+                            break;
+                        }
                     }
 
                     //check ==
