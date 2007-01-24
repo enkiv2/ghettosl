@@ -138,23 +138,21 @@ namespace ghetto
 
             public void Step(int stepNum)
             {
-                char[] splitChar = { ' ' };
-                if (stepNum < Lines.Length)
+                if (stepNum >= Lines.Length) return;
+
+                CurrentStep = stepNum;
+                string line = Lines[CurrentStep].Trim();
+                while (line.Length < 1 || line.Substring(line.Length - 1,1) == ":" || ParseCommand(SessionNumber, ScriptName, Lines[CurrentStep], true, false))
                 {
-                    CurrentStep = stepNum;
-                    string[] cmd = Lines[stepNum].Trim().Split(splitChar);
-                    while (Lines[stepNum].Trim() == "" || (cmd[0].Substring(cmd[0].Length - 1, 1) == ":") || ParseCommand(SessionNumber, ScriptName, Lines[CurrentStep], true, false))
-                    {
-                        CurrentStep++;
-                        if (CurrentStep >= Lines.Length) break;
-                    }
+                    CurrentStep++;
+                    if (CurrentStep >= Lines.Length) break;
+                    line = Lines[CurrentStep].Trim();
                 }
             }
 
             public void ScriptTimerHandler(object target, System.Timers.ElapsedEventArgs args)
             {
-                CurrentStep++;
-                Step(CurrentStep);
+                Step(CurrentStep + 1);
             }
 
             public UserScript(uint sessionNum, string scriptFile)
@@ -227,8 +225,7 @@ namespace ghetto
         /// <param name="amount">L$ amount associated with event</param>
         public static void TriggerEvent(uint sessionNum, string command, string scriptName)
         {
-            //FIXME - change "" to the script name from which the event originated!!!!!!
-            ParseCommand(sessionNum, "", command, true, false);
+            ParseCommand(sessionNum, scriptName, command, true, false);
         }
 
 
@@ -633,7 +630,7 @@ namespace ghetto
         {
 
             //DEBUG - testing scriptName value
-            if (scriptName != "") Console.WriteLine("({0}) [{1}] SCRIPTED COMMAND: {2}", sessionNum, scriptName, commandString);
+            //if (scriptName != "") Console.WriteLine("({0}) [{1}] SCRIPTED COMMAND: {2}", sessionNum, scriptName, commandString);
 
             //FIXME - change display output if fromMasterIM == true
 
@@ -1023,7 +1020,7 @@ namespace ghetto
                     {
                         foreach (KeyValuePair<uint, GhettoSL.UserSession> pair in Interface.Sessions)
                         {
-                            ParseCommand(pair.Key, "", details, parseVariables, fromMasterIM);
+                            ParseCommand(pair.Key, scriptName, details, parseVariables, fromMasterIM);
                         }
                     }
                     uint switchTo;
@@ -1041,7 +1038,7 @@ namespace ghetto
                     }
                     else
                     {
-                        ParseCommand(switchTo, "", details, parseVariables, fromMasterIM);
+                        ParseCommand(switchTo, scriptName, details, parseVariables, fromMasterIM);
                     }
                 }
                 else Display.SessionList();
