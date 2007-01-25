@@ -552,6 +552,9 @@ namespace ghetto
 
         public static bool ParseConditions(uint sessionNum, string conditions)
         {
+            //FIXME - actually parse paren grouping instead of just stripping parens
+            string c = conditions.Replace("(", "").Replace(")", "");
+
             bool pass = true;
 
             string[] splitLike = { " like ", " LIKE ", " Like " };
@@ -561,7 +564,7 @@ namespace ghetto
             string[] splitEq = { "==" , " = "};
             string[] splitNot = { "!=" , "<>" };
 
-            string[] condOr = ParseVariables(sessionNum, conditions.Trim(), "").Split(splitOr, StringSplitOptions.RemoveEmptyEntries);
+            string[] condOr = ParseVariables(sessionNum, c.Trim(), "").Split(splitOr, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (string or in condOr)
             {
@@ -662,6 +665,17 @@ namespace ghetto
             return ret;
         }
 
+        public static string ParseTokens(string originalString, string message)
+        {
+            string newString = originalString;
+            char[] splitChar = { ' ' };
+            string[] tok = message.Split(splitChar);
+            newString = newString.Replace("$0", "" + tok.Length);
+            int i;
+            for (i = 0; i < tok.Length; i++) newString = newString.Replace("$"+(i + 1),tok[i]);
+            return newString;
+        }
+
         public static bool ParseCommand(uint sessionNum, string scriptName, string commandString, bool parseVariables, bool fromMasterIM)
         {
 
@@ -675,7 +689,7 @@ namespace ghetto
 
             string commandToParse;
             commandToParse = commandString;
-            if (parseVariables && cmd[0] != "inc") commandToParse = ParseVariables(sessionNum, commandString, scriptName);            
+            if (parseVariables) commandToParse = ParseVariables(sessionNum, commandString, scriptName);            
 
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
 
@@ -1094,6 +1108,7 @@ namespace ghetto
                 else Display.SessionList();
             }
 
+            //FIXME - if %i == 1, inc %i 1 does inc 1 1 which is invalid
             else if (command == "inc" && scriptName != "")
             {
                 int amount = 1;
