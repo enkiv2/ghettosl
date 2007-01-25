@@ -586,7 +586,7 @@ namespace ghetto
                     {
                         string v1 = like[0].Trim();
                         string v2 = like[1].Trim();
-                        Console.WriteLine("Comparing {0} LIKE {1}", v1, v2); //DEBUG
+                        //Console.WriteLine("Comparing {0} LIKE {1}", v1, v2); //DEBUG
                         string regex = "^" + Regex.Escape(v1).Replace("\\*", ".*").Replace("\\?", ".") + "$";
                         if (like.Length > 1 && !Regex.IsMatch(like[0].Trim(), regex, RegexOptions.IgnoreCase))
                         {
@@ -600,8 +600,9 @@ namespace ghetto
                     {
                         string v1 = match[0].Trim();
                         string v2 = match[1].Trim();
-                        Console.WriteLine("Comparing {0} MATCH {1}", v1, v2); //DEBUG
-                        if (!Regex.IsMatch(v1, v2, RegexOptions.IgnoreCase))
+                        bool isMatch = Regex.IsMatch(v1, v2, RegexOptions.IgnoreCase);
+                        Console.WriteLine("Comparing {0} MATCH {1} == {2}", v1, v2, isMatch); //DEBUG
+                        if (!isMatch)
                         {
                             pass = false;
                             break;
@@ -621,8 +622,10 @@ namespace ghetto
                         pass = false;
                         break;
                     }
-
                 }
+
+                if (pass) return true; //FIXME - not sure if this is right
+
             }
 
             return pass;
@@ -888,12 +891,18 @@ namespace ghetto
 
             else if (command == "look")
             {
-                string weather = Display.RPGWeather(sessionNum, Session.Client.Network.CurrentSim.Region.Name, Session.Client.Grid.SunDirection);
-                Display.InfoResponse(sessionNum, weather);
                 int countText = 0;
 
                 if (cmd.Length == 1)
                 {
+                    LLVector3 sunDirection = Session.Client.Grid.SunDirection;
+                    string simName = Session.Client.Network.CurrentSim.Region.Name;
+                    string weather = Display.RPGWeather(sessionNum, simName, sunDirection);                    
+                    if (simName != "" && Helpers.VecMag(sunDirection) != 0)
+                    {
+                        Display.InfoResponse(sessionNum, weather);
+                    }
+
                     lock (Session.Prims)
                     {
                         foreach (KeyValuePair<uint, PrimObject> pair in Session.Prims)
