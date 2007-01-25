@@ -171,7 +171,7 @@ namespace ghetto
                 {
                     string command = e.Value.Command.Replace("$region", sim.Region.Name);
                     command = command.Replace("$newregion", Session.Client.Network.CurrentSim.Region.Name);
-                    command = ScriptSystem.ParseVariables(Session.SessionNumber, command, null);
+                    command = ScriptSystem.ParseVariables(Session.SessionNumber, command, "");
                     ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
                 }
             }
@@ -200,7 +200,7 @@ namespace ghetto
             {
                 if (e.Value.EventType == ScriptSystem.EventTypes.Connect)
                 {
-                    string command = ScriptSystem.ParseVariables(Session.SessionNumber, e.Value.Command, null);
+                    string command = ScriptSystem.ParseVariables(Session.SessionNumber, e.Value.Command, "");
                     ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
                 }
             }
@@ -213,7 +213,7 @@ namespace ghetto
             {
                 if (e.Value.EventType == ScriptSystem.EventTypes.Disconnect)
                 {
-                    string command = ScriptSystem.ParseVariables(Session.SessionNumber, e.Value.Command, null);
+                    string command = ScriptSystem.ParseVariables(Session.SessionNumber, e.Value.Command, "");
                     ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
                 }
             }

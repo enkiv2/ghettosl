@@ -97,7 +97,7 @@ namespace ghetto
                 {
                     char[] splitChar = { ' ' };
                     string[] args = input.ToLower().Trim().Split(splitChar);
-                    string[] commandsWithArgs = { "camp", "echo", "event", "go", "goto", "if", "label", "login", "pay", "payme", "say", "set", "shout", "sit", "sleep", "teleport", "touch", "touchid", "updates", "wait", "whisper" };
+                    string[] commandsWithArgs = { "camp", "echo", "event", "go", "goto", "if", "inc", "label", "login", "pay", "payme", "say", "set", "shout", "sit", "sleep", "teleport", "touch", "touchid", "updates", "wait", "whisper" };
                     string[] commandsWithoutArgs = { "break", "fly", "land", "listen", "quiet", "quit", "relog", "run", "sitg", "stand", "walk" };
 
                     bool skip = false;
@@ -561,7 +561,7 @@ namespace ghetto
             string[] splitEq = { "==" , " = "};
             string[] splitNot = { "!=" , "<>" };
 
-            string[] condOr = ParseVariables(sessionNum, conditions.Trim(), null).Split(splitOr, StringSplitOptions.RemoveEmptyEntries);
+            string[] condOr = ParseVariables(sessionNum, conditions.Trim(), "").Split(splitOr, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (string or in condOr)
             {
@@ -670,14 +670,16 @@ namespace ghetto
 
             //FIXME - change display output if fromMasterIM == true
 
+            char[] splitChar = { ' ' };
+            string[] cmd = commandString.Trim().Split(splitChar);
+
             string commandToParse;
-            if (parseVariables) commandToParse = ParseVariables(sessionNum, commandString, scriptName);
-            else commandToParse = commandString;
+            commandToParse = commandString;
+            if (parseVariables && cmd[0] != "inc") commandToParse = ParseVariables(sessionNum, commandString, scriptName);            
 
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
 
-            char[] splitChar = { ' ' };
-            string[] cmd = commandToParse.Trim().Split(splitChar);
+            cmd = commandToParse.Trim().Split(splitChar);
             string command = cmd[0].ToLower();
             int commandStart = 0;
 
@@ -1092,6 +1094,23 @@ namespace ghetto
                 else Display.SessionList();
             }
 
+            else if (command == "inc" && scriptName != "")
+            {
+                int amount = 1;
+                if (cmd.Length < 2 || cmd[1].Substring(0, 1) != "%" || (cmd.Length > 2 && !int.TryParse(cmd[2], out amount)))
+                {
+                    Display.Help(command);
+                    return false;
+                }
+                ScriptSystem.UserScript Script = Interface.Scripts[scriptName];
+                int value = 0;
+                if (Script.Variables.ContainsKey(cmd[1]) && !int.TryParse(Script.Variables[cmd[1]], out value)) return false;
+                //FIXME - change int + "" to a proper string-to-int conversion
+                else if (Script.Variables.ContainsKey(cmd[1])) Script.Variables[cmd[1]] = "" + (value + amount);
+                else Script.Variables.Add(cmd[1], "" + amount);
+                //QUESTION - Right now, inc creates a new %var if the specified one doesn't exist. Should it?
+            }
+
             else if (command == "set" && scriptName != "")
             {
                 if (cmd.Length < 2 || cmd[1].Substring(0, 1) != "%")
@@ -1100,8 +1119,8 @@ namespace ghetto
                     return false;
                 }
                 ScriptSystem.UserScript Script = Interface.Scripts[scriptName];
-                if (Script.Variables.ContainsKey(cmd[1])) Script.Variables.Remove(cmd[1]);
-                Script.Variables.Add(cmd[1], details);                
+                if (Script.Variables.ContainsKey(cmd[1])) Script.Variables[cmd[1]] = details;
+                else Script.Variables.Add(cmd[1], details);
             }
 
             else if (command == "shout")
