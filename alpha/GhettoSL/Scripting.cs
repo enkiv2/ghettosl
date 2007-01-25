@@ -97,7 +97,7 @@ namespace ghetto
                 {
                     char[] splitChar = { ' ' };
                     string[] args = input.ToLower().Trim().Split(splitChar);
-                    string[] commandsWithArgs = { "camp", "echo", "event", "go", "goto", "if", "label", "login", "pay", "payme", "say", "shout", "sit", "sleep", "teleport", "touch", "touchid", "updates", "wait", "whisper" };
+                    string[] commandsWithArgs = { "camp", "echo", "event", "go", "goto", "if", "label", "login", "pay", "payme", "say", "set", "shout", "sit", "sleep", "teleport", "touch", "touchid", "updates", "wait", "whisper" };
                     string[] commandsWithoutArgs = { "break", "fly", "land", "listen", "quiet", "quit", "relog", "run", "sitg", "stand", "walk" };
 
                     bool skip = false;
@@ -167,6 +167,7 @@ namespace ghetto
                 SleepTimer.AutoReset = false;
                 SleepTimer.Elapsed += new System.Timers.ElapsedEventHandler(ScriptTimerHandler);
                 SleepTimer.Enabled = false;
+                Variables = new Dictionary<string, string>();
             }
 
         }
@@ -560,7 +561,7 @@ namespace ghetto
             string[] splitEq = { "==" , " = "};
             string[] splitNot = { "!=" , "<>" };
 
-            string[] condOr = ParseVariables(sessionNum, conditions.Trim()).Split(splitOr, StringSplitOptions.RemoveEmptyEntries);
+            string[] condOr = ParseVariables(sessionNum, conditions.Trim(), null).Split(splitOr, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (string or in condOr)
             {
@@ -631,10 +632,21 @@ namespace ghetto
             return pass;
         }
 
-        public static string ParseVariables(uint sessionNum, string originalString)
+        public static string ParseVariables(uint sessionNum, string originalString, string scriptName)
         {
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
             string ret = originalString;
+
+            //parse %vars
+            if (scriptName != "")
+            {
+                foreach (KeyValuePair<string, string> var in Interface.Scripts[scriptName].Variables)
+                {
+                    ret = ret.Replace(var.Key, var.Value);
+                }
+            }
+
+            //parse $identifiers
             ret = ret.Replace("$myname", Session.Name).Replace("$myid", Session.Client.Network.AgentID.ToString());
             if (Session.Client.Network.Connected) ret = ret.Replace("$myid", Session.Client.Network.AgentID.ToString());
             else ret = ret.Replace("$myid", LLUUID.Zero.ToString());
@@ -659,7 +671,7 @@ namespace ghetto
             //FIXME - change display output if fromMasterIM == true
 
             string commandToParse;
-            if (parseVariables) commandToParse = ParseVariables(sessionNum, commandString);
+            if (parseVariables) commandToParse = ParseVariables(sessionNum, commandString, scriptName);
             else commandToParse = commandString;
 
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
@@ -708,7 +720,7 @@ namespace ghetto
 
             string details = "";
             int detailsStart = 1;
-            if (command == "im" || command == "re" || command == "s" || command == "session") detailsStart++;
+            if (command == "im" || command == "re" || command == "s" || command == "session" || command == "set") detailsStart++;
             else if (command == "dialog") detailsStart += 2;
             
             for (; detailsStart < cmd.Length; detailsStart++)
@@ -1078,6 +1090,18 @@ namespace ghetto
                     }
                 }
                 else Display.SessionList();
+            }
+
+            else if (command == "set" && scriptName != "")
+            {
+                if (cmd.Length < 2 || cmd[1].Substring(0, 1) != "%")
+                {
+                    Display.Help(command);
+                    return false;
+                }
+                ScriptSystem.UserScript Script = Interface.Scripts[scriptName];
+                if (Script.Variables.ContainsKey(cmd[1])) Script.Variables.Remove(cmd[1]);
+                Script.Variables.Add(cmd[1], details);                
             }
 
             else if (command == "shout")
