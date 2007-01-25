@@ -113,7 +113,7 @@ namespace ghetto
             Session.Balance = reply.MoneyData.MoneyBalance;
 
             //DEBUG
-            Display.Balance(Session.SessionNumber, reply.MoneyData.MoneyBalance, amount, name, desc);
+            //Display.Balance(Session.SessionNumber, reply.MoneyData.MoneyBalance, amount, name, desc);
 
             char[] splitChar = { ' ' };
             string[] msg = desc.Split(splitChar);
