@@ -681,23 +681,36 @@ namespace ghetto
 
             //DEBUG - testing scriptName value
             //if (scriptName != "") Console.WriteLine("({0}) [{1}] SCRIPTED COMMAND: {2}", sessionNum, scriptName, commandString);
-
             //FIXME - change display output if fromMasterIM == true
-
-            char[] splitChar = { ' ' };
-            string[] cmd = commandString.Trim().Split(splitChar);
-
-            string commandToParse;
-            commandToParse = commandString;
-            if (parseVariables) commandToParse = ParseVariables(sessionNum, commandString, scriptName);            
 
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
 
+            //First we trim up the original command string and then split it by spaces
+            string commandToParse = commandString.Trim();
+            char[] splitChar = { ' ' };
+            string[] cmd = commandToParse.Split(splitChar);
+
+            //The reason for splitting in this step is to save an un-parsed version of the first arg
+            //For "inc" and "set" commands, the first arg is a variable name, like "set %var %othervar"
+            //Let's say %var and %othervar were 1 and 5. Parsed would be "set 1 5", which is invalid.
+            string variableName = null;
+            if (cmd.Length > 1 && cmd[1].Substring(0, 1) == "%") variableName = cmd[1];
+
+            //NOW we can parse the variables
+            if (parseVariables)
+            {
+                commandToParse = ParseVariables(sessionNum, commandString, scriptName);
+            }
+
+            //Next we split again. This time everthing is parsed.
             cmd = commandToParse.Trim().Split(splitChar);
             string command = cmd[0].ToLower();
             int commandStart = 0;
 
-            //FIZME - add "else" and multi-line "if/end if" routines
+            //Time to check for IF statements and check for validity and pass/fail
+            //If they are invalid, the entire function will return false, halting a parent script.
+            //If they are valid but just fail, the command will halt, but it returns true.
+            //FIXME - add "else" and multi-line "if/end if" routines
             if (command == "if")
             {
                 string conditions = "";
@@ -734,16 +747,20 @@ namespace ghetto
                 command = cmd[0].ToLower();
             }
 
+            //The purpose of this part is to separate the message from the rest of the command.
+            //For example, in the command "im some-uuid-here Hi there!", details = "Hi there!"
             string details = "";
             int detailsStart = 1;
             if (command == "im" || command == "re" || command == "s" || command == "session" || command == "set") detailsStart++;
             else if (command == "dialog") detailsStart += 2;
-            
             for (; detailsStart < cmd.Length; detailsStart++)
             {
                 if (details != "") details += " ";
                 details += cmd[detailsStart];                
             }
+
+
+            //And on to the actual commands...
 
             if (command == "anim")
             {
@@ -757,7 +774,14 @@ namespace ghetto
 
             else if (command == "answer")
             {
-                
+                int channel = Session.LastDialogChannel;
+                LLUUID id = Session.LastDialogID;
+                if (cmd.Length < 2) { Display.Help(command); return false; }
+                else if (channel < 0 || id == LLUUID.Zero) Display.Error(sessionNum, "No dialogs received. Try /dialog <channel> <id> <message>.");
+                else if (ParseCommand(sessionNum, scriptName, "dialog " + channel + " " + id + " " + details, parseVariables, fromMasterIM))
+                {
+                    Display.InfoResponse(sessionNum, "Dialog reply sent.");
+                }
             }
 
             else if (command == "balance")
@@ -1108,21 +1132,20 @@ namespace ghetto
                 else Display.SessionList();
             }
 
-            //FIXME - if %i == 1, inc %i 1 does inc 1 1 which is invalid
             else if (command == "inc" && scriptName != "")
             {
                 int amount = 1;
-                if (cmd.Length < 2 || cmd[1].Substring(0, 1) != "%" || (cmd.Length > 2 && !int.TryParse(cmd[2], out amount)))
+                if (cmd.Length < 2 || variableName == null || (cmd.Length > 2 && !int.TryParse(cmd[2], out amount)))
                 {
                     Display.Help(command);
                     return false;
                 }
                 ScriptSystem.UserScript Script = Interface.Scripts[scriptName];
                 int value = 0;
-                if (Script.Variables.ContainsKey(cmd[1]) && !int.TryParse(Script.Variables[cmd[1]], out value)) return false;
+                if (Script.Variables.ContainsKey(variableName) && !int.TryParse(Script.Variables[variableName], out value)) return false;
                 //FIXME - change int + "" to a proper string-to-int conversion
-                else if (Script.Variables.ContainsKey(cmd[1])) Script.Variables[cmd[1]] = "" + (value + amount);
-                else Script.Variables.Add(cmd[1], "" + amount);
+                else if (Script.Variables.ContainsKey(variableName)) Script.Variables[variableName] = "" + (value + amount);
+                else Script.Variables.Add(variableName, "" + amount);
                 //QUESTION - Right now, inc creates a new %var if the specified one doesn't exist. Should it?
             }
 
@@ -1134,8 +1157,8 @@ namespace ghetto
                     return false;
                 }
                 ScriptSystem.UserScript Script = Interface.Scripts[scriptName];
-                if (Script.Variables.ContainsKey(cmd[1])) Script.Variables[cmd[1]] = details;
-                else Script.Variables.Add(cmd[1], details);
+                if (Script.Variables.ContainsKey(variableName)) Script.Variables[variableName] = details;
+                else Script.Variables.Add(variableName, details);
             }
 
             else if (command == "shout")

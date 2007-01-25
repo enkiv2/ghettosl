@@ -112,6 +112,9 @@ namespace ghetto
 
             Session.Balance = reply.MoneyData.MoneyBalance;
 
+            //DEBUG
+            Display.Balance(Session.SessionNumber, reply.MoneyData.MoneyBalance, amount, name, desc);
+
             char[] splitChar = { ' ' };
             string[] msg = desc.Split(splitChar);
 
@@ -120,10 +123,7 @@ namespace ghetto
                 if (desc.Length > 0) Display.Error(Session.SessionNumber, "Unexpected MoneyDataBlock.Description:" + desc);
                 return;
             }
-            else
-            {
-                Display.Balance(Session.SessionNumber, reply.MoneyData.MoneyBalance, amount, name, desc);
-            }
+
             if (msg[0] + " " + msg[1] == "You paid")
             {
                 Session.MoneySpent += amount;
@@ -138,9 +138,9 @@ namespace ghetto
                         ScriptSystem.TriggerEvent(Session.SessionNumber, e.Value.Command, e.Value.ScriptName);
                     }
                 }
-
                 amount *= -1; //you paid
             }
+
             else if (msg[2] + " " + msg[3] == "paid you")
             {
                 Session.MoneyReceived += amount;
@@ -155,8 +155,8 @@ namespace ghetto
                         ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
                     }
                 }
-
             }
+            Display.Balance(Session.SessionNumber, reply.MoneyData.MoneyBalance, amount, name, desc);
         }
 
         void Callback_TeleportFinish(Packet packet, Simulator sim)
@@ -188,7 +188,6 @@ namespace ghetto
 
             Session.Client.Self.Status.UpdateTimer.Start();
 
-            //FIXME - readd when libsl is fixed
             Session.Client.Grid.AddEstateSims();
 
             //Retrieve offline IMs
