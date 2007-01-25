@@ -169,7 +169,9 @@ namespace ghetto
             {
                 if (e.Value.EventType == ScriptSystem.EventTypes.TeleportFinish)
                 {
-                    string command = e.Value.Command.Replace("$region", sim.Region.Name);
+                    string command = e.Value.Command;
+                    command = ScriptSystem.ParseTokens(command, "");
+                    command = command.Replace("$region", sim.Region.Name);
                     command = command.Replace("$newregion", Session.Client.Network.CurrentSim.Region.Name);
                     command = ScriptSystem.ParseVariables(Session.SessionNumber, command, "");
                     ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
@@ -200,7 +202,9 @@ namespace ghetto
             {
                 if (e.Value.EventType == ScriptSystem.EventTypes.Connect)
                 {
-                    string command = ScriptSystem.ParseVariables(Session.SessionNumber, e.Value.Command, "");
+                    string command = e.Value.Command;
+                    command = ScriptSystem.ParseTokens(command, "");
+                    command = ScriptSystem.ParseVariables(Session.SessionNumber, command, "");                    
                     ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
                 }
             }
@@ -213,7 +217,9 @@ namespace ghetto
             {
                 if (e.Value.EventType == ScriptSystem.EventTypes.Disconnect)
                 {
-                    string command = ScriptSystem.ParseVariables(Session.SessionNumber, e.Value.Command, "");
+                    string command = e.Value.Command;
+                    command = ScriptSystem.ParseTokens(command, "");
+                    command = ScriptSystem.ParseVariables(Session.SessionNumber, command, "");
                     ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
                 }
             }
@@ -273,9 +279,12 @@ namespace ghetto
             {
                 if (e.Value.EventType == ScriptSystem.EventTypes.Chat)
                 {
-                    string command = e.Value.Command.Replace("$name", fromName).Replace("$message", message);
+                    string command = e.Value.Command;
+                    command = ScriptSystem.ParseTokens(command, message);
+                    command = command.Replace("$name", fromName).Replace("$message", message);
                     command = command.Replace("$id", id.ToString()).Replace("$ownerid", ownerid.ToString());
                     command = command.Replace("$ctype", chatType.ToString()).Replace("$stype", sourceType.ToString());
+                    command = ScriptSystem.ParseVariables(Session.SessionNumber, command, e.Value.ScriptName);
                     ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
                 }
             }
@@ -317,10 +326,11 @@ namespace ghetto
                 if (e.Value.EventType == ScriptSystem.EventTypes.IM)
                 {
                     string command = e.Value.Command.Replace("$name", fromName);
+                    command = ScriptSystem.ParseTokens(command, message);
                     command = command.Replace("$message", message);
                     command = command.Replace("$id", fromID.ToString());
                     command = command.Replace("$dialog", dialog.ToString());
-                    
+                    command = ScriptSystem.ParseVariables(Session.SessionNumber, command, e.Value.ScriptName);
                     ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
                 }
             }
