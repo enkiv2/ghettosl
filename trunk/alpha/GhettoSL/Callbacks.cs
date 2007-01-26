@@ -67,6 +67,7 @@ namespace ghetto
 
         void Inventory_OnInventoryItemReceived(LLUUID fromAgentID, string fromAgentName, uint parentEstateID, LLUUID regionID, LLVector3 position, DateTime timestamp, libsecondlife.InventorySystem.InventoryItem item)
         {
+            Display.InventoryItemReceived(Session.SessionNumber, fromAgentID, fromAgentName, parentEstateID, regionID, position, timestamp, item);
             foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
             {
                 if (e.Value.EventType == ScriptSystem.EventTypes.GetItem)
@@ -77,13 +78,13 @@ namespace ghetto
                     ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
                 }
             }
-            Display.InventoryItemReceived(Session.SessionNumber, fromAgentID, fromAgentName, parentEstateID, regionID, position, timestamp, item);
         }
 
         void Self_OnScriptDialog(string message, string objectName, LLUUID imageID, LLUUID objectID, string firstName, string lastName, int chatChannel, List<string> buttons)
         {
             Session.LastDialogID = objectID;
             Session.LastDialogChannel = chatChannel;
+            Display.ScriptDialog(Session.SessionNumber, message, objectName, imageID, objectID, firstName, lastName, chatChannel, buttons);
             foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
             {
                 if (e.Value.EventType == ScriptSystem.EventTypes.ScriptDialog)
@@ -94,7 +95,6 @@ namespace ghetto
                     ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
                 }
             }
-            Display.ScriptDialog(Session.SessionNumber, message, objectName, imageID, objectID, firstName, lastName, chatChannel, buttons);
         }
 
         void Callback_AlertMessage(Packet packet, Simulator sim)
@@ -143,7 +143,7 @@ namespace ghetto
             {
                 Session.MoneyReceived += amount;
                 name = msg[0] + " " + msg[1];
-
+                Display.Balance(Session.SessionNumber, reply.MoneyData.MoneyBalance, amount, name, desc);
                 foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
                 {
                     if (e.Value.EventType == ScriptSystem.EventTypes.GetMoney)
@@ -154,7 +154,6 @@ namespace ghetto
                     }
                 }
             }
-            Display.Balance(Session.SessionNumber, reply.MoneyData.MoneyBalance, amount, name, desc);
         }
 
         void Callback_TeleportFinish(Packet packet, Simulator sim)
@@ -196,7 +195,6 @@ namespace ghetto
             p.AgentData.AgentID = Session.Client.Network.AgentID;
             p.AgentData.SessionID = Session.Client.Network.SessionID;
             Session.Client.Network.SendPacket(p);
-
             foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
             {
                 if (e.Value.EventType == ScriptSystem.EventTypes.Connect)

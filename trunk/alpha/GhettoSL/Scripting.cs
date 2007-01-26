@@ -832,6 +832,7 @@ namespace ghetto
                     Display.Help(command);
                     return false;
                 }
+                Display.SendMessage(sessionNum, channel, objectid, details);
                 SendDialog(sessionNum, channel, objectid, details);
             }
 
