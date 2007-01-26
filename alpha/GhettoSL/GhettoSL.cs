@@ -112,7 +112,7 @@ namespace ghetto
 
                 Callbacks = new CallbackManager(this);
                 Avatars = new AvatarTracker(Client);
-                Balance = 0;
+                Balance = -1;
                 Friends = new Dictionary<LLUUID, Avatar>();
                 IMSessions = new Dictionary<LLUUID, IMSession>();
                 Prims = new Dictionary<uint, PrimObject>();

@@ -112,15 +112,13 @@ namespace ghetto
 
             Session.Balance = reply.MoneyData.MoneyBalance;
 
-            //DEBUG
-            //Display.Balance(Session.SessionNumber, reply.MoneyData.MoneyBalance, amount, name, desc);
-
             char[] splitChar = { ' ' };
             string[] msg = desc.Split(splitChar);
 
             if (msg.Length <= 4 || msg[4].Length < 4 || !int.TryParse(msg[4].Substring(2, msg[4].Length - 3), out amount))
             {
                 if (desc.Length > 0) Display.Error(Session.SessionNumber, "Unexpected MoneyDataBlock.Description:" + desc);
+                else Display.Balance(Session.SessionNumber, Session.Balance, 0, null, null);
                 return;
             }
 
@@ -184,11 +182,13 @@ namespace ghetto
 
             Display.Connected(Session.SessionNumber, Session.Name);
 
+            Session.Client.Self.RequestBalance();
+
             Session.UpdateAppearance();
 
-            Session.Client.Self.Status.UpdateTimer.Start();
-
             Session.Client.Grid.AddEstateSims();
+
+            Session.Client.Self.Status.UpdateTimer.Start();
 
             //Retrieve offline IMs
             //FIXME - Add Client.Self.RetrieveInstantMessages() to core

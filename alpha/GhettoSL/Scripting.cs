@@ -86,6 +86,7 @@ namespace ghetto
             /// </summary>
             public bool Load(string scriptFile)
             {
+
                 if (!File.Exists(scriptFile)) return false;
 
                 string[] script = { };
@@ -450,31 +451,35 @@ namespace ghetto
                 scriptFile = cmd[2];
                 if (!Interface.Scripts.ContainsKey(cmd[2])) Display.InfoResponse(sessionNum, "No such script loaded. For a list of active scripts, use /scripts.");
                 else Interface.Scripts.Remove(cmd[2]);
+                return true;
             }
-            else if (!File.Exists(cmd[1]))
+
+            if (!File.Exists(scriptFile))
             {
-                Display.Error(sessionNum, "File not found: " + cmd[1]);
-                return false;
+                if (!File.Exists(scriptFile + ".script"))
+                {
+                    Display.Error(sessionNum, "File not found: " + scriptFile);
+                    return false;
+                }
+                else scriptFile = scriptFile + ".script";
+            }
+
+            if (Interface.Scripts.ContainsKey(scriptFile))
+            {
+                //scriptFile is already loaded. refresh.
+                Display.InfoResponse(sessionNum, "Reloading script: " + scriptFile);
             }
             else
             {
-                if (Interface.Scripts.ContainsKey(scriptFile))
-                {
-                    //scriptFile is already loaded. refresh.
-                    Display.InfoResponse(sessionNum, "Reloading script: " + scriptFile);
-                }
-                else
-                {
-                    //add entry for scriptFile
-                    Display.InfoResponse(sessionNum, "Loading script: " + scriptFile);
-                    Interface.Scripts.Add(scriptFile, new UserScript(sessionNum, scriptFile));
-                }
+                //add entry for scriptFile
+                Display.InfoResponse(sessionNum, "Loading script: " + scriptFile);
+                Interface.Scripts.Add(scriptFile, new UserScript(sessionNum, scriptFile));
+            }
 
-                if (Interface.Scripts[scriptFile].Load(scriptFile))
-                {
-                    //start the script
-                    Interface.Scripts[scriptFile].Step(0);
-                }
+            if (Interface.Scripts[scriptFile].Load(scriptFile))
+            {
+                //start the script
+                Interface.Scripts[scriptFile].Step(0);
             }
             return true;
         }
@@ -654,6 +659,7 @@ namespace ghetto
             if (Session.Client.Network.Connected) ret = ret.Replace("$myid", Session.Client.Network.AgentID.ToString());
             else ret = ret.Replace("$myid", LLUUID.Zero.ToString());
             ret = ret.Replace("$master", Session.Settings.MasterID.ToString());
+            ret = ret.Replace("$balance", Session.Balance.ToString());
             ret = ret.Replace("$earned", Session.MoneyReceived.ToString());
             ret = ret.Replace("$spent", Session.MoneySpent.ToString());
 
@@ -1151,7 +1157,7 @@ namespace ghetto
 
             else if (command == "set" && scriptName != "")
             {
-                if (cmd.Length < 2 || cmd[1].Substring(0, 1) != "%")
+                if (cmd.Length < 2 || variableName == null)
                 {
                     Display.Help(command);
                     return false;
