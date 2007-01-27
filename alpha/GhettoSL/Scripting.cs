@@ -655,19 +655,23 @@ namespace ghetto
             }
 
             //parse $identifiers
-            ret = ret.Replace("$myname", Session.Name).Replace("$myid", Session.Client.Network.AgentID.ToString());
-            if (Session.Client.Network.Connected) ret = ret.Replace("$myid", Session.Client.Network.AgentID.ToString());
-            else ret = ret.Replace("$myid", LLUUID.Zero.ToString());
+            ret = ret.Replace("$myname", Session.Name);
             ret = ret.Replace("$master", Session.Settings.MasterID.ToString());
             ret = ret.Replace("$balance", Session.Balance.ToString());
             ret = ret.Replace("$earned", Session.MoneyReceived.ToString());
             ret = ret.Replace("$spent", Session.MoneySpent.ToString());
 
+            if (Session.Client.Network.Connected) ret = ret.Replace("$myid", Session.Client.Network.AgentID.ToString());
+            else ret = ret.Replace("$myid", LLUUID.Zero.ToString());
+
             if (Session.Client.Network.Connected) ret = ret.Replace("$connected", "$true");
             else ret = ret.Replace("$connected", "$false");
 
+            if (Session.Client.Self.Status.Controls.Fly) ret = ret.Replace("$flying", "$true");
+            else ret = ret.Replace("$flying", "$false");
+
             if (Session.Client.Network.Connected) ret = ret.Replace("$region", Session.Client.Network.CurrentSim.Region.Name);
-            else ret = ret.Replace("$region", "");
+            else ret = ret.Replace("$region", "$null");
 
             if (Session.Client.Self.SittingOn > 0) ret = ret.Replace("$sitting", "$true");
             else ret = ret.Replace("$sitting", "$false");
