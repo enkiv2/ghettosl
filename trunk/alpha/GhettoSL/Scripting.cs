@@ -663,10 +663,11 @@ namespace ghetto
             ret = ret.Replace("$earned", Session.MoneyReceived.ToString());
             ret = ret.Replace("$spent", Session.MoneySpent.ToString());
 
-            string regionName;
-            if (Session.Client.Network.Connected) regionName = Session.Client.Network.CurrentSim.Region.Name;
-            else regionName = "";
-            ret = ret.Replace("$region", regionName);
+            if (Session.Client.Network.Connected) ret = ret.Replace("$region", Session.Client.Network.CurrentSim.Region.Name);
+            else ret = ret.Replace("$region", "");
+
+            if (Session.Client.Self.SittingOn > 0) ret = ret.Replace("$sitting", "$true");
+            else ret = ret.Replace("$sitting", "$false");
 
             return ret;
         }
