@@ -1,16 +1,54 @@
 
+COMMANDS:
+
+anim <uuid>             Start the specified animation
+answer <text>           Answer the last-received script dialog
+camp <text>             Find a chair with text matching the specified string
+clear                   Clear the console display
+dir <path>              View inventory folder contents
+fly                     Enable flying
+*follow <name|off>      Follow the specified avatar, or "off" to disable
+go <X> <Y> [Z]          Move to the specified coordinates using autopilot
+inc <%var> [amount]     Increases %var by 1 or any other number/%var
+land                    Disable flying
+listen                  Listen to local chat (on by default)
+look [text]             Displays info about area, or searches by prim text
+pay <uuid> <amount>     Pays the specified avatar or object
+payme <amount>          Pays the specified amount to $masterid, if defined
+quiet                   Stop listening to local chat
+re [name] [message]     List IM sessions or reply by partial name match
+relog                   Log out and back in
+ride <name>             Sit on the same object as the specified name
+run                     Enable running
+session <#> [command]   Switch or send a command to another session
+set <%var> <value>      Used in scripts to define or change a variable
+script <scriptName>     Execute the specified script file
+shout <message>         Shout the specified message to users within 100m
+sit <uuid>              Sit on the specified UUID
+sitg                    Sit on the ground at current location
+stand                   Stand while seated on an object or on the ground
+stopanim <uuid>         Stop the specified animation
+teleport <sim> [x y z]  Teleports to the specified destination
+touch <uuid>            Touch the specified object
+touchid <localID>       Touch the specified object LocalID
+updates <on|off>        Toggles AgentUpdate timer (on by default)
+walk                    Disable running
+whisper                 Whisper the specified message to users within 5m
+who                     List avatars within viewing range
+
+
 DEFAULT IDENTIFIERS:
 
-$myname ........ Avatar name (or name supplied, if not connected)
-$myid .......... Avatar UUID (or LLUUID.Zero if not connected)
-$master ........ Master UUID (or UUID.Zero if none specified)
-$connected ..... Returns $true if connected, $false if not
-$flying ........ Returns $true if flying/hovering, $false if not
-$sitting ....... Returns $true if sitting, $false if not
-$region ........ Current region (or $null if not connected)
-$balance ....... L$ balance (or -1 if there is a problem retrieving)
-$earned ........ L$ earned since session was created
-$spent ......... L$ spent since session was created
+$myname ............... Avatar name (or name supplied, if not connected)
+$myid ................. Avatar UUID (or LLUUID.Zero if not connected)
+$master ............... Master UUID (or UUID.Zero if none specified)
+$connected ............ Returns $true if connected, $false if not
+$flying ............... Returns $true if flying/hovering, $false if not
+$sitting .............. Returns $true if sitting, $false if not
+$region ............... Current region (or $null if not connected)
+$balance .............. L$ balance (or -1 if there is a problem retrieving)
+$earned ............... L$ earned since session was created
+$spent ................ L$ spent since session was created
 
 
 COMPARISONS SUPPORTED:
