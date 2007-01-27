@@ -134,6 +134,7 @@ namespace ghetto
                 SleepingSince = Helpers.GetUnixTime();
                 Display.InfoResponse(SessionNumber, "Sleeping " + seconds + " seconds...");
                 SleepTimer.Interval = (int)(seconds * 1000);
+                SleepTimer.AutoReset = false;
                 SleepTimer.Enabled = true;
             }
 
@@ -143,10 +144,11 @@ namespace ghetto
 
                 CurrentStep = stepNum;
                 string line = Lines[CurrentStep].Trim();
-                while (line.Length < 1 || line.Substring(line.Length - 1,1) == ":" || ParseCommand(SessionNumber, ScriptName, Lines[CurrentStep], true, false))
+
+                //FIXME - feedback loop with ParseCommand() in this statement
+                while (CurrentStep < Lines.Length && (line.Length < 1 || line.Substring(line.Length - 1,1) == ":" || ParseCommand(SessionNumber, ScriptName, Lines[CurrentStep], true, false)))
                 {
                     CurrentStep++;
-                    if (CurrentStep >= Lines.Length) break;
                     line = Lines[CurrentStep].Trim();
                 }
             }
@@ -164,10 +166,7 @@ namespace ghetto
                 ScriptTime = Helpers.GetUnixTime();
                 SleepingSince = ScriptTime;
                 SleepTimer = new System.Timers.Timer();
-                SleepTimer.Enabled = false;
-                SleepTimer.AutoReset = false;
                 SleepTimer.Elapsed += new System.Timers.ElapsedEventHandler(ScriptTimerHandler);
-                SleepTimer.Enabled = false;
                 Variables = new Dictionary<string, string>();
             }
 
@@ -702,7 +701,7 @@ namespace ghetto
             //First we trim up the original command string and then split it by spaces
             string commandToParse = commandString.Trim();
             char[] splitChar = { ' ' };
-            string[] cmd = commandToParse.Split(splitChar);
+            string[] cmd = commandToParse.Split(splitChar, StringSplitOptions.RemoveEmptyEntries);
 
             //The reason for splitting in this step is to save an un-parsed version of the first arg
             //For "inc" and "set" commands, the first arg is a variable name, like "set %var %othervar"
