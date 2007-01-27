@@ -905,8 +905,7 @@ namespace ghetto
 
             else if (command == "goto")
             {
-                if (scriptName == "")
-                    return false;
+                if (scriptName == "") return false;
                 int i = 0;
                 foreach (string line in Interface.Scripts[scriptName].Lines)
                 {
@@ -929,7 +928,7 @@ namespace ghetto
             else if (command == "im")
             {
                 LLUUID target;
-                if (cmd.Length < 2 || LLUUID.TryParse(cmd[1], out target))
+                if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out target))
                 {
                     Display.Help(command);
                     return false;
