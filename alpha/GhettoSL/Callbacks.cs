@@ -185,7 +185,7 @@ namespace ghetto
 
             Session.UpdateAppearance();
 
-            Session.Client.Grid.AddEstateSims();
+            Session.Client.Grid.RequestEstateSims(GridManager.MapLayerType.Terrain);
 
             Session.Client.Self.Status.UpdateTimer.Start();
 

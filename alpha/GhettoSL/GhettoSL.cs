@@ -100,7 +100,6 @@ namespace ghetto
                 SessionNumber = newSessionNumber;
 
                 Client = new SecondLife();
-                Client.Debug = false;
 
                 Client.Self.Status.Camera.Far = 96.0f;
                 Client.Self.Status.Camera.CameraAtAxis = LLVector3.Zero;
