@@ -207,11 +207,13 @@ namespace ghetto
             TeleportFinish = 3,
             Chat = 4,
             IM = 5,
-            GroupIM = 6, //FIXME - still missing/incorrectly handled as IM
-            ScriptDialog = 7,
-            GetMoney = 8,
-            GiveMoney = 9,
-            GetItem = 10
+            Sit = 6,
+            Unsit = 7,
+            GroupIM = 8, //FIXME - still missing/incorrectly handled as IM
+            ScriptDialog = 9,
+            GetMoney = 10,
+            GiveMoney = 11,
+            GetItem = 12
         }
 
 
