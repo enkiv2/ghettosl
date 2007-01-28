@@ -659,6 +659,7 @@ namespace ghetto
             }
 
             //parse $identifiers
+            ret = ret.Replace("$null", "");
             ret = ret.Replace("$myname", Session.Name);
             ret = ret.Replace("$master", Session.Settings.MasterID.ToString());
             ret = ret.Replace("$balance", Session.Balance.ToString());
@@ -701,7 +702,7 @@ namespace ghetto
             //if (scriptName != "") Console.WriteLine("({0}) [{1}] SCRIPTED COMMAND: {2}", sessionNum, scriptName, commandString);
             //FIXME - change display output if fromMasterIM == true
 
-            if (!Interface.Scripts.ContainsKey(scriptName)) return false; //invalid or unloaded script
+            if (scriptName != "" && !Interface.Scripts.ContainsKey(scriptName)) return false; //invalid or unloaded script
 
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
 
