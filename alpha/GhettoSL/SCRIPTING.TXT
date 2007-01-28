@@ -1,4 +1,5 @@
 
+
 COMMANDS:
 
 anim <uuid>             Start the specified animation
@@ -37,6 +38,7 @@ whisper                 Whisper the specified message to users within 5m
 who                     List avatars within viewing range
 
 
+
 DEFAULT IDENTIFIERS:
 
 $myname ............... Avatar name (or name supplied, if not connected)
@@ -51,13 +53,39 @@ $earned ............... L$ earned since session was created
 $spent ................ L$ spent since session was created
 
 
+
+EVENTS:
+
+Event commands are processed by the same means as any other scripted command.
+They are not "pre-loaded" since users may wish to remove/alter an event on the fly.
+Automated actions can be performed on the following events:
+
+Connect
+Disconnect
+TeleportFinish
+Chat
+IM
+ScriptDialog
+GetMoney
+GiveMoney
+GetItem
+
+EXAMPLES:
+
+event payMaster GetMoney pay $amount $master
+event repeatChat Chat say $name just said $message.
+event -r repeatChat
+event repeatWord Chat say The first word $name said was $1.
+event ohnoes Disconnect goto disconnected
+
+
+
 COMPARISONS SUPPORTED:
 
 if (v1 == v2) then <command>     v1 is equal to v2
 if (v1 != v2) then <command>     v2 is not equal to v2
 if (v1 match v2) then <command>  v1 matches regex pattern v2
 if (v1 like v2) then <command>   v1 matches wildcard pattern v2
-
 
 NOTES:
 
@@ -66,8 +94,6 @@ NOTES:
 - Don't get used to "then". This will be replaced with { }
 - < > <= and >= are not yet supported. This will be fixed soon!
 - Wildcard matching may not be perfect. Let me know!
-
-
 
 EXAMPLE:
 
