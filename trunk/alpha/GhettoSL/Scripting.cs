@@ -449,7 +449,13 @@ namespace ghetto
                 scriptFile = cmd[2];
                 if (!Interface.Scripts.ContainsKey(cmd[2])) Display.InfoResponse(sessionNum, "No such script loaded. For a list of active scripts, use /scripts.");
                 else Interface.Scripts.Remove(cmd[2]);
-                return true;
+                //remove all events tied to this script
+                foreach (KeyValuePair<string, ScriptEvent> pair in Session.ScriptEvents)
+                {
+                    if (pair.Value.ScriptName == cmd[2]) Session.ScriptEvents.Remove(pair.Key);
+                }
+                if (scriptFile == cmd[2]) return false; //script unloaded itself
+                else return true;
             }
 
             if (!File.Exists(scriptFile))
@@ -694,6 +700,8 @@ namespace ghetto
             //DEBUG - testing scriptName value
             //if (scriptName != "") Console.WriteLine("({0}) [{1}] SCRIPTED COMMAND: {2}", sessionNum, scriptName, commandString);
             //FIXME - change display output if fromMasterIM == true
+
+            if (!Interface.Scripts.ContainsKey(scriptName)) return false; //invalid or unloaded script
 
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
 
