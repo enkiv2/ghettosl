@@ -63,7 +63,7 @@ Automated actions can be performed on the following events:
 Event Name		Associated Identifiers
 
 Connect ...............
-Chat ..................
+Chat .................. $name $id $message
 Disconnect. ...........
 GetItem ............... $item $itemid
 GetMoney .............. $name $amount
@@ -87,8 +87,8 @@ event ohnoes Disconnect goto disconnected
 COMPARISONS SUPPORTED:
 
 if (v1 == v2) then <command>     v1 is equal to v2
-if (v1 != v2) then <command>     v2 is not equal to v2
-if (v1 <> v2) then <command>     v2 is not equal to v2 (same as !=)
+if (v1 != v2) then <command>     v1 is not equal to v2
+if (v1 <> v2) then <command>     v1 is not equal to v2 (same as !=)
 if (v1 > v2) then <command>      v1 is greater than v2
 if (v1 < v2) then <command>      v1 is less than v2
 if (v1 >= v2) then <command>     v1 is greater than or equal to v2
