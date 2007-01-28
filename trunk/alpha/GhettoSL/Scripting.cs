@@ -395,7 +395,7 @@ namespace ghetto
                 else if (arg == "-here")
                 {
                     GhettoSL.UserSession fromSession = Interface.Sessions[sessionNum];
-                    if (Session.Client.Network.Connected)
+                    if (fromSession.Client.Network.Connected)
                     {
                         Session.Settings.URI = "uri:" + fromSession.Client.Network.CurrentSim.Region.Name + "&" + (int)fromSession.Client.Self.Position.X + "&" + (int)fromSession.Client.Self.Position.Y + "&" + (int)fromSession.Client.Self.Position.Z;
                     }
@@ -772,7 +772,7 @@ namespace ghetto
             //For example, in the command "im some-uuid-here Hi there!", details = "Hi there!"
             string details = "";
             int detailsStart = 1;
-            if (command == "im" || command == "re" || command == "s" || command == "session" || command == "set") detailsStart++;
+            if (command == "im" || command == "lure" || command == "re" || command == "s" || command == "session" || command == "set") detailsStart++;
             else if (command == "dialog") detailsStart += 2;
             for (; detailsStart < cmd.Length; detailsStart++)
             {
@@ -920,7 +920,6 @@ namespace ghetto
                 {
                     if (line.Trim() == cmd[1] + ":")
                     {
-                        //Interface.Scripts[scriptName].Step(i + 1);
                         Interface.Scripts[scriptName].CurrentStep = i;
                         break;
                     }
@@ -1008,6 +1007,21 @@ namespace ghetto
 
             }
 
+            else if (command == "lure")
+            {
+                LLUUID target;
+                if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out target))
+                {
+                    Display.Help(command);
+                }
+                string reason;
+                if (cmd.Length > 2) reason = details;
+                else reason = "Join me in " + Session.Client.Network.CurrentSim.Region.Name + "!";
+                
+                //FIXME - Add teleport lure
+
+            }
+
             else if (command == "pay")
             {
                 LLUUID id;
@@ -1078,7 +1092,11 @@ namespace ghetto
                             match = pair.Key;
                         }
                     }
-                    if (match != LLUUID.Zero) Session.Client.Self.InstantMessage(match, details, Session.IMSessions[match].IMSessionID);
+                    if (match != LLUUID.Zero)
+                    {
+                        Display.SendMessage(sessionNum, 0, match, details);
+                        Session.Client.Self.InstantMessage(match, details, Session.IMSessions[match].IMSessionID);
+                    }
                 }
             }
 
@@ -1167,7 +1185,7 @@ namespace ghetto
                 ScriptSystem.UserScript Script = Interface.Scripts[scriptName];
                 int value = 0;
                 if (Script.Variables.ContainsKey(variableName) && !int.TryParse(Script.Variables[variableName], out value)) return false;
-                //FIXME - change int + "" to a proper string-to-int conversion
+                //FIXME - change in the following code, int + "" to a proper string-to-int conversion
                 else if (Script.Variables.ContainsKey(variableName)) Script.Variables[variableName] = "" + (value + amount);
                 else Script.Variables.Add(variableName, "" + amount);
                 //QUESTION - Right now, inc creates a new %var if the specified one doesn't exist. Should it?
@@ -1400,7 +1418,7 @@ namespace ghetto
                 {
                     if (av.SittingOn > 0)
                     {
-                        //FIXME - request if fails
+                        //FIXME - request prim info (to get the uuid) if fails
                         if (!Session.Prims.ContainsKey(av.SittingOn))
                         {
                             Display.InfoResponse(sessionNum, "Object info missing");
