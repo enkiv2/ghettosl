@@ -571,9 +571,14 @@ namespace ghetto
             string[] splitLike = { " like ", " LIKE ", " Like " };
             string[] splitMatch = { " match ", " MATCH ", " Match " };
             string[] splitAnd = { " and ", " AND ", " And ", "&&" };
-            string[] splitOr = { " or ", " OR ", " Or ", "||" };
-            string[] splitEq = { "==" , " = "};
-            string[] splitNot = { "!=" , "<>" };
+            string[] splitOr = { " or ", " OR ", " Or ", " || " };
+            string[] splitEq = { " == " , " = "};
+            string[] splitNot = { " != " , " <> " };
+            string[] splitLT = { " < " };
+            string[] splitGT = { " > " };
+            string[] splitLE = { " <= " , " =< "};
+            string[] splitGE = { " >= " , " => "};
+
 
             string[] condOr = ParseVariables(sessionNum, c.Trim(), "").Split(splitOr, StringSplitOptions.RemoveEmptyEntries);
 
@@ -588,9 +593,13 @@ namespace ghetto
                     string[] eq = and.ToLower().Split(splitEq, StringSplitOptions.RemoveEmptyEntries);
                     string[] like = and.ToLower().Split(splitLike, StringSplitOptions.RemoveEmptyEntries);
                     string[] match = and.ToLower().Split(splitMatch, StringSplitOptions.RemoveEmptyEntries);
+                    string[] less = and.ToLower().Split(splitLT, StringSplitOptions.RemoveEmptyEntries);
+                    string[] greater = and.ToLower().Split(splitGT, StringSplitOptions.RemoveEmptyEntries);
+                    string[] lessEq = and.ToLower().Split(splitLE, StringSplitOptions.RemoveEmptyEntries);
+                    string[] greaterEq = and.ToLower().Split(splitGE, StringSplitOptions.RemoveEmptyEntries);
 
                     //only one term
-                    if (eq.Length == 1 && not.Length == 1 && like.Length == 1 && match.Length == 1)
+                    if (eq.Length == 1 && not.Length == 1 && less.Length == 1 && greater.Length == 1 && lessEq.Length == 1 && greaterEq.Length == 1 && like.Length == 1 && match.Length == 1)
                     {
                         if (eq[0].Trim() == "$false" || eq[0].Trim() == "0") pass = false;
                         break;
@@ -603,11 +612,8 @@ namespace ghetto
                         string v2 = like[1].Trim();
                         //Console.WriteLine("Comparing {0} LIKE {1}", v1, v2); //DEBUG
                         string regex = "^" + Regex.Escape(v1).Replace("\\*", ".*").Replace("\\?", ".") + "$";
-                        if (like.Length > 1 && !Regex.IsMatch(like[0].Trim(), regex, RegexOptions.IgnoreCase))
-                        {
-                            pass = false;
-                            break;
-                        }
+                        if (like.Length > 1 && !Regex.IsMatch(like[0].Trim(), regex, RegexOptions.IgnoreCase)) pass = false;
+                        break;
                     }
 
                     //check "match" (regex)
@@ -617,26 +623,55 @@ namespace ghetto
                         string v2 = match[1].Trim();
                         bool isMatch = Regex.IsMatch(v1, v2, RegexOptions.IgnoreCase);
                         Console.WriteLine("Comparing {0} MATCH {1} == {2}", v1, v2, isMatch); //DEBUG
-                        if (!isMatch)
-                        {
-                            pass = false;
-                            break;
-                        }
+                        if (!isMatch) pass = false;
+                        break;
                     }
 
                     //check ==
-                    if (eq.Length > 1 && eq[0].Trim() != eq[1].Trim())
+                    if (eq.Length > 1)
                     {
-                        pass = false;
+                        if (eq[0].Trim() != eq[1].Trim()) pass = false;
                         break;
                     }
 
                     //check !=
-                    if (not.Length > 1 && not[0].Trim() == not[1].Trim())
+                    if (not.Length > 1)
                     {
-                        pass = false;
+                        if (not[0].Trim() == not[1].Trim()) pass = false;
                         break;
                     }
+
+                    int val1;
+                    int val2;
+
+                    //check <
+                    if (less.Length > 1)
+                    {
+                        if (!int.TryParse(less[0].Trim(), out val1) || !int.TryParse(less[1].Trim(), out val2) || val1 >= val2) pass = false;
+                        break;
+                    }
+
+                    //check >
+                    if (greater.Length > 1)
+                    {
+                        if (!int.TryParse(greater[0].Trim(), out val1) || !int.TryParse(greater[1].Trim(), out val2) || val1 <= val2) pass = false;
+                        break;
+                    }
+
+                    //check <=
+                    if (lessEq.Length > 1)
+                    {
+                        if (!int.TryParse(lessEq[0].Trim(), out val1) || !int.TryParse(lessEq[1].Trim(), out val2) || val1 > val2) pass = false;
+                        break;
+                    }
+
+                    //check >=
+                    if (greaterEq.Length > 1)
+                    {
+                        if (!int.TryParse(greaterEq[0].Trim(), out val1) || !int.TryParse(greaterEq[1].Trim(), out val2) || val1 < val2) pass = false;
+                        break;
+                    }
+
                 }
 
                 if (pass) return true; //FIXME - not sure if this is right
