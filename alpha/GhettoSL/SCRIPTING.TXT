@@ -89,6 +89,10 @@ COMPARISONS SUPPORTED:
 if (v1 == v2) then <command>     v1 is equal to v2
 if (v1 != v2) then <command>     v2 is not equal to v2
 if (v1 <> v2) then <command>     v2 is not equal to v2 (same as !=)
+if (v1 > v2) then <command>      v1 is greater than v2
+if (v1 < v2) then <command>      v1 is less than v2
+if (v1 >= v2) then <command>     v1 is greater than or equal to v2
+if (v1 <= v2) then <command>     v1 is less than or equal to v2
 if (v1 match v2) then <command>  v1 matches regex pattern v2
 if (v1 like v2) then <command>   v1 matches wildcard pattern v2
 
@@ -97,7 +101,6 @@ NOTES:
 - ( and ) are currently optional (this will probably change)
 - && and || can be used, although grouping using ( ) does nothing
 - Don't get used to "then". This will be replaced with { }
-- <= and >= are not yet supported. This will be fixed soon!
 - Wildcard matching may not be perfect. Let me know!
 
 EXAMPLE:
