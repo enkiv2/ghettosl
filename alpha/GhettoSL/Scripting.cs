@@ -145,7 +145,6 @@ namespace ghetto
                 CurrentStep = stepNum;
                 string line = Lines[CurrentStep].Trim();
 
-                //FIXME - feedback loop with ParseCommand() in this statement
                 while (CurrentStep < Lines.Length && (line.Length < 1 || line.Substring(line.Length - 1,1) == ":" || ParseCommand(SessionNumber, ScriptName, Lines[CurrentStep], true, false)))
                 {
                     CurrentStep++;
@@ -804,6 +803,7 @@ namespace ghetto
 
             else if (command == "break")
             {
+                Interface.Scripts[scriptName].SleepTimer.Stop();
                 return false;
             }
 
@@ -910,7 +910,8 @@ namespace ghetto
                 {
                     if (line.Trim() == cmd[1] + ":")
                     {
-                        Interface.Scripts[scriptName].Step(i + 1);
+                        //Interface.Scripts[scriptName].Step(i + 1);
+                        Interface.Scripts[scriptName].CurrentStep = i;
                         break;
                     }
                     i++;
