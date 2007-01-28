@@ -50,6 +50,8 @@ namespace ghetto
             Session.Client.Self.OnScriptDialog += new MainAvatar.ScriptDialogCallback(Self_OnScriptDialog);
             Session.Client.Self.OnInstantMessage += new MainAvatar.InstantMessageCallback(Self_OnInstantMessage);
 
+            Session.Client.Objects.OnAvatarSitChanged += new ObjectManager.AvatarSitChanged(Objects_OnAvatarSitChanged);
+
             Session.Client.Network.OnCurrentSimChanged += new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
 
             Session.Client.Inventory.OnInventoryItemReceived += new libsecondlife.InventorySystem.InventoryManager.On_InventoryItemReceived(Inventory_OnInventoryItemReceived);
@@ -57,6 +59,22 @@ namespace ghetto
             Session.Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(Callback_AlertMessage));
             Session.Client.Network.RegisterCallback(PacketType.MoneyBalanceReply, new NetworkManager.PacketCallback(Callback_MoneyBalanceReply));
             Session.Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(Callback_TeleportFinish));
+        }
+
+        void Objects_OnAvatarSitChanged(Simulator simulator, uint sittingOn)
+        {
+            Display.SitChanged(Session.SessionNumber, sittingOn);
+            ScriptSystem.EventTypes type;
+            if (sittingOn > 0) type = ScriptSystem.EventTypes.Sit;
+            else type = ScriptSystem.EventTypes.Unsit;
+            foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
+            {
+                if (e.Value.EventType == type)
+                {
+                    //FIXME - add $sittingon?
+                    ScriptSystem.TriggerEvent(Session.SessionNumber, e.Value.Command, e.Value.ScriptName);
+                }
+            }
         }
 
         void Network_OnCurrentSimChanged(Simulator PreviousSimulator)
