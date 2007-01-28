@@ -803,6 +803,7 @@ namespace ghetto
 
             else if (command == "break")
             {
+                if (scriptName == "") return false;
                 Interface.Scripts[scriptName].SleepTimer.Stop();
                 return false;
             }

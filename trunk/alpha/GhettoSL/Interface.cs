@@ -46,7 +46,7 @@ namespace ghetto
         //Main void
         static void Main(string[] args)
         {
-
+            Exit = false; 
             string platform = System.Convert.ToString(Environment.OSVersion.Platform);
             Console.WriteLine(Environment.NewLine + "Running on platform " + platform);
             Random random = new Random();
@@ -85,10 +85,14 @@ namespace ghetto
             }
 
             //Make initial connection
-            Sessions[CurrentSession].Login();
+            //FIXME - move this to a callback for login-failed and add login-failed event
+            if (!Sessions[CurrentSession].Login())
+            {
+                Display.Error(1, "Login failed");
+            }
 
             //Accept commands
-            Exit = false;
+
             do ReadCommand();
             while (!Exit);
 
