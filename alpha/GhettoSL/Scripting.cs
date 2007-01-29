@@ -709,6 +709,10 @@ namespace ghetto
             if (Session.Client.Network.Connected) ret = ret.Replace("$connected", "$true");
             else ret = ret.Replace("$connected", "$false");
 
+            //FIXME - add AlwaysRun property to Status
+            //if (Session.Client.Self.Status.AlwaysRun) ret = ret.Replace("$flying", "$true");
+            //else ret = ret.Replace("$flying", "$false");
+
             if (Session.Client.Self.Status.Controls.Fly) ret = ret.Replace("$flying", "$true");
             else ret = ret.Replace("$flying", "$false");
 
@@ -919,13 +923,27 @@ namespace ghetto
 
             else if (command == "fly")
             {
-                if (Session.Client.Self.Status.Controls.Fly)
+                if (cmd.Length == 1 || cmd[1].ToLower() == "on")
                 {
-                    Display.InfoResponse(sessionNum, "You are already flying.");
+                    if (Session.Client.Self.Status.Controls.Fly)
+                    {
+                        Display.InfoResponse(sessionNum, "You are already flying.");
+                    }
+                    else
+                    {
+                        Display.InfoResponse(sessionNum, "Suddenly, you feel weightless...");
+                    }
                 }
-                else
+                else if (cmd[1].ToLower() == "off")
                 {
-                    Display.InfoResponse(sessionNum, "Suddenly, you feel weightless...");
+                    if (Session.Client.Self.Status.Controls.Fly)
+                    {
+                        Display.InfoResponse(sessionNum, "You drop to the ground.");
+                    }
+                    else
+                    {
+                        Display.InfoResponse(sessionNum, "You are not flying.");
+                    }
                 }
                 //Send either way, for good measure
                 Session.Client.Self.Status.Controls.Fly = true;
@@ -980,7 +998,7 @@ namespace ghetto
             else if (command == "im")
             {
                 LLUUID target;
-                if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out target))
+                if (cmd.Length < 3 || !LLUUID.TryParse(cmd[1], out target))
                 {
                     Display.Help(command);
                     return false;
@@ -1108,7 +1126,11 @@ namespace ghetto
                     Session.Settings.DisplayChat = true;
                     Display.InfoResponse(sessionNum, "Showing chat from objects/avatars.");
                 }
-                else Display.Help(command);
+                else
+                {
+                    Display.Help(command);
+                    return false;
+                }
             }
 
             else if (command == "quit")
@@ -1180,9 +1202,23 @@ namespace ghetto
                 RideWith(sessionNum, details);
             }
 
-            else if (command == "run")
+            else if (command == "run" || command == "running")
             {
-                Session.Client.Self.SetAlwaysRun(true);
+                if (cmd.Length == 1 || cmd[1].ToLower() == "on")
+                {
+                    Session.Client.Self.Status.AlwaysRun = true;
+                    Display.InfoResponse(sessionNum, "Running enabled.");
+                }
+                else if (cmd[1].ToLower() == "off")
+                {
+                    Session.Client.Self.Status.AlwaysRun = false;
+                    Display.InfoResponse(sessionNum, "Running disabled.");
+                }
+                else
+                {
+                    Display.Help(command);
+                    return false;
+                }
             }
 
             else if (command == "say")
@@ -1413,7 +1449,7 @@ namespace ghetto
 
             else if (command == "walk")
             {
-                Session.Client.Self.SetAlwaysRun(false);
+                Session.Client.Self.Status.AlwaysRun = false;
             }
 
             else if (command == "whisper")
