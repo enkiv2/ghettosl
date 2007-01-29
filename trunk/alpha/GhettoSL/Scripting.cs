@@ -622,7 +622,7 @@ namespace ghetto
                         string v1 = match[0].Trim();
                         string v2 = match[1].Trim();
                         bool isMatch = Regex.IsMatch(v1, v2, RegexOptions.IgnoreCase);
-                        Console.WriteLine("Comparing {0} MATCH {1} == {2}", v1, v2, isMatch); //DEBUG
+                        //Console.WriteLine("Comparing {0} MATCH {1} == {2}", v1, v2, isMatch); //DEBUG
                         if (!isMatch) pass = false;
                         break;
                     }
@@ -911,6 +911,12 @@ namespace ghetto
                 else return ParseEventCommand(sessionNum, cmd, scriptName);
             }
 
+            else if (command == "exit")
+            {
+                ParseCommand(sessionNum, scriptName, "s -a quit", false, fromMasterIM);
+                Interface.Exit = true;
+            }
+
             else if (command == "fly")
             {
                 if (Session.Client.Self.Status.Controls.Fly)
@@ -1009,7 +1015,7 @@ namespace ghetto
                 {
                     LLVector3 sunDirection = Session.Client.Grid.SunDirection;
                     string simName = Session.Client.Network.CurrentSim.Region.Name;
-                    string weather = Display.RPGWeather(sessionNum, simName, sunDirection);                    
+                    string weather = Display.RPGWeather(sessionNum, simName, sunDirection);
                     if (simName != "" && Helpers.VecMag(sunDirection) != 0)
                     {
                         Display.InfoResponse(sessionNum, weather);
@@ -1054,7 +1060,7 @@ namespace ghetto
                 string reason;
                 if (cmd.Length > 2) reason = details;
                 else reason = "Join me in " + Session.Client.Network.CurrentSim.Region.Name + "!";
-                
+
                 //FIXME - Add teleport lure
 
             }
@@ -1092,7 +1098,17 @@ namespace ghetto
 
             else if (command == "quiet")
             {
-                Session.Settings.DisplayChat = false;
+                if (cmd.Length == 1 || cmd[1].ToLower() == "on")
+                {
+                    Session.Settings.DisplayChat = false;
+                    Display.InfoResponse(sessionNum, "Hiding chat from objects/avatars.");
+                }
+                else if (cmd[1].ToLower() == "off")
+                {
+                    Session.Settings.DisplayChat = true;
+                    Display.InfoResponse(sessionNum, "Showing chat from objects/avatars.");
+                }
+                else Display.Help(command);
             }
 
             else if (command == "quit")

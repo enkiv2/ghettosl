@@ -1,14 +1,43 @@
 
+	      ----------------------------------------------------
+		
+		          +--+
+		          ¦  ¦
+		 +---------+ ¦      +-------------+
+		 ¦         ¦ ¦   +-------+        ¦+-------+
+		 ¦  +---+  ¦ ¦   ¦       ++  +----+¦       ¦
+		 ¦  ¦   ¦  ¦ +----++---+ ¦¦  ¦ +-+ ¦   .   ¦
+		 ¦  +---+  ¦ +--+ ¦+---+ ¦¦  +-+ +--+ ¦¦   ¦
+		 +-------+ ¦ ¦  ¦ ¦      ¦¦  +-+ +--+ ¦¦   ¦
+		  +-+    ¦ ¦ ¦  ¦ ¦+-----+¦  ¦ ¦ ¦ ¦  ¦¦   ¦
+		  ¦ +----+ ¦ ¦  ¦ ¦+-----+¦  ¦ ¦ ¦ ¦  `    ¦ SL
+		  +--------+-+  +-+------++--+ +-+ +-------+
+		
+	      ----------------------------------------------------
+		
+	       GhettoSL - by root66 - (c)2006 obsoleet industries
+       Thanks to mcortez, jhurliman and the rest of the libsecondlife crew.
+		
 
-COMMANDS:
 
+CONTENTS
+----------------------
+1. COMMANDS
+2. DEFAULT IDENTIFIERS
+3. EVENTS
+4. COMPARISONS
+
+
+
+
+1. COMMANDS:
+---------------------------------------------------------------------------
 anim <uuid>             Start the specified animation
 answer <text>           Answer the last-received script dialog
 camp <text>             Find a chair with text matching the specified string
 clear                   Clear the console display
 dir <path>              View inventory folder contents
 fly                     Enable flying
-*follow <name|off>      Follow the specified avatar, or "off" to disable
 go <X> <Y> [Z]          Move to the specified coordinates using autopilot
 inc <%var> [amount]     Increases %var by 1 or any other number/%var
 land                    Disable flying
@@ -39,8 +68,8 @@ who                     List avatars within viewing range
 
 
 
-DEFAULT IDENTIFIERS:
-
+2. DEFAULT IDENTIFIERS:
+---------------------------------------------------------------------------
 $myname ............... Avatar name (or name supplied, if not connected)
 $myid ................. Avatar UUID (or LLUUID.Zero if not connected)
 $master ............... Master UUID (or UUID.Zero if none specified)
@@ -54,10 +83,10 @@ $spent ................ L$ spent since session was created
 
 
 
-EVENTS:
-
+3. EVENTS:
+---------------------------------------------------------------------------
 Event commands are processed by the same means as any other scripted command.
-They are not "pre-loaded" since users may wish to remove/alter an event on the fly.
+They are not "pre-loaded" since users may wish to alter events on the fly.
 Automated actions can be performed on the following events:
 
 Event Name		Associated Identifiers
@@ -84,8 +113,8 @@ event ohnoes Disconnect goto disconnected
 
 
 
-COMPARISONS SUPPORTED:
-
+4. COMPARISONS:
+---------------------------------------------------------------------------
 if (v1 == v2) then <command>     v1 is equal to v2
 if (v1 != v2) then <command>     v1 is not equal to v2
 if (v1 <> v2) then <command>     v1 is not equal to v2 (same as !=)
