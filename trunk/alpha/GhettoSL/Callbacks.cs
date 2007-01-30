@@ -41,21 +41,18 @@ namespace ghetto
         public CallbackManager(GhettoSL.UserSession session)
         {
             Session = session;
+            Session.Client.Inventory.OnInventoryItemReceived += new libsecondlife.InventorySystem.InventoryManager.On_InventoryItemReceived(Inventory_OnInventoryItemReceived);
             Session.Client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
-            session.Client.OnLogMessage += new SecondLife.LogCallback(Client_OnLogMessage);
+            Session.Client.Network.OnCurrentSimChanged += new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
             Session.Client.Network.OnSimDisconnected += new NetworkManager.SimDisconnectCallback(Network_OnSimDisconnected);
+            Session.Client.Objects.OnAvatarSitChanged += new ObjectManager.AvatarSitChanged(Objects_OnAvatarSitChanged);
             Session.Client.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
             Session.Client.Objects.OnObjectKilled += new ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
             Session.Client.Objects.OnPrimMoved += new ObjectManager.PrimMovedCallback(Objects_OnPrimMoved);
+            session.Client.OnLogMessage += new SecondLife.LogCallback(Client_OnLogMessage);
             Session.Client.Self.OnChat += new MainAvatar.ChatCallback(Self_OnChat);
             Session.Client.Self.OnScriptDialog += new MainAvatar.ScriptDialogCallback(Self_OnScriptDialog);
             Session.Client.Self.OnInstantMessage += new MainAvatar.InstantMessageCallback(Self_OnInstantMessage);
-
-            Session.Client.Objects.OnAvatarSitChanged += new ObjectManager.AvatarSitChanged(Objects_OnAvatarSitChanged);
-
-            Session.Client.Network.OnCurrentSimChanged += new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
-
-            Session.Client.Inventory.OnInventoryItemReceived += new libsecondlife.InventorySystem.InventoryManager.On_InventoryItemReceived(Inventory_OnInventoryItemReceived);
 
             Session.Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(Callback_AlertMessage));
             Session.Client.Network.RegisterCallback(PacketType.MoneyBalanceReply, new NetworkManager.PacketCallback(Callback_MoneyBalanceReply));
@@ -209,6 +206,8 @@ namespace ghetto
 
             Session.UpdateAppearance();
 
+            Session.Client.Groups.BeginGetCurrentGroups(new GroupManager.CurrentGroupsCallback(GroupsUpdatedHandler));
+
             Session.Client.Grid.RequestEstateSims(GridManager.MapLayerType.Terrain);
 
             Session.Client.Self.Status.UpdateTimer.Start();
@@ -244,6 +243,11 @@ namespace ghetto
                     ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
                 }
             }
+        }
+
+        void GroupsUpdatedHandler(Dictionary<LLUUID, libsecondlife.Group> groups)
+        {
+            Session.Groups = groups;
         }
 
         void Objects_OnPrimMoved(Simulator simulator, PrimUpdate prim, ulong regionHandle, ushort timeDilation)

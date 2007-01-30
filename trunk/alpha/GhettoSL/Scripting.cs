@@ -992,6 +992,44 @@ namespace ghetto
                 }
             }
 
+            else if (command == "groups")
+            {
+                Display.GroupList(sessionNum);
+            }
+
+            else if (command == "roles")
+            {
+                LLUUID groupID;
+                if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out groupID))
+                {
+                    Display.Help(command);
+                    return false;
+                }
+                Session.Client.Groups.BeginGetGroupRoles(groupID, new GroupManager.GroupRolesCallback(GroupRolesHandler));
+            }
+
+            else if (command == "groupinvite")
+            {
+                LLUUID inviteeID;
+                LLUUID groupID;
+                LLUUID roleID;
+                if (cmd.Length < 4 || !LLUUID.TryParse(cmd[1], out inviteeID) || !LLUUID.TryParse(cmd[2], out groupID) || !LLUUID.TryParse(cmd[3], out roleID))
+                {
+                    Display.Help(command);
+                    return false;
+                }
+                InviteGroupRequestPacket p = new InviteGroupRequestPacket();
+                InviteGroupRequestPacket.InviteDataBlock b = new InviteGroupRequestPacket.InviteDataBlock();
+                b.InviteeID = inviteeID;
+                b.RoleID = roleID;
+                p.InviteData[0] = b;
+                p.GroupData.GroupID = groupID;
+                p.AgentData.AgentID = Session.Client.Network.AgentID;
+                p.AgentData.SessionID = Session.Client.Network.SessionID;
+                Display.InfoResponse(sessionNum, "Inviting user " + inviteeID + " to group " + groupID + " with the role " + roleID + ".");
+                Session.Client.Network.SendPacket(p);
+            }
+
             else if (command == "help")
             {
                 string topic = "";
@@ -1570,7 +1608,14 @@ namespace ghetto
             Session.Client.Network.SendPacket(reply);
         }
 
-
+        public static void GroupRolesHandler(Dictionary<LLUUID, GroupRole> roles)
+        {
+            //FIXME - move to display
+            foreach (GroupRole role in roles.Values)
+            {
+                Console.WriteLine(role.ID + " " + role.Name + " \"" + role.Title + "\"");
+            }
+        }
 
     }
 }
