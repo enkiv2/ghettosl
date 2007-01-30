@@ -49,6 +49,7 @@ namespace ghetto
             public int Balance;
             public SecondLife Client;
             public Dictionary<LLUUID, Avatar> Friends;
+            public Dictionary<LLUUID, Group> Groups;
             public Dictionary<LLUUID, IMSession> IMSessions;
             public Dictionary<uint, Primitive> Prims;
             public Dictionary<string, ScriptSystem.ScriptEvent> ScriptEvents;
