@@ -42,6 +42,7 @@ namespace ghetto
         {
             Session = session;
             Session.Client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
+            session.Client.OnLogMessage += new SecondLife.LogCallback(Client_OnLogMessage);
             Session.Client.Network.OnSimDisconnected += new NetworkManager.SimDisconnectCallback(Network_OnSimDisconnected);
             Session.Client.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
             Session.Client.Objects.OnObjectKilled += new ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
@@ -59,6 +60,11 @@ namespace ghetto
             Session.Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(Callback_AlertMessage));
             Session.Client.Network.RegisterCallback(PacketType.MoneyBalanceReply, new NetworkManager.PacketCallback(Callback_MoneyBalanceReply));
             Session.Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(Callback_TeleportFinish));
+        }
+
+        void Client_OnLogMessage(string message, Helpers.LogLevel level)
+        {
+            Display.LogMessage(Session.SessionNumber, message, level);
         }
 
         void Objects_OnAvatarSitChanged(Simulator simulator, uint sittingOn)
@@ -178,7 +184,7 @@ namespace ghetto
         {
             TeleportFinishPacket p = (TeleportFinishPacket)packet;
             Display.TeleportFinished(Session.SessionNumber, sim.Region.Name);
-            Session.Prims = new Dictionary<uint, PrimObject>();
+            Session.Prims = new Dictionary<uint, Primitive>();
             Session.UpdateAppearance(); //probably never needed
             foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
             {
@@ -252,7 +258,7 @@ namespace ghetto
             }
         }
 
-        void Objects_OnNewPrim(Simulator simulator, PrimObject prim, ulong regionHandle, ushort timeDilation)
+        void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
         {
             lock (Session.Prims)
             {
