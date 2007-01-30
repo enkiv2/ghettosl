@@ -244,13 +244,13 @@ namespace ghetto
         {
             if (start >= args.Length) return "";
             else if (args[start].Substring(0, 1) != "\"") return args[start];
-            else if (args[start].Substring(args.Length - 1, 1) == "\"") return args[start].Replace("\"", "");
+            else if (args[start].Substring(args[start].Length - 1, 1) == "\"") return args[start].Replace("\"", "");
 
             string ret = args[start];
             for (int i = start + 1; i < args.Length; i++)
             {
                 ret += " " + args[i];
-                if (args[i].Substring(args.Length - 1, 1) == "\"") break;
+                if (args[i].Substring(args[i].Length - 1, 1) == "\"") break;
             }
             return ret.Replace("\"", "");
         }
@@ -720,9 +720,8 @@ namespace ghetto
             if (Session.Client.Network.Connected) ret = ret.Replace("$connected", "$true");
             else ret = ret.Replace("$connected", "$false");
 
-            //FIXME - add AlwaysRun property to Status
-            //if (Session.Client.Self.Status.AlwaysRun) ret = ret.Replace("$flying", "$true");
-            //else ret = ret.Replace("$flying", "$false");
+            if (Session.Client.Self.Status.AlwaysRun) ret = ret.Replace("$flying", "$true");
+            else ret = ret.Replace("$flying", "$false");
 
             if (Session.Client.Self.Status.Controls.Fly) ret = ret.Replace("$flying", "$true");
             else ret = ret.Replace("$flying", "$false");
@@ -942,6 +941,7 @@ namespace ghetto
                     }
                     else
                     {
+                        Session.Client.Self.Status.Controls.Fly = true;
                         Display.InfoResponse(sessionNum, "Suddenly, you feel weightless...");
                     }
                 }
@@ -949,6 +949,7 @@ namespace ghetto
                 {
                     if (Session.Client.Self.Status.Controls.Fly)
                     {
+                        Session.Client.Self.Status.Controls.Fly = false;
                         Display.InfoResponse(sessionNum, "You drop to the ground.");
                     }
                     else
@@ -956,32 +957,19 @@ namespace ghetto
                         Display.InfoResponse(sessionNum, "You are not flying.");
                     }
                 }
-                //Send either way, for good measure
-                Session.Client.Self.Status.Controls.Fly = true;
+                //Send either way, for good measure                
                 Session.Client.Self.Status.SendUpdate();
             }
 
             else if (command == "go")
             {
-                int x = 0;
-                int y = 0;
-                float z = 0f;
-
-                if (cmd.Length < 3 || !int.TryParse(cmd[1], out x) || !int.TryParse(cmd[2], out y))
+                LLVector3 target;
+                if (cmd.Length < 2 || !LLVector3.TryParse(details, out target))
                 {
                     Display.Help(command);
                     return false;
                 }
-
-                if (cmd.Length < 4 || !float.TryParse(cmd[3], out z)) z = Session.Client.Self.Position.Z;
-
-                //FIXME - core library returns incorrect RegionHandle, RegionX, and RegionY?
-                //ulong regionHandle = Session.Client.Network.CurrentSim.Region.Handle;
-                //Console.WriteLine("Client.Network.CurrentSim.Region.Handle: " + regionHandle); //DEBUG
-                //int regionX = (int)(regionHandle >> 32);
-                //int regionY = (int)(regionHandle & 0xFFFFFFFF);
-
-                Session.Client.Self.AutoPilotLocal(x, y, z);
+                Session.Client.Self.AutoPilotLocal((int)target.X, (int)target.Y, target.Z);
             }
 
             else if (command == "fixme")
@@ -1097,6 +1085,13 @@ namespace ghetto
 
                 //FIXME - Add teleport lure
 
+            }
+
+            else if (command == "mlook")
+            {
+                if (cmd.Length < 2 || cmd[1].ToLower() == "on") Session.Client.Self.Status.Controls.Mouselook = true;
+                else if (cmd[1].ToLower() == "off") Session.Client.Self.Status.Controls.Mouselook = false;
+                else { Display.Error(sessionNum, command); return false; }
             }
 
             else if (command == "pay")
@@ -1392,37 +1387,36 @@ namespace ghetto
 
             else if (command == "teleport")
             {
-                if (cmd.Length < 2) { Display.Help(command); return false; }
-                string simName;
-                LLVector3 tPos;
-                if (cmd.Length >= 4)
+                if (cmd.Length < 2)
                 {
-                    if (cmd.Length > 4)
-                    {
-                        simName = String.Join(" ", cmd, 1, cmd.Length - 4);
-                        tPos.X = float.Parse(cmd[cmd.Length - 3]);
-                        tPos.Y = float.Parse(cmd[cmd.Length - 2]);
-                        tPos.Z = float.Parse(cmd[cmd.Length - 1]);
-                    }
-                    else
-                    {
-                        simName = String.Join(" ", cmd, 1, cmd.Length - 3);
-                        tPos.X = float.Parse(cmd[cmd.Length - 2]);
-                        tPos.Y = float.Parse(cmd[cmd.Length - 1]);
-                        tPos.Z = Session.Client.Self.Position.Z;
-                    }
-
+                    Display.Help(command);
+                    return false;
                 }
-                else
+
+                //assumed values
+                string simName = QuoteArg(cmd, 1);
+                LLVector3 target = new LLVector3(128, 128, 0);
+
+                //assumed wrong
+                if (cmd.Length > 2)
                 {
-                    simName = details;
-                    tPos = new LLVector3(128, 128, 0);
+                    //find what pos the vector starts at and how many tokens it is
+                    int start = simName.Split(splitChar).Length + 1;
+                    int len = cmd.Length - start;
+                    if (len > 0)
+                    {
+                        string[] v = new string[len];
+                        Array.Copy(cmd, start, v, 0, len);
+                        if (!LLVector3.TryParse(String.Join(" ", v), out target))
+                        {
+                            Display.Help(command);
+                            return false;
+                        }
+                    }
                 }
 
                 Display.Teleporting(sessionNum, simName);
-                Session.Client.Self.Teleport(simName, tPos);
-
-                return true;
+                Session.Client.Self.Teleport(simName, target);
             }
 
             //FIXME - move to /teleport and just check for ulong
