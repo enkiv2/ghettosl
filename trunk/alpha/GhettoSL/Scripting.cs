@@ -757,8 +757,15 @@ namespace ghetto
 
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
 
-            //First we trim up the original command string and then split it by spaces
+            //First we clean up the original command string, removing whitespace and command slashes
             string commandToParse = commandString.Trim();
+            while (commandToParse.Length > 0 && commandToParse.Substring(0, 1) == "/")
+            {
+                commandToParse = commandToParse.Substring(1).Trim();
+                if (commandToParse.Length == 0) return true;
+            }
+
+            //Next we split it by spaces
             char[] splitChar = { ' ' };
             string[] cmd = commandToParse.Split(splitChar, StringSplitOptions.RemoveEmptyEntries);
 
@@ -789,7 +796,7 @@ namespace ghetto
                 string[] ifCmd = new string[0];
                 for (int i = 1; i < cmd.Length; i++)
                 {
-                    if (commandStart > 0) //already found THEN statement
+                    if (commandStart > 0) //already found THEN statement, adding to command string
                     {
                         Array.Resize(ref ifCmd, ifCmd.Length + 1);
                         ifCmd[ifCmd.Length - 1] = cmd[i];
@@ -1309,6 +1316,7 @@ namespace ghetto
                         {
                             ParseCommand(pair.Key, scriptName, details, parseVariables, fromMasterIM);
                         }
+                        return true;
                     }
                     uint switchTo;
                     if (!uint.TryParse(cmd[1], out switchTo) || switchTo < 1 || !Interface.Sessions.ContainsKey(switchTo))
