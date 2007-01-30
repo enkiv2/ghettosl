@@ -15,8 +15,11 @@
 		
 	      ----------------------------------------------------
 		
-	       GhettoSL - by root66 - (c)2006 obsoleet industries
-       Thanks to mcortez, jhurliman and the rest of the libsecondlife crew.
+	           GhettoSL - by root66 A.K.A. Dirty McLean
+	               (c)2006-2007 obsoleet industries
+              Thanks to mcortez, jhurliman, everyone in the libsl &
+                      openSL crews, and Dimentox Travanti.
+       
 		
 
 
@@ -32,40 +35,39 @@ CONTENTS
 
 1. COMMANDS:
 ---------------------------------------------------------------------------
-anim <uuid>             Start the specified animation
-answer <text>           Answer the last-received script dialog
-camp <text>             Find a chair with text matching the specified string
-clear                   Clear the console display
-dir <path>              View inventory folder contents
-fly                     Enable flying
-go <X> <Y> [Z]          Move to the specified coordinates using autopilot
-inc <%var> [amount]     Increases %var by 1 or any other number/%var
-land                    Disable flying
-listen                  Listen to local chat (on by default)
-look [text]             Displays info about area, or searches by prim text
-pay <uuid> <amount>     Pays the specified avatar or object
-payme <amount>          Pays the specified amount to $masterid, if defined
-quiet                   Stop listening to local chat
-re [name] [message]     List IM sessions or reply by partial name match
-relog                   Log out and back in
-ride <name>             Sit on the same object as the specified name
-run                     Enable running
-session <#> [command]   Switch or send a command to another session
-set <%var> <value>      Used in scripts to define or change a variable
-script <scriptName>     Execute the specified script file
-shout <message>         Shout the specified message to users within 100m
-sit <uuid>              Sit on the specified UUID
-sitg                    Sit on the ground at current location
-stand                   Stand while seated on an object or on the ground
-stopanim <uuid>         Stop the specified animation
-teleport <sim> [x y z]  Teleports to the specified destination
-touch <uuid>            Touch the specified object
-touchid <localID>       Touch the specified object LocalID
-updates <on|off>        Toggles AgentUpdate timer (on by default)
-walk                    Disable running
-whisper                 Whisper the specified message to users within 5m
-who                     List avatars within viewing range
-
+ anim <uuid>             Start the specified animation
+ answer <text>           Answer the last-received script dialog
+ camp <text>             Find a chair with text matching the specified string
+ clear                   Clear the console display
+ dir <path>              View inventory folder contents
+ fly [on|off]            Toggles avatar flying
+ go <X> <Y> [Z]          Move to the specified coordinates using autopilot
+ inc <%var> [amount]     Increases %var by 1 or any other number/%var
+ land                    Disable flying
+ listen                  Same as /quiet off
+ look [text]             Display info about area, or searches by prim text
+ pay <uuid> <amount>     Pay the specified avatar or object
+ payme <amount>          Pay the specified amount to $masterid, if defined
+ quiet [on|off]          Toggle the display of object/avatar chat
+ re [name] [message]     List IM sessions or reply by partial name match
+ relog                   Log out and back in
+ ride <name>             Sit on the same object as the specified name
+ run [on|off]            Toggles avatar running
+ session <#> [command]   Switch or send a command to another session
+ set <%var> <value>      Used in scripts to define or change a variable
+ script <scriptName>     Execute the specified script file
+ shout <message>         Shout the specified message to users within 100m
+ sit <uuid>              Sit on the specified UUID
+ sitg                    Sit on the ground at current location
+ stand                   Stand while seated on an object or on the ground
+ stopanim <uuid>         Stop the specified animation
+ teleport <sim> [x y z]  Teleports to the specified destination
+ touch <uuid>            Touch the specified object
+ touchid <localID>       Touch the specified object LocalID
+ updates <on|off>        Toggle AgentUpdate timer (on by default)
+ walk                    Disable running
+ whisper                 Whisper the specified message to users within 5m
+ who                     List avatars within viewing range
 
 
 2. DEFAULT IDENTIFIERS:
