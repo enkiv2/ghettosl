@@ -96,7 +96,9 @@ namespace ghetto
             do ReadCommand();
             while (!Exit);
 
-            Thread.Sleep(500);
+            Console.WriteLine("SHUTTING DOWN...");
+            Thread.Sleep(1000);
+            Thread.Sleep(1000);
             //Exit application
 
         } //End of Main void

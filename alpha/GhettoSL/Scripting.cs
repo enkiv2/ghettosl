@@ -98,8 +98,11 @@ namespace ghetto
                 {
                     char[] splitChar = { ' ' };
                     string[] args = input.ToLower().Trim().Split(splitChar);
-                    string[] commandsWithArgs = { "camp", "echo", "event", "go", "goto", "if", "inc", "label", "login", "pay", "payme", "say", "set", "shout", "sit", "sleep", "teleport", "touch", "touchid", "updates", "wait", "whisper" };
+                    string[] commandsWithArgs = { "camp", "echo", "event", "fly", "go", "goto", "if", "inc", "label", "login", "pay", "payme", "quiet",
+                                                    "rot", "rotate", "run", "say", "set", "shout", "sit", "sleep", "teleport", "touch", "touchid", "updates", "whisper" };
                     string[] commandsWithoutArgs = { "break", "fly", "land", "listen", "quiet", "quit", "relog", "run", "sitg", "stand", "walk" };
+
+                    
 
                     bool skip = false;
                     if (args.Length == 1 && (args[0] == "" || args[0].Substring(args[0].Length - 1, 1) == ":")) skip = true;
@@ -399,7 +402,10 @@ namespace ghetto
                     GhettoSL.UserSession fromSession = Interface.Sessions[sessionNum];
                     if (fromSession.Client.Network.Connected)
                     {
-                        Session.Settings.URI = "uri:" + fromSession.Client.Network.CurrentSim.Region.Name + "&" + (int)fromSession.Client.Self.Position.X + "&" + (int)fromSession.Client.Self.Position.Y + "&" + (int)fromSession.Client.Self.Position.Z;
+                        Session.Settings.URI = "uri:" + fromSession.Client.Network.CurrentSim.Region.Name
+                            + "&" + (int)fromSession.Client.Self.Position.X
+                            + "&" + (int)fromSession.Client.Self.Position.Y
+                            + "&" + (int)fromSession.Client.Self.Position.Z;
                     }
                     else
                     {
@@ -422,7 +428,12 @@ namespace ghetto
                 Thread.Sleep(1000);
             }
 
-            Session.Login();
+            //FIXME - move this to a callback for login-failed and add login-failed event
+            if (!Session.Login())
+            {
+                Display.Error(1, "Login failed");
+            }
+
             return true;
 
         }
@@ -962,7 +973,7 @@ namespace ghetto
                     return false;
                 }
 
-                if (cmd.Length < 4 || !float.TryParse(cmd[4], out z)) z = Session.Client.Self.Position.Z;
+                if (cmd.Length < 4 || !float.TryParse(cmd[3], out z)) z = Session.Client.Self.Position.Z;
 
                 //FIXME - core library returns incorrect RegionHandle, RegionX, and RegionY?
                 //ulong regionHandle = Session.Client.Network.CurrentSim.Region.Handle;
@@ -971,6 +982,11 @@ namespace ghetto
                 //int regionY = (int)(regionHandle & 0xFFFFFFFF);
 
                 Session.Client.Self.AutoPilotLocal(x, y, z);
+            }
+
+            else if (command == "fixme")
+            {
+                Session.UpdateAppearance();
             }
 
             else if (command == "goto")
@@ -1041,7 +1057,7 @@ namespace ghetto
 
                     lock (Session.Prims)
                     {
-                        foreach (KeyValuePair<uint, PrimObject> pair in Session.Prims)
+                        foreach (KeyValuePair<uint, Primitive> pair in Session.Prims)
                         {
                             if (pair.Value.Text != "") countText++;
                         }
@@ -1053,7 +1069,7 @@ namespace ghetto
                 {
                     lock (Session.Prims)
                     {
-                        foreach (KeyValuePair<uint, PrimObject> pair in Session.Prims)
+                        foreach (KeyValuePair<uint, Primitive> pair in Session.Prims)
                         {
                             if (Regex.IsMatch(pair.Value.Text, details, RegexOptions.IgnoreCase))
                             {
@@ -1200,6 +1216,25 @@ namespace ghetto
             else if (command == "ride")
             {
                 RideWith(sessionNum, details);
+            }
+
+            else if (command == "rot" || command == "rotate")
+            {
+                char[] space = { ' ' };
+                string vString = details.Replace("<", "").Replace(">", "").Replace(",", " ");
+                string[] v = vString.Split(space, StringSplitOptions.RemoveEmptyEntries);
+                float x; float y; float z;
+                if (v.Length != 3
+                    || !float.TryParse(v[0].Trim(), out x)
+                    || !float.TryParse(v[1].Trim(), out y)
+                    || !float.TryParse(v[2].Trim(), out z)
+                )
+                {
+                    Display.Help(command);
+                    return false;
+                }
+
+                Session.Client.Self.Status.Camera.BodyRotation = Helpers.Axis2Rot(new LLVector3(x, y, z));
             }
 
             else if (command == "run" || command == "running")
@@ -1412,7 +1447,7 @@ namespace ghetto
                 }
                 lock (Session.Prims)
                 {
-                    foreach (PrimObject prim in Session.Prims.Values)
+                    foreach (Primitive prim in Session.Prims.Values)
                     {
                         if (prim.ID != findID) continue;
                         Session.Client.Self.Touch(prim.LocalID);
@@ -1478,7 +1513,7 @@ namespace ghetto
 
             lock (Interface.Sessions[sessionID].Prims)
             {
-                foreach (PrimObject prim in Interface.Sessions[sessionID].Prims.Values)
+                foreach (Primitive prim in Interface.Sessions[sessionID].Prims.Values)
                 {
                     int len = textValue.Length;
                     string match = prim.Text.Replace("\n", ""); //Strip newlines

@@ -50,7 +50,7 @@ namespace ghetto
             public SecondLife Client;
             public Dictionary<LLUUID, Avatar> Friends;
             public Dictionary<LLUUID, IMSession> IMSessions;
-            public Dictionary<uint, PrimObject> Prims;
+            public Dictionary<uint, Primitive> Prims;
             public Dictionary<string, ScriptSystem.ScriptEvent> ScriptEvents;
             public LLUUID LastDialogID;
             public int LastDialogChannel;
@@ -115,7 +115,7 @@ namespace ghetto
                 Balance = -1;
                 Friends = new Dictionary<LLUUID, Avatar>();
                 IMSessions = new Dictionary<LLUUID, IMSession>();
-                Prims = new Dictionary<uint, PrimObject>();
+                Prims = new Dictionary<uint, Primitive>();
                 LastDialogChannel = -1;
                 LastDialogID = LLUUID.Zero;
                 MoneySpent = 0;
