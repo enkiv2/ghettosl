@@ -148,7 +148,7 @@ namespace ghetto
                 CurrentStep = stepNum;
                 string line = Lines[CurrentStep].Trim();
 
-                while (CurrentStep < Lines.Length && (line.Length < 1 || line.Substring(line.Length - 1,1) == ":" || ParseCommand(SessionNumber, ScriptName, Lines[CurrentStep], true, false)))
+                while (CurrentStep < Lines.Length && (line.Length < 1 || line.Substring(line.Length - 1, 1) == ":" || ParseCommand(SessionNumber, ScriptName, line, true, false)))
                 {
                     CurrentStep++;
                     line = Lines[CurrentStep].Trim();
@@ -621,9 +621,10 @@ namespace ghetto
                     {
                         string v1 = like[0].Trim();
                         string v2 = like[1].Trim();
-                        //Console.WriteLine("Comparing {0} LIKE {1}", v1, v2); //DEBUG
-                        string regex = "^" + Regex.Escape(v1).Replace("\\*", ".*").Replace("\\?", ".") + "$";
-                        if (like.Length > 1 && !Regex.IsMatch(like[0].Trim(), regex, RegexOptions.IgnoreCase)) pass = false;
+                        //Console.WriteLine("Comparing {0} LIKE {1} == {2}", v1, v2); //DEBUG
+                        string regex = "^" + Regex.Escape(v2).Replace("\\*", ".*").Replace("\\?", ".") + "$";
+                        bool isMatch = Regex.IsMatch(v1, regex, RegexOptions.IgnoreCase);
+                        if (!isMatch) pass = false;
                         break;
                     }
 
@@ -633,7 +634,7 @@ namespace ghetto
                         string v1 = match[0].Trim();
                         string v2 = match[1].Trim();
                         bool isMatch = Regex.IsMatch(v1, v2, RegexOptions.IgnoreCase);
-                        //Console.WriteLine("Comparing {0} MATCH {1} == {2}", v1, v2, isMatch); //DEBUG
+                        Console.WriteLine("Comparing {0} MATCH {1} == {2}", v1, v2, isMatch); //DEBUG
                         if (!isMatch) pass = false;
                         break;
                     }
@@ -992,7 +993,7 @@ namespace ghetto
                 {
                     if (line.Trim() == cmd[1] + ":")
                     {
-                        Interface.Scripts[scriptName].CurrentStep = i;
+                        Interface.Scripts[scriptName].CurrentStep = i + 1;
                         break;
                     }
                     i++;
