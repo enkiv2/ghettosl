@@ -48,7 +48,7 @@ namespace ghetto
             Session.Client.Objects.OnAvatarSitChanged += new ObjectManager.AvatarSitChanged(Objects_OnAvatarSitChanged);
             Session.Client.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
             Session.Client.Objects.OnObjectKilled += new ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
-            Session.Client.Objects.OnPrimMoved += new ObjectManager.PrimMovedCallback(Objects_OnPrimMoved);
+            Session.Client.Objects.OnObjectUpdated += new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
             session.Client.OnLogMessage += new SecondLife.LogCallback(Client_OnLogMessage);
             Session.Client.Self.OnChat += new MainAvatar.ChatCallback(Self_OnChat);
             Session.Client.Self.OnScriptDialog += new MainAvatar.ScriptDialogCallback(Self_OnScriptDialog);
@@ -57,6 +57,18 @@ namespace ghetto
             Session.Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(Callback_AlertMessage));
             Session.Client.Network.RegisterCallback(PacketType.MoneyBalanceReply, new NetworkManager.PacketCallback(Callback_MoneyBalanceReply));
             Session.Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(Callback_TeleportFinish));
+        }
+
+        void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
+        {
+            lock (Session.Prims)
+            {
+                if (Session.Prims.ContainsKey(update.LocalID))
+                {
+                    Session.Prims[update.LocalID].Position = update.Position;
+                    Session.Prims[update.LocalID].Rotation = update.Rotation;
+                }
+            }
         }
 
         void Client_OnLogMessage(string message, Helpers.LogLevel level)
@@ -248,18 +260,6 @@ namespace ghetto
         void GroupsUpdatedHandler(Dictionary<LLUUID, libsecondlife.Group> groups)
         {
             Session.Groups = groups;
-        }
-
-        void Objects_OnPrimMoved(Simulator simulator, PrimUpdate prim, ulong regionHandle, ushort timeDilation)
-        {
-            lock (Session.Prims)
-            {
-                if (Session.Prims.ContainsKey(prim.LocalID))
-                {
-                    Session.Prims[prim.LocalID].Position = prim.Position;
-                    Session.Prims[prim.LocalID].Rotation = prim.Rotation;
-                }
-            }
         }
 
         void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
