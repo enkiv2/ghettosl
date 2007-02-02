@@ -39,6 +39,7 @@ namespace ghetto
     {
         public static Dictionary<string, ScriptSystem.UserScript> Scripts;
         public static Dictionary<uint, GhettoSL.UserSession> Sessions;
+        public static SocketServer HTTPServer;
         public static uint CurrentSession;
         public static bool Exit;
         public static bool NoColor;
@@ -46,6 +47,7 @@ namespace ghetto
         //Main void
         static void Main(string[] args)
         {
+            HTTPServer = new SocketServer();
             Exit = false; 
             string platform = System.Convert.ToString(Environment.OSVersion.Platform);
             Console.WriteLine(Environment.NewLine + "Running on platform " + platform);

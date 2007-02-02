@@ -52,7 +52,6 @@ namespace ghetto
             public Dictionary<LLUUID, Group> Groups;
             public Dictionary<LLUUID, IMSession> IMSessions;
             public Dictionary<uint, Primitive> Prims;
-            public Dictionary<string, ScriptSystem.ScriptEvent> ScriptEvents;
             public LLUUID LastDialogID;
             public int LastDialogChannel;
             public int MoneySpent;
@@ -124,7 +123,6 @@ namespace ghetto
                 MasterIMSession = LLUUID.Zero;
                 RegionX = 0;
                 RegionY = 0;
-                ScriptEvents = new Dictionary<string, ScriptSystem.ScriptEvent>();
                 Settings = new UserSessionSettings();
                 StartTime = Helpers.GetUnixTime();
             }
