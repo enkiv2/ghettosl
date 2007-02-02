@@ -148,10 +148,14 @@ namespace ghetto
                 CurrentStep = stepNum;
                 string line = Lines[CurrentStep].Trim();
 
-                while (CurrentStep < Lines.Length && (line.Length < 1 || line.Substring(line.Length - 1, 1) == ":" || ParseCommand(SessionNumber, ScriptName, line, true, false)))
+                while (CurrentStep < Lines.Length)
                 {
-                    CurrentStep++;
-                    line = Lines[CurrentStep].Trim();
+                    if (line.Length < 1 || line.Substring(line.Length - 1, 1) == ":" || ParseCommand(SessionNumber, ScriptName, line, true, false))
+                    {
+                        CurrentStep++;
+                        line = Lines[CurrentStep].Trim();
+                    }
+                    else break;
                 }
             }
 
@@ -162,6 +166,7 @@ namespace ghetto
 
             public UserScript(uint sessionNum, string scriptFile)
             {
+                Events = new Dictionary<string, ScriptEvent>();
                 SessionNumber = sessionNum;
                 ScriptName = scriptFile;
                 CurrentStep = 0;
@@ -228,11 +233,22 @@ namespace ghetto
         /// <param name="message">Message/text associated with event</param>
         /// <param name="id">UUID associated with event</param>
         /// <param name="amount">L$ amount associated with event</param>
-        public static void TriggerEvent(uint sessionNum, string command, string scriptName)
-        {
-            ParseCommand(sessionNum, scriptName, command, true, false);
-        }
+        //public static void TriggerEvent(uint sessionNum, string command, string scriptName)
+        //{
+        //    ParseCommand(sessionNum, scriptName, command, true, false);
+        //}
 
+        public static void TriggerEvents(uint sessionNum, ScriptSystem.EventTypes eventType, Dictionary<string, string> identifiers)
+        {
+            GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
+            foreach (KeyValuePair<string, ScriptSystem.UserScript> s in Interface.Scripts)
+            {
+                foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in s.Value.Events)
+                {
+                    if (e.Value.EventType == eventType) ParseCommand(sessionNum, s.Value.ScriptName, e.Value.Command, true, false);
+                }
+            }
+        }
 
         /// <summary>
         /// Returns a multi-word (quoted) argument from a command array with quotations stripped
@@ -460,13 +476,9 @@ namespace ghetto
             {
                 if (cmd.Length < 3) { Display.Help(arg); return false; }
                 scriptFile = cmd[2];
-                if (!Interface.Scripts.ContainsKey(cmd[2])) Display.InfoResponse(sessionNum, "No such script loaded. For a list of active scripts, use /scripts.");
+                if (Interface.Scripts.ContainsKey(cmd[2])) Display.InfoResponse(sessionNum, "No such script loaded. For a list of active scripts, use /scripts.");
                 else Interface.Scripts.Remove(cmd[2]);
-                //remove all events tied to this script
-                foreach (KeyValuePair<string, ScriptEvent> pair in Session.ScriptEvents)
-                {
-                    if (pair.Value.ScriptName == cmd[2]) Session.ScriptEvents.Remove(pair.Key);
-                }
+                Interface.Scripts[cmd[2]] = null;
                 if (scriptFile == cmd[2]) return false; //script unloaded itself
                 else return true;
             }
@@ -505,7 +517,7 @@ namespace ghetto
         /// <summary>
         /// /event command
         /// </summary>
-        public static bool ParseEventCommand(uint sessionNum, string[] cmd, string scriptName)
+        public static bool ParseEventCommand(uint sessionNum, string scriptName, string[] cmd)
         {
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
             if (cmd.Length < 3) {
@@ -514,16 +526,22 @@ namespace ghetto
             }
             else if (cmd[1] == "-r" || cmd[1] == "-remove" || cmd[1] == "remove")
             {
-                if (cmd.Length < 3) Display.Help(cmd[0]);
-                else if (!Session.ScriptEvents.ContainsKey(cmd[2])) Display.Error(sessionNum, "No such event: " + cmd[2]);
-                else
+                if (cmd.Length < 3) { Display.Help(cmd[0]); return false; }
+                string eventName = cmd[2];
+                ScriptSystem.UserScript script = Interface.Scripts[scriptName];
+                if (script.Events.ContainsKey(eventName))
                 {
-                    Session.ScriptEvents.Remove(cmd[2]);
-                    Display.InfoResponse(sessionNum, "Removed event: " + cmd[2]);
+                    script.Events.Remove(eventName);
+                    script.Events[eventName] = null;
+                    //DEBUG - removed message should not be in release
+                    Display.InfoResponse(sessionNum, "Removed event: " + eventName);
                     return true;
                 }
+                Display.Error(sessionNum, scriptName + " - No such event: " + cmd[2]);
+                return false;
             }
-            else if (cmd.Length < 4) {
+            else if (cmd.Length < 4)
+            {
                 Display.Help(cmd[0]);
             }
             else
@@ -556,17 +574,16 @@ namespace ghetto
                 ScriptEvent newEvent = new ScriptEvent(scriptName);
                 newEvent.EventType = (EventTypes)eventNum;
                 newEvent.Command = eventCommand;
-                if (Session.ScriptEvents.ContainsKey(eventLabel))
+                foreach (ScriptSystem.UserScript s in Interface.Scripts.Values)
                 {
-                    Session.ScriptEvents.Remove(eventLabel);
-                    Session.ScriptEvents.Add(eventLabel, newEvent);
-                    Display.InfoResponse(sessionNum, "Replaced " + eventType + " event: " + eventLabel);
+                    if (s.Events.ContainsKey(eventLabel))
+                    {
+                        Display.Error(sessionNum, "Event \"" + eventLabel + "\" already exists in script \"" + s.ScriptName + "\".");
+                        return false;
+                    }
                 }
-                else
-                {
-                    Session.ScriptEvents.Add(eventLabel, newEvent);
-                    Display.InfoResponse(sessionNum, "Added " + eventType + " event: " + eventLabel);
-                }
+                Interface.Scripts[scriptName].Events.Add(eventLabel, newEvent);
+                Display.InfoResponse(sessionNum, "Added " + eventType + " event: " + eventLabel);
                 return true;
             }
             return false;
@@ -754,10 +771,10 @@ namespace ghetto
             //if (scriptName != "") Console.WriteLine("({0}) [{1}] SCRIPTED COMMAND: {2}", sessionNum, scriptName, commandString);
             //FIXME - change display output if fromMasterIM == true
 
-            if (scriptName != "" && !Interface.Scripts.ContainsKey(scriptName)) return false; //invalid or unloaded script
-
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
 
+            if (scriptName != "" && !Interface.Scripts.ContainsKey(scriptName)) return false; //invalid or unloaded script
+            
             //First we clean up the original command string, removing whitespace and command slashes
             string commandToParse = commandString.Trim();
             while (commandToParse.Length > 0 && commandToParse.Substring(0, 1) == "/")
@@ -845,7 +862,8 @@ namespace ghetto
             if (command == "anim")
             {
                 LLUUID anim;
-                if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out anim)) {
+                if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out anim))
+                {
                     Display.Help(command);
                     return false;
                 }
@@ -926,11 +944,14 @@ namespace ghetto
                 Console.WriteLine(details);
             }
 
-            else if (command == "event" || command == "events")
+            else if (command == "event" && scriptName != "")
             {
-                //FIXME - add -b flag to block events that occur after this one?
+                return ParseEventCommand(sessionNum, scriptName, cmd);
+            }
+
+            else if (command == "events")
+            {
                 if (cmd.Length == 1) Display.EventList(sessionNum);
-                else return ParseEventCommand(sessionNum, cmd, scriptName);
             }
 
             else if (command == "exit")
@@ -985,15 +1006,15 @@ namespace ghetto
                 Session.UpdateAppearance();
             }
 
-            else if (command == "goto")
+            else if (command == "goto" && scriptName != "")
             {
-                if (scriptName == "") return false;
                 int i = 0;
-                foreach (string line in Interface.Scripts[scriptName].Lines)
+                UserScript script = Interface.Scripts[scriptName];
+                foreach (string line in script.Lines)
                 {
                     if (line.Trim() == cmd[1] + ":")
                     {
-                        Interface.Scripts[scriptName].CurrentStep = i + 1;
+                        Interface.Scripts[scriptName].CurrentStep = i;
                         break;
                     }
                     i++;
@@ -1043,6 +1064,25 @@ namespace ghetto
                 string topic = "";
                 if (cmd.Length > 1) topic = cmd[1];
                 Display.Help(topic);
+            }
+
+            else if (command == "http")
+            {
+                string flag = cmd[1].ToLower();
+                if (cmd.Length < 2 || (flag != "on" && flag != "off"))
+                {
+                    Display.Help(command);
+                    return false;
+                }
+                if (flag == "off")
+                {
+                    Interface.HTTPServer.DisableServer();
+                }
+                else if (flag == "on")
+                {
+                    //FIXME - add port number argument
+                    Interface.HTTPServer.Listen(8066);
+                }
             }
 
             else if (command == "im")
