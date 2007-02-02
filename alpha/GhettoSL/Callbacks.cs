@@ -81,17 +81,6 @@ namespace ghetto
             Display.SitChanged(Session.SessionNumber, sittingOn);
             if (sittingOn > 0) ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.Sit, null);
             else ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.Unsit, null);
-
-            //if (sittingOn > 0) type = ScriptSystem.EventTypes.Sit;
-            //else type = ScriptSystem.EventTypes.Unsit;
-            //foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
-            //{
-            //    if (e.Value.EventType == type)
-            //    {
-            //        //FIXME - add $sittingon?
-            //        ScriptSystem.TriggerEvent(Session.SessionNumber, e.Value.Command, e.Value.ScriptName);
-            //    }
-            //}
         }
 
         void Network_OnCurrentSimChanged(Simulator PreviousSimulator)
@@ -109,17 +98,6 @@ namespace ghetto
             identifiers.Add("$item", item.Name);
             identifiers.Add("$itemid", item.ItemID.ToString());
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.GetItem, identifiers);
-
-            //foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
-            //{
-            //    if (e.Value.EventType == ScriptSystem.EventTypes.GetItem)
-            //    {
-            //        //FIXME - add $identifiers for everything else
-            //        string command = e.Value.Command.Replace("$name", fromAgentName).Replace("$id", fromAgentID.ToString());
-            //        command = command.Replace("$item", item.Name).Replace("$itemid", item.ItemID.ToString());
-            //        ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
-            //    }
-            //}
         }
 
         void Self_OnScriptDialog(string message, string objectName, LLUUID imageID, LLUUID objectID, string firstName, string lastName, int chatChannel, List<string> buttons)
@@ -134,17 +112,6 @@ namespace ghetto
             identifiers.Add("$channel", chatChannel.ToString());
             identifiers.Add("$message", message);
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.ScriptDialog, identifiers);
-
-            //foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
-            //{
-            //    if (e.Value.EventType == ScriptSystem.EventTypes.ScriptDialog)
-            //    {
-            //        //FIXME - add $identifiers for everything else
-            //        string command = e.Value.Command.Replace("$name", objectName).Replace("$id", objectID.ToString());
-            //        command = command.Replace("$channel", chatChannel.ToString()).Replace("$message", message);
-            //        ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
-            //    }
-            //}
         }
 
         void Callback_AlertMessage(Packet packet, Simulator sim)
@@ -182,16 +149,6 @@ namespace ghetto
                 identifiers.Add("$amount", amount.ToString());
                 ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.GiveMoney, identifiers);
 
-                //foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
-                //{
-                //    if (e.Value.EventType == ScriptSystem.EventTypes.GiveMoney)
-                //    {
-                //        //FIXME - try to get id
-                //        string command = e.Value.Command.Replace("$name", name).Replace("$amount", amount.ToString());
-                //        ScriptSystem.TriggerEvent(Session.SessionNumber, e.Value.Command, e.Value.ScriptName);
-                //    }
-                //}
-
                 amount *= -1; //you paid
             }
 
@@ -205,17 +162,8 @@ namespace ghetto
                 identifiers.Add("$name", name);
                 identifiers.Add("$amount", amount.ToString());
                 ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.GetMoney, identifiers);
-
-                //foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
-                //{
-                //    if (e.Value.EventType == ScriptSystem.EventTypes.GetMoney)
-                //    {
-                //        //FIXME - try to get id
-                //        string command = e.Value.Command.Replace("$name", name).Replace("$amount", amount.ToString());
-                //        ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
-                //    }
-                //}
             }
+
         }
 
         void Callback_TeleportFinish(Packet packet, Simulator sim)
@@ -230,18 +178,6 @@ namespace ghetto
             identifiers.Add("$newregion", Session.Client.Network.CurrentSim.Region.Name);
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.TeleportFinish, identifiers);
 
-            //foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
-            //{
-            //    if (e.Value.EventType == ScriptSystem.EventTypes.TeleportFinish)
-            //    {
-            //        string command = e.Value.Command;
-            //        command = ScriptSystem.ParseTokens(command, "");
-            //        command = command.Replace("$region", sim.Region.Name);
-            //        command = command.Replace("$newregion", Session.Client.Network.CurrentSim.Region.Name);
-            //        command = ScriptSystem.ParseVariables(Session.SessionNumber, command, "");
-            //        ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
-            //    }
-            //}
         }
 
         void Network_OnConnected(object sender)
@@ -268,33 +204,12 @@ namespace ghetto
 
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.Connect, null);
 
-            //foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
-            //{
-            //    if (e.Value.EventType == ScriptSystem.EventTypes.Connect)
-            //    {
-            //        string command = e.Value.Command;
-            //        command = ScriptSystem.ParseTokens(command, "");
-            //        command = ScriptSystem.ParseVariables(Session.SessionNumber, command, "");                    
-            //        ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
-            //    }
-            //}
         }
 
         void Network_OnSimDisconnected(Simulator simulator, NetworkManager.DisconnectType reason)
         {
             Display.Disconnected(Session.SessionNumber, reason.ToString());
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.Disconnect, null);
-
-            //foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
-            //{
-            //    if (e.Value.EventType == ScriptSystem.EventTypes.Disconnect)
-            //    {
-            //        string command = e.Value.Command;
-            //        command = ScriptSystem.ParseTokens(command, "");
-            //        command = ScriptSystem.ParseVariables(Session.SessionNumber, command, "");
-            //        ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
-            //    }
-            //}
         }
 
         void GroupsUpdatedHandler(Dictionary<LLUUID, libsecondlife.Group> groups)
@@ -348,21 +263,6 @@ namespace ghetto
             identifiers.Add("$ctype", chatType.ToString());
             identifiers.Add("$stype", sourceType.ToString());
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.Chat, identifiers);
-
-            //foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
-            //{
-            //    if (e.Value.EventType == ScriptSystem.EventTypes.Chat)
-            //    {
-            //        string command = e.Value.Command;
-            //        command = ScriptSystem.ParseTokens(command, message);
-            //        command = command.Replace("$name", fromName).Replace("$message", message);
-            //        command = command.Replace("$id", id.ToString()).Replace("$ownerid", ownerid.ToString());
-            //        command = command.Replace("$ctype", chatType.ToString()).Replace("$stype", sourceType.ToString());
-            //        command = ScriptSystem.ParseVariables(Session.SessionNumber, command, e.Value.ScriptName);
-            //        ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
-            //    }
-            //}
-
         }
 
 
@@ -401,20 +301,6 @@ namespace ghetto
             identifiers.Add("$id", fromID.ToString());
             identifiers.Add("$dialog", dialog.ToString());
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.IM, identifiers);
-
-            //foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in Session.ScriptEvents)
-            //{
-            //    if (e.Value.EventType == ScriptSystem.EventTypes.IM)
-            //    {
-            //        string command = e.Value.Command.Replace("$name", fromName);
-            //        command = ScriptSystem.ParseTokens(command, message);
-            //        command = command.Replace("$message", message);
-            //        command = command.Replace("$id", fromID.ToString());
-            //        command = command.Replace("$dialog", dialog.ToString());
-            //        command = ScriptSystem.ParseVariables(Session.SessionNumber, command, e.Value.ScriptName);
-            //        ScriptSystem.TriggerEvent(Session.SessionNumber, command, e.Value.ScriptName);
-            //    }
-            //}
 
         }
     }

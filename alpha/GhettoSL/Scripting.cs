@@ -146,16 +146,20 @@ namespace ghetto
                 if (stepNum >= Lines.Length) return;
 
                 CurrentStep = stepNum;
-                string line = Lines[CurrentStep].Trim();
+                string[] splitChar = { " | " };
 
                 while (CurrentStep < Lines.Length)
                 {
-                    if (line.Length < 1 || line.Substring(line.Length - 1, 1) == ":" || ParseCommand(SessionNumber, ScriptName, line, true, false))
+                    string line = Lines[CurrentStep].Trim();
+                    CurrentStep++;
+                    if (line.Length < 1) continue;
+                    string[] commands = line.Split(splitChar, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (string command in commands)
                     {
-                        CurrentStep++;
-                        line = Lines[CurrentStep].Trim();
+                        if (command.Substring(command.Length - 1, 1) == ":") continue;
+                        if (!ParseCommand(SessionNumber, ScriptName, command, true, false)) return;
                     }
-                    else break;
+                    
                 }
             }
 
@@ -224,20 +228,6 @@ namespace ghetto
             GetItem = 12
         }
 
-
-        /// <summary>
-        /// Triggered by callbacks for matching events
-        /// </summary>
-        /// <param name="command">Command triggered on this event</param>
-        /// <param name="name">Avatar/object name associated with event</param>
-        /// <param name="message">Message/text associated with event</param>
-        /// <param name="id">UUID associated with event</param>
-        /// <param name="amount">L$ amount associated with event</param>
-        //public static void TriggerEvent(uint sessionNum, string command, string scriptName)
-        //{
-        //    ParseCommand(sessionNum, scriptName, command, true, false);
-        //}
-
         public static void TriggerEvents(uint sessionNum, ScriptSystem.EventTypes eventType, Dictionary<string, string> identifiers)
         {
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
@@ -245,7 +235,13 @@ namespace ghetto
             {
                 foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in s.Value.Events)
                 {
-                    if (e.Value.EventType == eventType) ParseCommand(sessionNum, s.Value.ScriptName, e.Value.Command, true, false);
+                    string command = e.Value.Command;
+                    if (identifiers != null)
+                    {
+                        foreach (KeyValuePair<string, string> pair in identifiers)
+                            command = command.Replace(pair.Key, pair.Value);
+                    }
+                    if (e.Value.EventType == eventType) ParseCommand(sessionNum, s.Value.ScriptName, command, true, false);
                 }
             }
         }
@@ -497,14 +493,15 @@ namespace ghetto
             {
                 //scriptFile is already loaded. refresh.
                 Display.InfoResponse(sessionNum, "Reloading script: " + scriptFile);
+                Interface.Scripts[scriptFile] = new UserScript(sessionNum, scriptFile);
             }
             else
             {
                 //add entry for scriptFile
                 Display.InfoResponse(sessionNum, "Loading script: " + scriptFile);
-                Interface.Scripts.Add(scriptFile, new UserScript(sessionNum, scriptFile));
+                
             }
-
+            Interface.Scripts.Add(scriptFile, new UserScript(sessionNum, scriptFile));
             if (Interface.Scripts[scriptFile].Load(scriptFile))
             {
                 //start the script
