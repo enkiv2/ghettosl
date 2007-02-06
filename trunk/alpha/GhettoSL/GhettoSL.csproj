@@ -38,6 +38,7 @@
   </Target>
   -->
   <ItemGroup>
+    <Compile Include="SocketServer.cs" />
     <Compile Include="Display.cs" />
     <Compile Include="Callbacks.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
