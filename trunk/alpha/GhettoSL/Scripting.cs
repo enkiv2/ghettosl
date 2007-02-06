@@ -40,23 +40,11 @@ namespace ghetto
     public class ScriptSystem
     {
 
-        //public static uint sessionNum;
-
-        //public static GhettoSL.UserSession Session;
-
-        //public ScriptSystem(uint sessionNumber)
-        //{
-        //    sessionNum = sessionNumber;
-        //}
-
         public class UserScript
         {
             public uint SessionNumber;
             public string ScriptName;
-            /// <summary>
-            /// Array containing each line of the script
-            /// </summary>
-            public string[] Lines;
+
             /// <summary>
             /// Current line script step, referenced after a sleep
             /// </summary>
@@ -74,62 +62,135 @@ namespace ghetto
             /// </summary>
             public System.Timers.Timer SleepTimer;
             /// <summary>
+            /// Dictionary of scripted aliases
+            /// </summary>
+            public Dictionary<string, string[]> Aliases;
+            /// <summary>
             /// Dictionary of scripted events
             /// </summary>
-            public Dictionary<string, ScriptEvent> Events;
+            public Dictionary<EventTypes, ScriptEvent> Events;
             /// <summary>
             /// Variables accessed with /set %var value, and %var
             /// </summary>
             public Dictionary<string, string> Variables;
+
+
             /// <summary>
             /// Load the specified script file into the Lines array
             /// </summary>
-            public bool Load(string scriptFile)
+            /// <returns>-1 if read-error, 0 if no errors, or the line number where an error occurred</returns>
+            public int Load(string scriptFile)
             {
 
-                if (!File.Exists(scriptFile)) return false;
+                StreamReader read;
+                try { read = File.OpenText(scriptFile); }
+                catch { return -1; }
 
                 string[] script = { };
                 string input;
-                int error = 0;
-                //FIXME - display file access error if file is in use
-                StreamReader read = File.OpenText(scriptFile);
                 for (int i = 0; (input = read.ReadLine()) != null; i++)
                 {
-                    char[] splitChar = { ' ' };
-                    string[] args = input.ToLower().Trim().Split(splitChar);
-                    string[] commandsWithArgs = { "camp", "echo", "event", "fly", "go", "goto", "if", "inc", "label", "login", "pay", "payme", "quiet",
-                                                    "rot", "rotate", "run", "say", "set", "shout", "sit", "sleep", "teleport", "touch", "touchid", "updates", "whisper" };
-                    string[] commandsWithoutArgs = { "break", "fly", "land", "listen", "quiet", "quit", "relog", "run", "sitg", "stand", "walk" };
+                    string[] splitChar = { " " };
+                    string[] args = input.Trim().Split(splitChar, StringSplitOptions.RemoveEmptyEntries);
+                    Array.Resize(ref script, i + 1);
+                    script[i] = String.Join(" ", args);
+                }
 
-                    
+                read.Close();
 
-                    bool skip = false;
-                    if (args.Length == 1 && (args[0] == "" || args[0].Substring(args[0].Length - 1, 1) == ":")) skip = true;
-
-                    if (!skip && Array.IndexOf(commandsWithArgs, args[0]) > -1 && args.Length < 2)
+                string currentAlias = "";
+                EventTypes currentEvent = EventTypes.NULL;
+                string[] currentList = { };
+                for (int i = 0, level = 0; i < script.Length; i++)
+                {
+                    string[] splitChar = { " " };
+                    string[] cmd = script[i].Split(splitChar, StringSplitOptions.RemoveEmptyEntries);
+                    if (currentAlias != "" || currentEvent != EventTypes.NULL)
                     {
-                        Console.WriteLine("Missing argument(s) for command \"{0}\" on line {1} of {2}", args[0], i + 1, scriptFile);
-                        error++;
-                    }
-                    else if (!skip && Array.IndexOf(commandsWithArgs, args[0]) < 0 && Array.IndexOf(commandsWithoutArgs, args[0]) < 0)
-                    {
-                        Console.WriteLine("Unknown command \"{0}\" on line {1} of {2}", args[0], i + 1, scriptFile);
-                        error++;
+                        if (script.Length == 0) continue;
+                        else if (script[i] == "{") { level++; continue; }
+                        else if (script[i] == "}")
+                        {
+                            level--;
+
+                            if (level < 0)
+                            {
+                                Display.Error(0, "Bracket mismatch");
+                                return i + 1;
+                            }
+                            else if (level == 0)
+                            {
+                                //all { have been closed with } - Time to store the list we collected and move on
+                                if (currentList.Length == 0)
+                                {
+                                    if (currentAlias != "") Display.Error(0, "Empty alias \"" + currentAlias + "\" on line " + (i + 1));
+                                    else if (currentEvent != EventTypes.NULL) Display.Error(0, "Empty event \"" + currentEvent + "\" on line " + (i + 1));
+                                    return i + 1;
+                                }
+                                if (currentAlias != "")
+                                {
+                                    Aliases.Add(currentAlias, currentList);
+                                    //DEBUG
+                                    //Display.InfoResponse(0, "Added alias \"" + currentAlias + "\" (" + currentList.Length + " lines)");
+                                    //Console.WriteLine(String.Join(Environment.NewLine, currentList));
+                                    currentAlias = "";
+                                }
+                                else if (currentEvent != EventTypes.NULL)
+                                {
+                                    Events.Add(currentEvent, new ScriptEvent(ScriptName, currentList));
+                                    //DEBUG
+                                    //Display.InfoResponse(0, "Added " + currentEvent + " event (" + currentList.Length + " lines)");
+                                    //Console.WriteLine(String.Join(Environment.NewLine, currentList));
+                                    currentEvent = EventTypes.NULL;
+                                }
+                                //we already stored the event or alias so we can clear this info
+                                string[] empty = { };
+                                currentList = empty;
+                                continue;
+                            }
+                        }
+                        else //not a { or a }, and level > 0, so add to the current list
+                        {
+                            if (cmd.Length == 0) continue;
+                            int len = currentList.Length;
+                            Array.Resize(ref currentList, len + 1);
+                            currentList[len] = script[i];
+                        }
                     }
                     else
                     {
-                        Array.Resize(ref script, i + 1);
-                        script[i] = input;
+                        if (cmd.Length == 0) continue;
+                        string prefix = cmd[0].ToLower();
+                        string name = cmd[1];
+                        if (prefix == "alias" && cmd.Length == 2)
+                        {
+                            if (Aliases.ContainsKey(name))
+                            {
+                                Display.Error(0, "Duplicate definition for alias \"" + name + "\"");
+                                return i + 1;
+                            }
+                            currentAlias = cmd[1];
+                        }
+                        else if (prefix == "event" && cmd.Length == 2)
+                        {
+                            ScriptSystem.EventTypes type = EventTypeByName(cmd[1]);
+                            if (type == EventTypes.NULL)
+                            {
+                                Display.Error(0, "Unknown event type \"" + cmd[1] + "\"");
+                                return i + 1;
+                            }                            
+                            else if (Events.ContainsKey(type))
+                            {
+                                Display.Error(0, "Duplicate definition for event \"" + name + "\"");
+                                return i + 1;
+                            }
+                            currentEvent = type;
+                        }
+                        else return i + 1; //unknown prefix
                     }
                 }
-                read.Close();
-                if (error > 0) return false;
-                else
-                {
-                    Lines = script;
-                    return true;
-                }
+
+                return 0; //no errors
             }
 
             public void Sleep(float seconds)
@@ -141,43 +202,14 @@ namespace ghetto
                 SleepTimer.Enabled = true;
             }
 
-            public void Step(int stepNum)
-            {
-                if (stepNum >= Lines.Length) return;
-
-                CurrentStep = stepNum;
-                string[] splitChar = { " | " };
-
-                while (CurrentStep < Lines.Length)
-                {
-                    string line = Lines[CurrentStep].Trim();
-                    CurrentStep++;
-                    if (line.Length < 1) continue;
-                    string[] commands = line.Split(splitChar, StringSplitOptions.RemoveEmptyEntries);
-                    foreach (string command in commands)
-                    {
-                        if (command.Substring(command.Length - 1, 1) == ":") continue;
-                        if (!ParseCommand(SessionNumber, ScriptName, command, true, false)) return;
-                    }
-                    
-                }
-            }
-
-            public void ScriptTimerHandler(object target, System.Timers.ElapsedEventArgs args)
-            {
-                Step(CurrentStep + 1);
-            }
-
             public UserScript(uint sessionNum, string scriptFile)
             {
-                Events = new Dictionary<string, ScriptEvent>();
+                Aliases = new Dictionary<string, string[]>();
+                Events = new Dictionary<EventTypes, ScriptEvent>();
                 SessionNumber = sessionNum;
                 ScriptName = scriptFile;
                 CurrentStep = 0;
                 ScriptTime = Helpers.GetUnixTime();
-                SleepingSince = ScriptTime;
-                SleepTimer = new System.Timers.Timer();
-                SleepTimer.Elapsed += new System.Timers.ElapsedEventHandler(ScriptTimerHandler);
                 Variables = new Dictionary<string, string>();
             }
 
@@ -187,28 +219,22 @@ namespace ghetto
         public class ScriptEvent
         {
             /// <summary>
-            /// Event type, enumerated in EventTypes.*
-            /// </summary>
-            public EventTypes EventType;
-
-            /// <summary>
             /// Command to execute on the specified event
             /// </summary>
-            public string Command;
+            public string[] Commands;
 
             /// <summary>
             /// Script name attached to the event, if any
             /// </summary>
             public string ScriptName;
 
-            public ScriptEvent(string scriptName)
+            public ScriptEvent(string scriptName, string[] commandList)
             {
+                Commands = commandList;
                 ScriptName = scriptName;
-                EventType = EventTypes.NULL;
-                Command = "";
+                //EventType = eventType;
             }
         }
-
 
         //Used by scripted events
         public enum EventTypes
@@ -228,20 +254,36 @@ namespace ghetto
             GetItem = 12
         }
 
+        public static EventTypes EventTypeByName(string typeString)
+        {
+            for (int t = 1; t < 14; t++)
+            {
+                string compare = (ScriptSystem.EventTypes)t + "";
+                if (compare == typeString)
+                {
+                    return (ScriptSystem.EventTypes)t;
+                }
+            }
+            return EventTypes.NULL;
+        }
+
         public static void TriggerEvents(uint sessionNum, ScriptSystem.EventTypes eventType, Dictionary<string, string> identifiers)
         {
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
             foreach (KeyValuePair<string, ScriptSystem.UserScript> s in Interface.Scripts)
             {
-                foreach (KeyValuePair<string, ScriptSystem.ScriptEvent> e in s.Value.Events)
+                if (s.Value.Events.ContainsKey(eventType))
                 {
-                    string command = e.Value.Command;
-                    if (identifiers != null)
+                    foreach (String command in s.Value.Events[eventType].Commands)
                     {
-                        foreach (KeyValuePair<string, string> pair in identifiers)
-                            command = command.Replace(pair.Key, pair.Value);
+                        string c = command;
+                        if (identifiers != null)
+                        {
+                            foreach (KeyValuePair<string, string> pair in identifiers)
+                                c = c.Replace(pair.Key, pair.Value);
+                        }
+                        ParseCommand(sessionNum, s.Value.ScriptName, c, true, false);
                     }
-                    if (e.Value.EventType == eventType) ParseCommand(sessionNum, s.Value.ScriptName, command, true, false);
                 }
             }
         }
@@ -492,118 +534,53 @@ namespace ghetto
             if (Interface.Scripts.ContainsKey(scriptFile))
             {
                 //scriptFile is already loaded. refresh.
-                Display.InfoResponse(sessionNum, "Reloading script: " + scriptFile);
-                Interface.Scripts[scriptFile] = new UserScript(sessionNum, scriptFile);
+                Display.InfoResponse(0, "Reloading script: " + scriptFile);
+                Interface.Scripts[scriptFile] = new UserScript(0, scriptFile);
             }
             else
             {
                 //add entry for scriptFile
-                Display.InfoResponse(sessionNum, "Loading script: " + scriptFile);
-                
+                Display.InfoResponse(0, "Loading script: " + scriptFile);
+                Interface.Scripts.Add(scriptFile, new UserScript(0, scriptFile));
             }
-            Interface.Scripts.Add(scriptFile, new UserScript(sessionNum, scriptFile));
-            if (Interface.Scripts[scriptFile].Load(scriptFile))
+            int loaded = Interface.Scripts[scriptFile].Load(scriptFile);
+            if (loaded < 0)
             {
-                //start the script
-                Interface.Scripts[scriptFile].Step(0);
-            }
-            return true;
-        }
-
-
-        /// <summary>
-        /// /event command
-        /// </summary>
-        public static bool ParseEventCommand(uint sessionNum, string scriptName, string[] cmd)
-        {
-            GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
-            if (cmd.Length < 3) {
-                Display.Help(cmd[0]);
+                Display.Error(0, "Error opening " + scriptFile + " (invalid file name or file in use)");
                 return false;
             }
-            else if (cmd[1] == "-r" || cmd[1] == "-remove" || cmd[1] == "remove")
+            else if (loaded > 0)
             {
-                if (cmd.Length < 3) { Display.Help(cmd[0]); return false; }
-                string eventName = cmd[2];
-                ScriptSystem.UserScript script = Interface.Scripts[scriptName];
-                if (script.Events.ContainsKey(eventName))
-                {
-                    script.Events.Remove(eventName);
-                    script.Events[eventName] = null;
-                    //DEBUG - removed message should not be in release
-                    Display.InfoResponse(sessionNum, "Removed event: " + eventName);
-                    return true;
-                }
-                Display.Error(sessionNum, scriptName + " - No such event: " + cmd[2]);
+                Display.Error(0, "Error on line " + loaded + " of script " + scriptFile);
                 return false;
-            }
-            else if (cmd.Length < 4)
-            {
-                Display.Help(cmd[0]);
             }
             else
             {
-                string eventLabel = cmd[1];
-                string eventType = "";
-                int eventNum = 0;
-                foreach (int e in Enum.GetValues(typeof(EventTypes)))
-                {
-                    if (((EventTypes)e).ToString().ToLower() == cmd[2].ToLower())
-                    {
-                        eventNum = e;
-                        eventType = ((EventTypes)e).ToString();
-                        break;
-                    }
-                }
-                if (eventNum == 0)
-                {
-                    Display.Error(sessionNum, "Unrecognized event type: " + cmd[2]);
-                    return false;
-                }
-
-                string eventCommand = "";
-                for (int i = 3; i < cmd.Length; i++)
-                {
-                    if (eventCommand != "") eventCommand += " ";
-                    eventCommand += cmd[i];
-                }
-
-                ScriptEvent newEvent = new ScriptEvent(scriptName);
-                newEvent.EventType = (EventTypes)eventNum;
-                newEvent.Command = eventCommand;
-                foreach (ScriptSystem.UserScript s in Interface.Scripts.Values)
-                {
-                    if (s.Events.ContainsKey(eventLabel))
-                    {
-                        Display.Error(sessionNum, "Event \"" + eventLabel + "\" already exists in script \"" + s.ScriptName + "\".");
-                        return false;
-                    }
-                }
-                Interface.Scripts[scriptName].Events.Add(eventLabel, newEvent);
-                Display.InfoResponse(sessionNum, "Added " + eventType + " event: " + eventLabel);
+                int a = Interface.Scripts[scriptFile].Aliases.Count;
+                int e = Interface.Scripts[scriptFile].Events.Count;
+                Display.InfoResponse(0, "Loaded " + a + " alias(es) and " + e + " event(s).");
                 return true;
             }
-            return false;
         }
 
         public static bool ParseConditions(uint sessionNum, string conditions)
         {
             //FIXME - actually parse paren grouping instead of just stripping parens
+            //FIXME - possible code injection point
             string c = conditions.Replace("(", "").Replace(")", "");
 
             bool pass = true;
 
-            string[] splitLike = { " like ", " LIKE ", " Like " };
-            string[] splitMatch = { " match ", " MATCH ", " Match " };
-            string[] splitAnd = { " and ", " AND ", " And ", "&&" };
-            string[] splitOr = { " or ", " OR ", " Or ", " || " };
+            string[] splitLike = { " iswm ", " ISWM " };
+            string[] splitMatch = { " match ", " MATCH " };
+            string[] splitAnd = { " and ", " AND ", "&&" };
+            string[] splitOr = { " or ", " OR ", " || " };
             string[] splitEq = { " == " , " = "};
             string[] splitNot = { " != " , " <> " };
             string[] splitLT = { " < " };
             string[] splitGT = { " > " };
             string[] splitLE = { " <= " , " =< "};
             string[] splitGE = { " >= " , " => "};
-
 
             string[] condOr = ParseVariables(sessionNum, c.Trim(), "").Split(splitOr, StringSplitOptions.RemoveEmptyEntries);
 
@@ -614,27 +591,29 @@ namespace ghetto
                 string[] condAnd = or.Trim().Split(splitAnd, StringSplitOptions.RemoveEmptyEntries);
                 foreach (string and in condAnd)
                 {
-                    string[] not = and.ToLower().Split(splitNot, StringSplitOptions.RemoveEmptyEntries);
-                    string[] eq = and.ToLower().Split(splitEq, StringSplitOptions.RemoveEmptyEntries);
-                    string[] like = and.ToLower().Split(splitLike, StringSplitOptions.RemoveEmptyEntries);
-                    string[] match = and.ToLower().Split(splitMatch, StringSplitOptions.RemoveEmptyEntries);
-                    string[] less = and.ToLower().Split(splitLT, StringSplitOptions.RemoveEmptyEntries);
-                    string[] greater = and.ToLower().Split(splitGT, StringSplitOptions.RemoveEmptyEntries);
-                    string[] lessEq = and.ToLower().Split(splitLE, StringSplitOptions.RemoveEmptyEntries);
-                    string[] greaterEq = and.ToLower().Split(splitGE, StringSplitOptions.RemoveEmptyEntries);
+                    string[] not = and.ToLower().Split(splitNot, StringSplitOptions.None);
+                    string[] eq = and.ToLower().Split(splitEq, StringSplitOptions.None);
+                    string[] like = and.ToLower().Split(splitLike, StringSplitOptions.None);
+                    string[] match = and.ToLower().Split(splitMatch, StringSplitOptions.None);
+                    string[] less = and.ToLower().Split(splitLT, StringSplitOptions.None);
+                    string[] greater = and.ToLower().Split(splitGT, StringSplitOptions.None);
+                    string[] lessEq = and.ToLower().Split(splitLE, StringSplitOptions.None);
+                    string[] greaterEq = and.ToLower().Split(splitGE, StringSplitOptions.None);
 
-                    //only one term
+                    //only one term (like a number or $true or $false)
                     if (eq.Length == 1 && not.Length == 1 && less.Length == 1 && greater.Length == 1 && lessEq.Length == 1 && greaterEq.Length == 1 && like.Length == 1 && match.Length == 1)
                     {
                         if (eq[0].Trim() == "$false" || eq[0].Trim() == "0") pass = false;
                         break;
                     }
 
-                    //check "like" (wildcards, which are converted to regex)
+                    //check "iswm" (wildcards, which are converted to regex)
                     if (like.Length > 1)
                     {
                         string v1 = like[0].Trim();
                         string v2 = like[1].Trim();
+                        if (v1.Length == 0) v1 = "$null";
+                        if (v2.Length == 0) v2 = "$null";
                         //Console.WriteLine("Comparing {0} LIKE {1} == {2}", v1, v2); //DEBUG
                         string regex = "^" + Regex.Escape(v2).Replace("\\*", ".*").Replace("\\?", ".") + "$";
                         bool isMatch = Regex.IsMatch(v1, regex, RegexOptions.IgnoreCase);
@@ -647,9 +626,16 @@ namespace ghetto
                     {
                         string v1 = match[0].Trim();
                         string v2 = match[1].Trim();
-                        bool isMatch = Regex.IsMatch(v1, v2, RegexOptions.IgnoreCase);
-                        Console.WriteLine("Comparing {0} MATCH {1} == {2}", v1, v2, isMatch); //DEBUG
-                        if (!isMatch) pass = false;
+                        try {
+                            bool isMatch = Regex.IsMatch(v1, v2, RegexOptions.IgnoreCase);
+                            if (!isMatch) pass = false;
+                        }
+                        catch {
+                            Display.Error(sessionNum, "/if: invalid regular expression");
+                            return false;
+                        }
+                        //Console.WriteLine("Comparing {0} MATCH {1} == {2}", v1, v2, isMatch); //DEBUG
+                        
                         break;
                     }
 
@@ -723,7 +709,14 @@ namespace ghetto
 
             //parse $identifiers
             ret = ret.Replace("$null", "");
+            ret = ret.Replace("$myfirst", Session.Settings.FirstName);
+            ret = ret.Replace("$mylast", Session.Settings.LastName);
             ret = ret.Replace("$myname", Session.Name);
+            ret = ret.Replace("$mypos", Display.VectorString(Session.Client.Self.Position));
+            ret = ret.Replace("$mypos.x", Session.Client.Self.Position.X.ToString());
+            ret = ret.Replace("$mypos.y", Session.Client.Self.Position.Y.ToString());
+            ret = ret.Replace("$mypos.z", Session.Client.Self.Position.Z.ToString());
+            ret = ret.Replace("$session", Session.SessionNumber.ToString());
             ret = ret.Replace("$master", Session.Settings.MasterID.ToString());
             ret = ret.Replace("$balance", Session.Balance.ToString());
             ret = ret.Replace("$earned", Session.MoneyReceived.ToString());
@@ -752,12 +745,27 @@ namespace ghetto
 
         public static string ParseTokens(string originalString, string message)
         {
-            string newString = originalString;
-            char[] splitChar = { ' ' };
-            string[] tok = message.Split(splitChar);
-            newString = newString.Replace("$0", "" + tok.Length);
-            int i;
-            for (i = 0; i < tok.Length; i++) newString = newString.Replace("$"+(i + 1),tok[i]);
+            string[] splitChar = { " " };
+            string[] orig = originalString.Split(splitChar, StringSplitOptions.RemoveEmptyEntries);
+            string[] tok = message.Split(splitChar, StringSplitOptions.RemoveEmptyEntries);
+
+            //FIXME - parse all $1 $2 etc
+
+            string newString = "";
+            foreach (string o in orig)
+            {
+                int number;
+                if (o.Substring(0, 1) == "$" && int.TryParse(o.Substring(1), out number))
+                {
+                    if (newString != "") newString += " ";
+                    if (tok.Length >= number) newString += tok[number - 1];
+                }
+                else
+                {
+                    if (newString != "") newString += " ";
+                    newString += o;
+                }
+            }
             return newString;
         }
 
@@ -853,9 +861,24 @@ namespace ghetto
                 details += cmd[detailsStart];                
             }
 
+            //Check for user-defined aliases
+            foreach (UserScript s in Interface.Scripts.Values)
+            {
+                foreach (KeyValuePair<string, string[]> pair in s.Aliases)
+                {
+                    if (command == pair.Key.ToLower())
+                    {
+                        foreach (string c in pair.Value)
+                        {
+                            string ctok = ParseTokens(c, details);
+                            if (!ParseCommand(sessionNum, s.ScriptName, ctok, true, fromMasterIM)) break;
+                        }
+                        return true;
+                    }
+                }
+            }
 
             //And on to the actual commands...
-
             if (command == "anim")
             {
                 LLUUID anim;
@@ -891,13 +914,34 @@ namespace ghetto
                 return false;
             }
 
-            else if (command == "camp")
+            else if (command == "paybytext")
+            {
+                int amount;
+                if (cmd.Length < 3 || int.TryParse(cmd[1],out amount)) {
+                    Display.Help(command);
+                    return false;
+                }
+                uint localID = FindObjectByText(sessionNum, details.ToLower());
+                if (!Session.Prims.ContainsKey(localID))
+                {
+                    Display.Error(sessionNum, "Object info missing for local object ID " + localID);
+                    return false; //FIXME - should this return false and stop scripts?
+                }
+                if (localID > 0)
+                {
+                    Session.Client.Self.GiveMoney(Session.Prims[localID].ID, amount, "");
+                    Display.InfoResponse(sessionNum, "Paid L$" + amount + " to object " + Session.Prims[localID].ID);
+                }
+
+            }
+
+            else if (command == "sitbytext")
             {
                 if (cmd.Length < 2) { Display.Help(command); return false; }
                 uint localID = FindObjectByText(sessionNum, details.ToLower());
                 if (localID > 0)
                 {
-                    Display.InfoResponse(sessionNum, "Match found. Camping...");
+                    Display.InfoResponse(sessionNum, "Match found. Sitting...");
                     Session.Client.Self.RequestSit(Session.Prims[localID].ID, LLVector3.Zero);
                     Session.Client.Self.Sit();
                     //Session.Client.Self.Status.Controls.FinishAnim = false;
@@ -939,11 +983,6 @@ namespace ghetto
                 //FIXME - move to Display.Echo
                 if (cmd.Length < 1) return true;
                 Console.WriteLine(details);
-            }
-
-            else if (command == "event" && scriptName != "")
-            {
-                return ParseEventCommand(sessionNum, scriptName, cmd);
             }
 
             else if (command == "events")
@@ -1001,21 +1040,10 @@ namespace ghetto
             else if (command == "fixme")
             {
                 Session.UpdateAppearance();
-            }
-
-            else if (command == "goto" && scriptName != "")
-            {
-                int i = 0;
-                UserScript script = Interface.Scripts[scriptName];
-                foreach (string line in script.Lines)
-                {
-                    if (line.Trim() == cmd[1] + ":")
-                    {
-                        Interface.Scripts[scriptName].CurrentStep = i;
-                        break;
-                    }
-                    i++;
-                }
+                Session.Client.Self.Status.Controls.FinishAnim = true;
+                Session.Client.Self.Status.SendUpdate();
+                Session.Client.Self.Status.Controls.FinishAnim = false;
+                Session.Client.Self.Status.SendUpdate();
             }
 
             else if (command == "groups")

@@ -56,7 +56,23 @@ namespace ghetto
 
             Session.Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(Callback_AlertMessage));
             Session.Client.Network.RegisterCallback(PacketType.MoneyBalanceReply, new NetworkManager.PacketCallback(Callback_MoneyBalanceReply));
-            Session.Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(Callback_TeleportFinish));
+
+
+            //Session.Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(Callback_TeleportFinish));
+            Session.Client.Self.OnTeleport += new MainAvatar.TeleportCallback(Self_OnTeleport);
+        }
+
+        void Self_OnTeleport(string message, MainAvatar.TeleportStatus status)
+        {
+            if (status == MainAvatar.TeleportStatus.Finished)
+            {
+                Display.TeleportFinished(Session.SessionNumber);
+                Session.Prims = new Dictionary<uint, Primitive>();
+                Session.UpdateAppearance(); //probably never needed
+                Dictionary<string, string> identifiers = new Dictionary<string, string>();
+                identifiers.Add("$message", message);
+                ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.TeleportFinish, identifiers);
+            }
         }
 
         void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
@@ -166,6 +182,7 @@ namespace ghetto
 
         }
 
+        /*
         void Callback_TeleportFinish(Packet packet, Simulator sim)
         {
             TeleportFinishPacket p = (TeleportFinishPacket)packet;
@@ -179,9 +196,13 @@ namespace ghetto
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.TeleportFinish, identifiers);
 
         }
+         * */
 
         void Network_OnConnected(object sender)
         {
+            //change our settings to use the correct caps from now on
+            Session.Settings.FirstName = Session.Client.Self.FirstName;
+            Session.Settings.LastName = Session.Client.Self.LastName;
 
             Display.Connected(Session.SessionNumber, Session.Name);
 

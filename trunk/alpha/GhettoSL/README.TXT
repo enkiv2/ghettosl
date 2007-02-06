@@ -27,8 +27,9 @@ CONTENTS
 ----------------------
 1. COMMANDS
 2. DEFAULT IDENTIFIERS
-3. EVENTS
-4. COMPARISONS
+3. ALIASES
+4. EVENTS
+5. COMPARISONS
 
 
 
@@ -37,7 +38,6 @@ CONTENTS
 ---------------------------------------------------------------------------
 anim <uuid>             Start the specified animation
 answer <text>           Answer the last-received script dialog
-camp <text>             Find a chair with text matching the specified string
 clear                   Clear the console display
 dir <path>              View inventory folder contents
 fly [on|off]            Toggles avatar flying
@@ -48,6 +48,7 @@ land                    Disable flying
 listen                  Same as /quiet off
 look [text]             Display info about area, or searches by prim text
 pay <uuid> <amount>     Pay the specified avatar or object
+paybytext <text>        Pay an object with text matching the specified string
 payme <amount>          Pay the specified amount to $masterid, if defined
 quiet [on|off]          Toggle the display of object/avatar chat
 re [name] [message]     List IM sessions or reply by partial name match
@@ -61,6 +62,7 @@ set <%var> <value>      Used in scripts to define or change a variable
 script <scriptName>     Execute the specified script file
 shout <message>         Shout the specified message to users within 100m
 sit <uuid>              Sit on the specified UUID
+sitbytext <text>        Find a chair with text matching the specified string
 sitg                    Sit on the ground at current location
 stand                   Stand while seated on an object or on the ground
 stopanim <uuid>         Stop the specified animation
@@ -73,11 +75,19 @@ whisper                 Whisper the specified message to users within 5m
 who                     List avatars within viewing range
 
 
+
 2. DEFAULT IDENTIFIERS:
 ---------------------------------------------------------------------------
-$myname ............... Avatar name (or name supplied, if not connected)
+$myfirst .............. Avatar's first name (or name supplied, if not connected)
+$mylast ............... Avatar's last name (or name supplied, if not connected)
+$myname ............... Avatar's full name (or name supplied, if not connected)
+$mypos ................ Avatar's position, in a friendly integer format
+$mypos.x .............. Avatar's X position, in decimal format
+$mypos.y .............. Avatar's Y position, in decimal format
+$mypos.z .............. Avatar's Z position, in decimal format
 $myid ................. Avatar UUID (or LLUUID.Zero if not connected)
 $master ............... Master UUID (or UUID.Zero if none specified)
+$session .............. Returns the session number that it is called from
 $connected ............ Returns $true if connected, $false if not
 $flying ............... Returns $true if flying/hovering, $false if not
 $sitting .............. Returns $true if sitting, $false if not
@@ -88,11 +98,35 @@ $spent ................ L$ spent since session was created
 
 
 
-3. EVENTS:
+3. ALIASES
+---------------------------------------------------------------------------
+Aliases allow you to bind a series of commands to a single command, or to
+perform certain actions based on the arguments supplied to it. Arguments
+are referenced using token identifiers, such as $1 for the first word.
+
+EXAMPLES:
+
+alias sayhi
+{
+  echo This is a test. We will say "hi" now.
+  say Hi, my name is $myfirst. Let's make out!
+}
+
+alias add
+{
+  set %i $1
+  inc %i $2
+  echo $1 + $2 = %i
+}
+
+
+
+4. EVENTS:
 ---------------------------------------------------------------------------
 Event commands are processed by the same means as any other scripted command.
 They are not "pre-loaded" since users may wish to alter events on the fly.
-Automated actions can be performed on the following events:
+Remember, scripts affect all sessions in your client, so be careful with
+events. The following event types are supported:
 
 Event Name		Associated Identifiers
 
@@ -110,15 +144,19 @@ Unsit .................
 
 EXAMPLES:
 
-event payMaster GetMoney pay $amount $master
-event repeatChat Chat say $name just said $message.
-event -r repeatChat
-event repeatWord Chat say The first word $name said was $1.
-event ohnoes Disconnect goto disconnected
+event GetMoney
+{
+  pay $amount $master
+}
+
+event Chat
+{
+  say $name just said $message. Second word: $2
+}
 
 
 
-4. COMPARISONS:
+5. COMPARISONS:
 ---------------------------------------------------------------------------
 if (v1 == v2) then <command>     v1 is equal to v2
 if (v1 != v2) then <command>     v1 is not equal to v2
