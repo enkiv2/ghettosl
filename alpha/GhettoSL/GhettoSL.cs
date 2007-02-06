@@ -85,11 +85,7 @@ namespace ghetto
 
             public string Name
             {
-                get
-                {
-                    if (Client.Network.Connected) return Client.Self.FirstName + " " + Client.Self.LastName;
-                    else return Settings.FirstName + " " + Settings.LastName;
-                }
+                get { return Settings.FirstName + " " + Settings.LastName; }
             }
 
             /// <summary>
