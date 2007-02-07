@@ -456,7 +456,7 @@ namespace ghetto
                     GhettoSL.UserSession fromSession = Interface.Sessions[sessionNum];
                     if (fromSession.Client.Network.Connected)
                     {
-                        Session.Settings.URI = "uri:" + fromSession.Client.Network.CurrentSim.Region.Name
+                        Session.Settings.URI = "uri:" + fromSession.Client.Network.CurrentSim.Name
                             + "&" + (int)fromSession.Client.Self.Position.X
                             + "&" + (int)fromSession.Client.Self.Position.Y
                             + "&" + (int)fromSession.Client.Self.Position.Z;
@@ -734,7 +734,7 @@ namespace ghetto
             if (Session.Client.Self.Status.Controls.Fly) ret = ret.Replace("$flying", "$true");
             else ret = ret.Replace("$flying", "$false");
 
-            if (Session.Client.Network.Connected) ret = ret.Replace("$region", Session.Client.Network.CurrentSim.Region.Name);
+            if (Session.Client.Network.Connected) ret = ret.Replace("$region", Session.Client.Network.CurrentSim.Name);
             else ret = ret.Replace("$region", "$null");
 
             if (Session.Client.Self.SittingOn > 0) ret = ret.Replace("$sitting", "$true");
@@ -1147,7 +1147,7 @@ namespace ghetto
                 if (cmd.Length == 1)
                 {
                     LLVector3 sunDirection = Session.Client.Grid.SunDirection;
-                    string simName = Session.Client.Network.CurrentSim.Region.Name;
+                    string simName = Session.Client.Network.CurrentSim.Name;
                     string weather = Display.RPGWeather(sessionNum, simName, sunDirection);
                     if (simName != "" && Helpers.VecMag(sunDirection) != 0)
                     {
@@ -1192,7 +1192,7 @@ namespace ghetto
                 }
                 string reason;
                 if (cmd.Length > 2) reason = details;
-                else reason = "Join me in " + Session.Client.Network.CurrentSim.Region.Name + "!";
+                else reason = "Join me in " + Session.Client.Network.CurrentSim.Name + "!";
 
                 //FIXME - Add teleport lure
 
