@@ -164,20 +164,24 @@ namespace ghetto
                 Dictionary<string, string> identifiers = new Dictionary<string, string>();
                 identifiers.Add("$name", name);
                 identifiers.Add("$amount", amount.ToString());
-                ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.GiveMoney, identifiers);
 
                 amount *= -1; //you paid
+                Display.Balance(Session.SessionNumber, reply.MoneyData.MoneyBalance, amount, name, desc);
+
+                ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.GiveMoney, identifiers);
             }
 
             else if (msg[2] + " " + msg[3] == "paid you")
             {
                 Session.MoneyReceived += amount;
                 name = msg[0] + " " + msg[1];
+
                 Display.Balance(Session.SessionNumber, reply.MoneyData.MoneyBalance, amount, name, desc);
 
                 Dictionary<string, string> identifiers = new Dictionary<string, string>();
                 identifiers.Add("$name", name);
                 identifiers.Add("$amount", amount.ToString());
+
                 ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.GetMoney, identifiers);
             }
 
