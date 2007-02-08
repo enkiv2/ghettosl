@@ -42,9 +42,15 @@ namespace ghetto
 
         public class UserScript
         {
+            /// <summary>
+            /// The session number the script was loaded from
+            /// FIXME - This is really just for $session in the Load event (not implemented yet) do we need it?
+            /// </summary>
             public uint SessionNumber;
+            /// <summary>
+            /// Same as the key in the Scripts dictionary
+            /// </summary>
             public string ScriptName;
-
             /// <summary>
             /// Current line script step, referenced after a sleep
             /// </summary>
@@ -54,9 +60,9 @@ namespace ghetto
             /// </summary>
             public uint ScriptTime;
             /// <summary>
-            /// Timestamp of the last (or currently active) sleep
+            /// Timestamp of the last settime event
             /// </summary>
-            public uint SleepingSince;
+            public uint SetTime;
             /// <summary>
             /// Timer to invoke the next command after sleeping
             /// </summary>
@@ -193,17 +199,19 @@ namespace ghetto
                 return 0; //no errors
             }
 
+            /*
             public void Sleep(float seconds)
             {
-                SleepingSince = Helpers.GetUnixTime();
                 Display.InfoResponse(SessionNumber, "Sleeping " + seconds + " seconds...");
                 SleepTimer.Interval = (int)(seconds * 1000);
                 SleepTimer.AutoReset = false;
                 SleepTimer.Enabled = true;
             }
+            */
 
             public UserScript(uint sessionNum, string scriptFile)
             {
+                SetTime = Helpers.GetUnixTime();
                 Aliases = new Dictionary<string, string[]>();
                 Events = new Dictionary<EventTypes, ScriptEvent>();
                 SessionNumber = sessionNum;
@@ -240,18 +248,19 @@ namespace ghetto
         public enum EventTypes
         {
             NULL = 0,
-            Connect = 1,
-            Disconnect = 2,
-            TeleportFinish = 3,
-            Chat = 4,
-            IM = 5,
-            Sit = 6,
-            Unsit = 7,
-            GroupIM = 8, //FIXME - still missing/incorrectly handled as IM
-            ScriptDialog = 9,
-            GetMoney = 10,
-            GiveMoney = 11,
-            GetItem = 12
+            Load = 1,
+            Connect = 2,
+            Disconnect = 3,
+            TeleportFinish = 4,
+            Chat = 5,
+            IM = 6,
+            Sit = 7,
+            Unsit = 8,
+            GroupIM = 9, //FIXME - still missing/incorrectly handled as IM
+            ScriptDialog = 10,
+            GetMoney = 11,
+            GiveMoney = 12,
+            GetItem = 13
         }
 
         public static EventTypes EventTypeByName(string typeString)
@@ -559,6 +568,7 @@ namespace ghetto
                 int a = Interface.Scripts[scriptFile].Aliases.Count;
                 int e = Interface.Scripts[scriptFile].Events.Count;
                 Display.InfoResponse(0, "Loaded " + a + " alias(es) and " + e + " event(s).");
+                ScriptSystem.TriggerEvents(sessionNum, ScriptSystem.EventTypes.Load, null);
                 return true;
             }
         }
@@ -567,7 +577,8 @@ namespace ghetto
         {
             //FIXME - actually parse paren grouping instead of just stripping parens
             //FIXME - possible code injection point
-            string c = conditions.Replace("(", "").Replace(")", "");
+            string[] splitSpace = { " " };
+            string c = String.Join(" ", conditions.Replace("(", "").Replace(")", "").Trim().Split(splitSpace, StringSplitOptions.RemoveEmptyEntries));
 
             bool pass = true;
 
@@ -698,15 +709,6 @@ namespace ghetto
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
             string ret = originalString;
 
-            //parse %vars
-            if (scriptName != "")
-            {
-                foreach (KeyValuePair<string, string> var in Interface.Scripts[scriptName].Variables)
-                {
-                    ret = ret.Replace(var.Key, var.Value);
-                }
-            }
-
             //parse $identifiers
             ret = ret.Replace("$null", "");
             ret = ret.Replace("$myfirst", Session.Settings.FirstName);
@@ -740,6 +742,15 @@ namespace ghetto
             if (Session.Client.Self.SittingOn > 0) ret = ret.Replace("$sitting", "$true");
             else ret = ret.Replace("$sitting", "$false");
 
+            //parse %vars
+            if (scriptName != "")
+            {
+                foreach (KeyValuePair<string, string> var in Interface.Scripts[scriptName].Variables)
+                {
+                    ret = ret.Replace(var.Key, var.Value);
+                }
+            }
+
             return ret;
         }
 
@@ -751,7 +762,18 @@ namespace ghetto
 
             //FIXME - parse all $1 $2 etc
 
-            string newString = "";
+            string newString = originalString;
+
+
+            for (int i=64; i > 0; i--)
+            {
+                if (tok.Length >= i) newString = newString.Replace("$" + i, tok[i - 1]);
+                else newString = newString.Replace("$" + i, "");
+                string[] spaceChar = { " " };
+                newString = String.Join(newString.Split(spaceChar, StringSplitOptions.RemoveEmptyEntries));
+            }
+
+            /*
             foreach (string o in orig)
             {
                 int number;
@@ -766,6 +788,8 @@ namespace ghetto
                     newString += o;
                 }
             }
+            */
+
             return newString;
         }
 
@@ -853,7 +877,7 @@ namespace ghetto
             //For example, in the command "im some-uuid-here Hi there!", details = "Hi there!"
             string details = "";
             int detailsStart = 1;
-            if (command == "im" || command == "lure" || command == "re" || command == "s" || command == "session" || command == "set") detailsStart++;
+            if (command == "im" || command == "lure" || command == "re" || command == "s" || command == "session" || command == "set" || command == "paybytext" || command == "paybyname") detailsStart++;
             else if (command == "dialog") detailsStart += 2;
             for (; detailsStart < cmd.Length; detailsStart++)
             {
@@ -862,18 +886,21 @@ namespace ghetto
             }
 
             //Check for user-defined aliases
-            foreach (UserScript s in Interface.Scripts.Values)
+            lock (Interface.Scripts)
             {
-                foreach (KeyValuePair<string, string[]> pair in s.Aliases)
+                foreach (UserScript s in Interface.Scripts.Values)
                 {
-                    if (command == pair.Key.ToLower())
+                    foreach (KeyValuePair<string, string[]> pair in s.Aliases)
                     {
-                        foreach (string c in pair.Value)
+                        if (command == pair.Key.ToLower())
                         {
-                            string ctok = ParseTokens(c, details);
-                            if (!ParseCommand(sessionNum, s.ScriptName, ctok, true, fromMasterIM)) break;
+                            foreach (string c in pair.Value)
+                            {
+                                string ctok = ParseTokens(c, details);
+                                if (!ParseCommand(sessionNum, s.ScriptName, ctok, true, fromMasterIM)) break;
+                            }
+                            return true;
                         }
-                        return true;
                     }
                 }
             }
@@ -914,25 +941,51 @@ namespace ghetto
                 return false;
             }
 
-            else if (command == "paybytext")
+            else if (command == "paybytext" || command == "paybyname")
             {
                 int amount;
-                if (cmd.Length < 3 || int.TryParse(cmd[1],out amount)) {
+                if (cmd.Length < 3 || !int.TryParse(cmd[1],out amount)) {
                     Display.Help(command);
                     return false;
                 }
-                uint localID = FindObjectByText(sessionNum, details.ToLower());
-                if (!Session.Prims.ContainsKey(localID))
+                uint localID = 0;
+                LLUUID uuid = LLUUID.Zero;
+
+                Console.WriteLine(command + " " + details);
+
+                if (command == "paybytext")
                 {
-                    Display.Error(sessionNum, "Object info missing for local object ID " + localID);
-                    return false; //FIXME - should this return false and stop scripts?
+                    localID = FindObjectByText(sessionNum, details.ToLower());
+                    if (!Session.Prims.ContainsKey(localID))
+                    {
+                        Display.Error(sessionNum, "Missing info for local ID " + localID);
+                        return false; //FIXME - should this return false and stop scripts?
+                    }
+                    uuid = Session.Prims[localID].ID;
                 }
+                else if (command == "paybyname")
+                {
+                    localID = FindAgentByName(sessionNum, details.ToLower());
+                    if (!Session.Avatars.ContainsKey(localID))
+                    {
+                        Display.Error(sessionNum, "Missing info for local ID " + localID);
+                        return false; //FIXME - should this return false and stop scripts?
+                    }
+                    uuid = Session.Avatars[localID].ID;
+                }
+                else return false; //this should never happen
+
                 if (localID > 0)
                 {
-                    Session.Client.Self.GiveMoney(Session.Prims[localID].ID, amount, "");
-                    Display.InfoResponse(sessionNum, "Paid L$" + amount + " to object " + Session.Prims[localID].ID);
+                    Session.Client.Self.GiveMoney(uuid, amount, "");
+                    Display.InfoResponse(sessionNum, "Paid L$" + amount + " to " + uuid);
                 }
 
+            }
+
+            else if (command == "settime" && scriptName != "")
+            {
+                Interface.Scripts[scriptName].SetTime = Helpers.GetUnixTime();
             }
 
             else if (command == "sitbytext")
@@ -1170,11 +1223,19 @@ namespace ghetto
                     {
                         foreach (KeyValuePair<uint, Primitive> pair in Session.Prims)
                         {
-                            if (Regex.IsMatch(pair.Value.Text, details, RegexOptions.IgnoreCase))
+                            try
                             {
-                                //FIXME - move to Display
-                                Console.WriteLine(pair.Value.LocalID + " " + pair.Value.ID + " " + pair.Value.Text);
-                                countText++;
+                                if (Regex.IsMatch(pair.Value.Text, details, RegexOptions.IgnoreCase))
+                                {
+                                    //FIXME - move to Display
+                                    Console.WriteLine(pair.Value.LocalID + " " + pair.Value.ID + " " + pair.Value.Text);
+                                    countText++;
+                                }
+                            }
+                            catch
+                            {
+                                Display.Error(sessionNum, "/look: invalid regular expression");
+                                return false;
                             }
                         }
                     }
@@ -1461,6 +1522,7 @@ namespace ghetto
                 Session.Client.Self.Status.Controls.SitOnGround = false;
             }
 
+            /*
             else if (command == "sleep")
             {
                 float interval;
@@ -1472,6 +1534,7 @@ namespace ghetto
                 Interface.Scripts[scriptName].Sleep(interval);
                 return false; //pause script
             }
+            */
 
             else if (command == "stand")
             {
@@ -1634,6 +1697,31 @@ namespace ghetto
             return localID;
         }
 
+        public static uint FindAgentByName(uint sessionID, string name)
+        {
+            uint localID = 0;
+
+            lock (Interface.Sessions[sessionID].Avatars)
+            {
+                foreach (Avatar av in Interface.Sessions[sessionID].Avatars.Values)
+                {
+                    int len = name.Length;
+                    string match;
+                    if (av.Name != null) match = av.Name;
+                    else continue;
+
+                    Console.WriteLine("test: " + av.Name + " vs. " + name);
+
+                    if (match.Length < len) continue; //Name is too short to be a match
+                    else if (Regex.IsMatch(match.Substring(0, len).ToLower(), name, RegexOptions.IgnoreCase))
+                    {
+                        localID = av.LocalID;
+                        break;
+                    }
+                }
+            }
+            return localID;
+        }
 
         public static bool RideWith(uint sessionNum, string name)
         {
@@ -1641,7 +1729,7 @@ namespace ghetto
 
             string findName = name.ToLower();
 
-            foreach (Avatar av in Session.Avatars.SimLocalAvatars().Values)
+            foreach (Avatar av in Session.Avatars.Values)
             {
 
                 if (av.Name.ToLower().Substring(0, findName.Length) == findName)

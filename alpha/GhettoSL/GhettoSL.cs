@@ -44,13 +44,14 @@ namespace ghetto
         {
 
             public uint SessionNumber;
-            public AvatarTracker Avatars;
+            //public AvatarTracker Avatars;
             public CallbackManager Callbacks;
             public int Balance;
             public SecondLife Client;
             public Dictionary<LLUUID, Avatar> Friends;
             public Dictionary<LLUUID, Group> Groups;
             public Dictionary<LLUUID, IMSession> IMSessions;
+            public Dictionary<uint, Avatar> Avatars;
             public Dictionary<uint, Primitive> Prims;
             public LLUUID LastDialogID;
             public int LastDialogChannel;
@@ -107,7 +108,7 @@ namespace ghetto
                 Client.Self.Status.Camera.BodyRotation = LLQuaternion.Identity;
 
                 Callbacks = new CallbackManager(this);
-                Avatars = new AvatarTracker(Client);
+                Avatars = new Dictionary<uint, Avatar>();
                 Balance = -1;
                 Friends = new Dictionary<LLUUID, Avatar>();
                 IMSessions = new Dictionary<LLUUID, IMSession>();
