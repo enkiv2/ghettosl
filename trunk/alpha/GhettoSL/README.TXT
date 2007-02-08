@@ -48,7 +48,8 @@ land                    Disable flying
 listen                  Same as /quiet off
 look [text]             Display info about area, or searches by prim text
 pay <uuid> <amount>     Pay the specified avatar or object
-paybytext <text>        Pay an object with text matching the specified string
+paybytext <amt> <text>  Pay an object with text matching the specified string
+paybytext <amt> <text>  Pay an avatar with a name matching the specified string
 payme <amount>          Pay the specified amount to $masterid, if defined
 quiet [on|off]          Toggle the display of object/avatar chat
 re [name] [message]     List IM sessions or reply by partial name match
@@ -166,7 +167,7 @@ if (v1 < v2) then <command>      v1 is less than v2
 if (v1 >= v2) then <command>     v1 is greater than or equal to v2
 if (v1 <= v2) then <command>     v1 is less than or equal to v2
 if (v1 match v2) then <command>  v1 matches regex pattern v2
-if (v1 like v2) then <command>   v1 matches wildcard pattern v2
+if (v1 iswm v2) then <command>   v1 matches wildcard pattern v2
 
 NOTES:
 
@@ -177,9 +178,17 @@ NOTES:
 
 EXAMPLE:
 
-set %sim MyFavoriteSim
-echo We are going to keep trying until we get to %sim!
-tp:
-teleport %sim 128 128 20
-sleep 10
-if ($region != %sim) then goto tp
+event Load
+{
+  set %favoriteSim Testville
+}
+
+event TeleportFinish
+{
+  if ($region == %favoriteSim) then celebrate $region
+}
+
+alias celebrate
+{
+  say I am so happy to be in $1!
+}

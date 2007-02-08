@@ -44,7 +44,12 @@ namespace ghetto
             Session.Client.Inventory.OnInventoryItemReceived += new libsecondlife.InventorySystem.InventoryManager.On_InventoryItemReceived(Inventory_OnInventoryItemReceived);
             Session.Client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
             Session.Client.Network.OnCurrentSimChanged += new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
-            Session.Client.Network.OnSimDisconnected += new NetworkManager.SimDisconnectCallback(Network_OnSimDisconnected);
+            //Session.Client.Network.OnSimDisconnected += new NetworkManager.SimDisconnectCallback(Network_OnSimDisconnected);
+
+            Session.Client.Network.OnDisconnected += new NetworkManager.DisconnectCallback(Network_OnDisconnected);
+
+            Session.Client.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
+
             Session.Client.Objects.OnAvatarSitChanged += new ObjectManager.AvatarSitChanged(Objects_OnAvatarSitChanged);
             Session.Client.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
             Session.Client.Objects.OnObjectKilled += new ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
@@ -62,12 +67,28 @@ namespace ghetto
             Session.Client.Self.OnTeleport += new MainAvatar.TeleportCallback(Self_OnTeleport);
         }
 
+        void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
+        {
+            lock (Session.Avatars)
+            {
+                if (!Session.Avatars.ContainsKey(avatar.LocalID)) Session.Avatars.Add(avatar.LocalID, avatar);
+                else Session.Avatars[avatar.LocalID] = avatar;
+            }
+        }
+
+        void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
+        {
+            Display.Disconnected(Session.SessionNumber, reason, message);
+            Session.Avatars = new Dictionary<uint, Avatar>();
+        }
+
         void Self_OnTeleport(string message, MainAvatar.TeleportStatus status, MainAvatar.TeleportFlags flags)
         {
             if (status == MainAvatar.TeleportStatus.Finished)
             {
                 Display.TeleportFinished(Session.SessionNumber);
                 Session.Prims = new Dictionary<uint, Primitive>();
+                Session.Avatars = new Dictionary<uint, Avatar>();
                 Session.UpdateAppearance(); //probably never needed
                 Dictionary<string, string> identifiers = new Dictionary<string, string>();
                 identifiers.Add("$message", message);
@@ -84,6 +105,14 @@ namespace ghetto
                 {
                     Session.Prims[update.LocalID].Position = update.Position;
                     Session.Prims[update.LocalID].Rotation = update.Rotation;
+                }
+            }
+            lock (Session.Avatars)
+            {
+                if (Session.Avatars.ContainsKey(update.LocalID))
+                {
+                    Session.Avatars[update.LocalID].Position = update.Position;
+                    Session.Avatars[update.LocalID].Rotation = update.Rotation;
                 }
             }
         }
@@ -104,6 +133,7 @@ namespace ghetto
         {
             //FIXME - add event?
             Display.SimChanged(Session.SessionNumber, PreviousSimulator, Session.Client.Network.CurrentSim);
+            Session.Avatars = new Dictionary<uint, Avatar>();
         }
 
         void Inventory_OnInventoryItemReceived(LLUUID fromAgentID, string fromAgentName, uint parentEstateID, LLUUID regionID, LLVector3 position, DateTime timestamp, libsecondlife.InventorySystem.InventoryItem item)
@@ -232,11 +262,11 @@ namespace ghetto
 
         }
 
-        void Network_OnSimDisconnected(Simulator simulator, NetworkManager.DisconnectType reason)
-        {
-            Display.Disconnected(Session.SessionNumber, reason.ToString());
-            ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.Disconnect, null);
-        }
+        //void Network_OnSimDisconnected(Simulator simulator, NetworkManager.DisconnectType reason)
+        //{
+        //    Display.Disconnected(Session.SessionNumber, reason.ToString());
+        //    ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.Disconnect, null);
+        //}
 
         void GroupsUpdatedHandler(Dictionary<LLUUID, libsecondlife.Group> groups)
         {
@@ -257,6 +287,11 @@ namespace ghetto
             {
                 if (Session.Prims.ContainsKey(objectID))
                     Session.Prims.Remove(objectID);
+            }
+            lock (Session.Avatars)
+            {
+                if (Session.Avatars.ContainsKey(objectID))
+                    Session.Avatars.Remove(objectID);
             }
         }
 
