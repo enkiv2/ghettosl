@@ -724,6 +724,12 @@ namespace ghetto
             ret = ret.Replace("$earned", Session.MoneyReceived.ToString());
             ret = ret.Replace("$spent", Session.MoneySpent.ToString());
 
+            if (scriptName != "")
+            {
+                uint elapsed = Helpers.GetUnixTime() - Interface.Scripts[scriptName].SetTime;
+                ret = ret.Replace("$elapsed", elapsed.ToString());
+            }
+
             if (Session.Client.Network.Connected) ret = ret.Replace("$myid", Session.Client.Network.AgentID.ToString());
             else ret = ret.Replace("$myid", LLUUID.Zero.ToString());
 
