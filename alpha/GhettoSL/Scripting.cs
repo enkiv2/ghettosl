@@ -770,7 +770,7 @@ namespace ghetto
                 if (tok.Length >= i) newString = newString.Replace("$" + i, tok[i - 1]);
                 else newString = newString.Replace("$" + i, "");
                 string[] spaceChar = { " " };
-                newString = String.Join(newString.Split(spaceChar, StringSplitOptions.RemoveEmptyEntries));
+                newString = String.Join(" ", newString.Split(spaceChar, StringSplitOptions.RemoveEmptyEntries));
             }
 
             /*
