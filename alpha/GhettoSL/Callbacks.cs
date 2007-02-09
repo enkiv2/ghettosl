@@ -291,7 +291,10 @@ namespace ghetto
             lock (Session.Avatars)
             {
                 if (Session.Avatars.ContainsKey(objectID))
+                {
+                    if (Session.Avatars[objectID].Name == Session.FollowName) Session.FollowTimer.Stop();
                     Session.Avatars.Remove(objectID);
+                }
             }
         }
 

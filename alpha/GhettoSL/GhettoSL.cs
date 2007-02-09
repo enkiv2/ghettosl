@@ -62,6 +62,8 @@ namespace ghetto
             public int RegionY;
             public UserSessionSettings Settings;
             public uint StartTime;
+            public string FollowName;
+            public System.Timers.Timer FollowTimer;
 
              public bool Login()
             {
@@ -71,7 +73,7 @@ namespace ghetto
                 else
                 {
                     string start = Settings.URI;
-                    Console.WriteLine(start); //debug
+                    //Console.WriteLine(start); //debug
                     return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", start, "root66@gmail.com", false);
                 }
             }
@@ -97,7 +99,7 @@ namespace ghetto
                 SessionNumber = newSessionNumber;
 
                 Client = new SecondLife();
-                Client.Settings.DEBUG = false; //DEBUG - turn off again!
+                Client.Settings.DEBUG = false;
 
                 Client.Self.Status.Camera.Far = 96.0f;
                 Client.Self.Status.Camera.CameraAtAxis = LLVector3.Zero;
@@ -122,6 +124,42 @@ namespace ghetto
                 RegionY = 0;
                 Settings = new UserSessionSettings();
                 StartTime = Helpers.GetUnixTime();
+                FollowName = "";
+                FollowTimer = new System.Timers.Timer(500);
+                FollowTimer.Enabled = false;
+                FollowTimer.AutoReset = true;
+                FollowTimer.Elapsed += new System.Timers.ElapsedEventHandler(FollowTimer_Elapsed);
+            }
+
+            public void Follow(string avatarName)
+            {
+                uint avatar = ScriptSystem.FindAgentByName(SessionNumber, avatarName);
+                if (avatar < 1) Display.InfoResponse(SessionNumber, "No avatar found matching \"" + avatarName + "\"");
+                else
+                {
+                    FollowName = Avatars[avatar].Name;
+                    Display.InfoResponse(SessionNumber, "Following " + FollowName + "...");                    
+                    FollowTimer.Start();
+                }
+            }
+
+            void FollowTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+            {
+                Client.Self.Status.SendUpdate();
+                foreach (Avatar av in Avatars.Values)
+                {
+                    if (av.Name == FollowName)
+                    {
+                        //Console.WriteLine(av.Position); //DEBUG
+                        if (Helpers.VecDist(Client.Self.Position, av.Position) > 3)
+                        {
+                            Client.Self.AutoPilotLocal((int)av.Position.X, (int)av.Position.Y, av.Position.Z);
+                        }
+                        return;
+                    }
+                }
+                Display.InfoResponse(SessionNumber, "Lost track of " + FollowName + " - following disabled");
+                FollowTimer.Stop();
             }
         }
 

@@ -41,6 +41,7 @@ answer <text>           Answer the last-received script dialog
 clear                   Clear the console display
 dir <path>              View inventory folder contents
 fly [on|off]            Toggles avatar flying
+follow <name|off|on>    Follow the specified avatar, or toggle following
 go <x,y,z>              Move to the specified coordinates using autopilot
 groups                  Lists information about groups you are in
 inc <%var> [amount]     Increases %var by 1 or any other number/%var
