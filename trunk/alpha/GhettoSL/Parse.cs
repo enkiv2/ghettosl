@@ -1362,7 +1362,8 @@ namespace ghetto
                     else m = "sec";
                     Display.InfoResponse(sessionNum, "Timer \"" + name + "\" activated (Repeat: " + repeats + ", Interval: " + interval + m + ")");
                     ScriptSystem.UserTimer timer = new ScriptSystem.UserTimer(sessionNum, name, interval, milliseconds, repeats, details);
-                    Session.Timers.Add(name, timer);
+                    if (!Session.Timers.ContainsKey(name)) Session.Timers.Add(name, timer);
+                    else Session.Timers[name] = timer;
                     return true;
                 }
             }
