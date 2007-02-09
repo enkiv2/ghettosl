@@ -239,6 +239,7 @@ namespace ghetto
             return ret;
         }
 
+
         public static string Tokens(string originalString, string message)
         {
             string[] splitChar = { " " };
@@ -395,7 +396,6 @@ namespace ghetto
         }
 
 
-
         /// <summary>
         /// /script command
         /// </summary>
@@ -487,24 +487,18 @@ namespace ghetto
                 if (commandToParse.Length == 0) return true;
             }
 
-            //Next we split it by spaces
+            //Next we save the unparsed command, split it by spaces, for commands like /set and /inc
             char[] splitChar = { ' ' };
-            string[] cmd = commandToParse.Split(splitChar, StringSplitOptions.RemoveEmptyEntries);
+            string[] unparsedCommand = commandToParse.Split(splitChar, StringSplitOptions.RemoveEmptyEntries);
 
-            //The reason for splitting in this step is to save an un-parsed version of the first arg
-            //For "inc" and "set" commands, the first arg is a variable name, like "set %var %othervar"
-            //Let's say %var and %othervar were 1 and 5. Parsed would be "set 1 5", which is invalid.
-            string variableName = null;
-            if (cmd.Length > 1 && cmd[1].Substring(0, 1) == "%") variableName = cmd[1];
-
-            //NOW we can parse the variables
+            //Now we parse the variables
             if (parseVariables)
             {
                 commandToParse = Variables(sessionNum, commandString, scriptName);
             }
 
             //Next we split again. This time everthing is parsed.
-            cmd = commandToParse.Trim().Split(splitChar);
+            string[] cmd = commandToParse.Trim().Split(splitChar);
             string command = cmd[0].ToLower();
             int commandStart = 0;
 
@@ -552,9 +546,9 @@ namespace ghetto
             //For example, in the command "im some-uuid-here Hi there!", details = "Hi there!"
             string details = "";
             int detailsStart = 1;
-            if (command == "im" || command == "lure" || command == "re" || command == "s" || command == "session" || command == "set" || command == "paybytext" || command == "paybyname") detailsStart++;
+            if (command == "im" || command == "lure" || command == "re" || command == "s" || command == "session" || command == "paybytext" || command == "paybyname") detailsStart++;
             else if (command == "dialog") detailsStart += 2;
-            else if (command == "timer")
+            else if (command == "timer" && cmd.Length > 1)
             {
                 if (cmd.Length > 1)
                 {
@@ -562,10 +556,11 @@ namespace ghetto
                     else detailsStart += 3;
                 }
             }
-            for (; detailsStart < cmd.Length; detailsStart++)
+            while (detailsStart < cmd.Length)
             {
                 if (details != "") details += " ";
                 details += cmd[detailsStart];
+                detailsStart++;
             }
 
             
@@ -1184,13 +1179,14 @@ namespace ghetto
             else if (command == "inc" && scriptName != "")
             {
                 int amount = 1;
-                if (cmd.Length < 2 || variableName == null || (cmd.Length > 2 && !int.TryParse(cmd[2], out amount)))
+                if (unparsedCommand.Length < 2 || (unparsedCommand.Length > 2 && !int.TryParse(Variables(sessionNum, unparsedCommand[2], scriptName), out amount)))
                 {
                     Display.Help(command);
                     return false;
                 }
                 ScriptSystem.UserScript Script = Interface.Scripts[scriptName];
                 int value = 0;
+                string variableName = unparsedCommand[1];
                 if (Script.Variables.ContainsKey(variableName) && !int.TryParse(Script.Variables[variableName], out value)) return false;
                 //FIXME - change in the following code, int + "" to a proper string-to-int conversion
                 else if (Script.Variables.ContainsKey(variableName)) Script.Variables[variableName] = "" + (value + amount);
@@ -1200,14 +1196,22 @@ namespace ghetto
 
             else if (command == "set" && scriptName != "")
             {
-                if (cmd.Length < 2 || variableName == null)
+                if (unparsedCommand.Length < 3 || unparsedCommand[1].Substring(0, 1) != "%")
                 {
                     Display.Help(command);
                     return false;
                 }
+                details = "";
+                for (int d = 2; d < unparsedCommand.Length; d++)
+                {
+                    if (details != "") details += " ";
+                    details += unparsedCommand[d];
+                }
+                string variableName = unparsedCommand[1];
                 ScriptSystem.UserScript Script = Interface.Scripts[scriptName];
-                if (Script.Variables.ContainsKey(variableName)) Script.Variables[variableName] = details;
-                else Script.Variables.Add(variableName, details);
+                if (Script.Variables.ContainsKey(variableName)) Script.Variables[variableName] = Variables(sessionNum, details, scriptName);
+                else Script.Variables.Add(variableName, Variables(sessionNum, details, scriptName));
+            
             }
 
             else if (command == "shout")
