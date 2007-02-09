@@ -614,7 +614,8 @@ namespace ghetto
                     //only one term (like a number or $true or $false)
                     if (eq.Length == 1 && not.Length == 1 && less.Length == 1 && greater.Length == 1 && lessEq.Length == 1 && greaterEq.Length == 1 && like.Length == 1 && match.Length == 1)
                     {
-                        if (eq[0].Trim() == "$false" || eq[0].Trim() == "0") pass = false;
+                        string val = eq[0].Trim();
+                        if (val == "$false" || val == "$null" || val == "0") pass = false;
                         break;
                     }
 
@@ -711,6 +712,7 @@ namespace ghetto
 
             //parse $identifiers
             ret = ret.Replace("$null", "");
+            ret = ret.Replace("$nullkey", LLUUID.Zero.ToString());
             ret = ret.Replace("$myfirst", Session.Settings.FirstName);
             ret = ret.Replace("$mylast", Session.Settings.LastName);
             ret = ret.Replace("$myname", Session.Name);
@@ -729,6 +731,13 @@ namespace ghetto
                 uint elapsed = Helpers.GetUnixTime() - Interface.Scripts[scriptName].SetTime;
                 ret = ret.Replace("$elapsed", elapsed.ToString());
             }
+
+            if (Session.Client.Self.SittingOn > 0 && Session.Prims.ContainsKey(Session.Client.Self.SittingOn))
+            {
+                ret = ret.Replace("$seattext", Session.Prims[Session.Client.Self.SittingOn].Text);
+                ret = ret.Replace("$seatid", Session.Prims[Session.Client.Self.SittingOn].ID.ToString());
+            }
+            else ret = ret.Replace("$seattext", "$null").Replace("$seatid",LLUUID.Zero.ToString());
 
             if (Session.Client.Network.Connected) ret = ret.Replace("$myid", Session.Client.Network.AgentID.ToString());
             else ret = ret.Replace("$myid", LLUUID.Zero.ToString());
@@ -1083,6 +1092,36 @@ namespace ghetto
                 }
                 //Send either way, for good measure                
                 Session.Client.Self.Status.SendUpdate();
+            }
+
+            else if (command == "follow")
+            {
+                if (cmd.Length < 2) { Display.Help(command); return false; }
+                if (cmd.Length == 1 || cmd[1].ToLower() == "on")
+                {
+                    if (Session.FollowName == "")
+                    {
+                        Display.InfoResponse(sessionNum, "You are not following anyone.");
+                    }
+                    else
+                    {
+                        Session.Follow(Session.FollowName);
+                    }
+                }
+                else if (cmd[1].ToLower() == "off")
+                {
+                    if (Session.FollowTimer.Enabled == true)
+                    {
+                        Session.FollowTimer.Stop();
+                        Display.InfoResponse(sessionNum, "You stopped following " + Session.FollowName + ".");
+                        Session.Client.Self.Status.SendUpdate();
+                    }
+                    else
+                    {
+                        Display.InfoResponse(sessionNum, "You are not following.");
+                    }
+                }
+                else Session.Follow(details);
             }
 
             else if (command == "go")
@@ -1716,9 +1755,10 @@ namespace ghetto
                     if (av.Name != null) match = av.Name;
                     else continue;
 
-                    Console.WriteLine("test: " + av.Name + " vs. " + name);
+                    //Console.WriteLine("test: " + av.Name + " vs. " + name); //DEBUG
 
                     if (match.Length < len) continue; //Name is too short to be a match
+                    //FIXME - should we really use regex here? how about just partial names instead?
                     else if (Regex.IsMatch(match.Substring(0, len).ToLower(), name, RegexOptions.IgnoreCase))
                     {
                         localID = av.LocalID;
