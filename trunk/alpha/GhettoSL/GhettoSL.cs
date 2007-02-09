@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using libsecondlife;
 using libsecondlife.Packets;
 using libsecondlife.AssetSystem;
@@ -49,10 +50,11 @@ namespace ghetto
             public int Balance;
             public SecondLife Client;
             public Dictionary<LLUUID, Avatar> Friends;
-            public Dictionary<LLUUID, Group> Groups;
+            public Dictionary<LLUUID, libsecondlife.Group> Groups;
             public Dictionary<LLUUID, IMSession> IMSessions;
             public Dictionary<uint, Avatar> Avatars;
             public Dictionary<uint, Primitive> Prims;
+            public Dictionary<string, ScriptSystem.UserTimer> Timers;
             public LLUUID LastDialogID;
             public int LastDialogChannel;
             public int MoneySpent;
@@ -65,7 +67,7 @@ namespace ghetto
             public string FollowName;
             public System.Timers.Timer FollowTimer;
 
-             public bool Login()
+            public bool Login()
             {
                 Display.InfoResponse(SessionNumber, "Logging in as " + Settings.FirstName + " " + Settings.LastName + "...");
                 //Dictionary<string, object> loginParams = DefaultLoginValues(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", "root66@gmail.com");
@@ -76,6 +78,81 @@ namespace ghetto
                     //Console.WriteLine(start); //debug
                     return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", start, "root66@gmail.com", false);
                 }
+            }
+
+            public bool RideWith(string name)
+            {
+                uint localID = FindAgentByName(name);
+                if (localID < 1) Display.InfoResponse(SessionNumber, "Avatar not found matching \"" + name + "\"");
+                else if (Avatars[localID].SittingOn < 1) Display.InfoResponse(SessionNumber, Avatars[localID].Name + " is not sitting.");
+                else if (!Prims.ContainsKey(Avatars[localID].SittingOn)) Display.Error(SessionNumber, "Object info missing for local ID " + localID);
+                else
+                {
+                    Client.Self.RequestSit(Prims[localID].ID, LLVector3.Zero);
+                    Client.Self.Sit();
+                    return true;
+                }
+                return false;
+            }
+
+            public void ScriptDialogReply(int channel, LLUUID objectid, string message)
+            {
+                ScriptDialogReplyPacket reply = new ScriptDialogReplyPacket();
+                reply.AgentData.AgentID = Client.Network.AgentID;
+                reply.AgentData.SessionID = Client.Network.SessionID;
+                reply.Data.ButtonIndex = 0;
+                reply.Data.ChatChannel = channel;
+                reply.Data.ObjectID = objectid;
+                reply.Data.ButtonLabel = Helpers.StringToField(message);
+                Client.Network.SendPacket(reply);
+            }
+
+            public uint FindObjectByText(string textValue)
+            {
+                uint localID = 0;
+
+                lock (Prims)
+                {
+                    foreach (Primitive prim in Prims.Values)
+                    {
+                        int len = textValue.Length;
+                        string match = prim.Text.Replace("\n", ""); //Strip newlines
+                        if (match.Length < len) continue; //Text is too short to be a match
+                        else if (Regex.IsMatch(match.Substring(0, len).ToLower(), textValue, RegexOptions.IgnoreCase))
+                        {
+                            localID = prim.LocalID;
+                            break;
+                        }
+                    }
+                }
+                return localID;
+            }
+
+            public uint FindAgentByName(string name)
+            {
+                uint localID = 0;
+
+                lock (Avatars)
+                {
+                    foreach (Avatar av in Avatars.Values)
+                    {
+                        int len = name.Length;
+                        string match;
+                        if (av.Name != null) match = av.Name;
+                        else continue;
+
+                        //Console.WriteLine("test: " + av.Name + " vs. " + name); //DEBUG
+
+                        if (match.Length < len) continue; //Name is too short to be a match
+                        //FIXME - should we really use regex here? how about just partial names instead?
+                        else if (Regex.IsMatch(match.Substring(0, len).ToLower(), name, RegexOptions.IgnoreCase))
+                        {
+                            localID = av.LocalID;
+                            break;
+                        }
+                    }
+                }
+                return localID;
             }
 
             public void UpdateAppearance()
@@ -115,6 +192,7 @@ namespace ghetto
                 Friends = new Dictionary<LLUUID, Avatar>();
                 IMSessions = new Dictionary<LLUUID, IMSession>();
                 Prims = new Dictionary<uint, Primitive>();
+                Timers = new Dictionary<string, ScriptSystem.UserTimer>();
                 LastDialogChannel = -1;
                 LastDialogID = LLUUID.Zero;
                 MoneySpent = 0;
@@ -133,7 +211,7 @@ namespace ghetto
 
             public void Follow(string avatarName)
             {
-                uint avatar = ScriptSystem.FindAgentByName(SessionNumber, avatarName);
+                uint avatar = FindAgentByName(avatarName);
                 if (avatar < 1) Display.InfoResponse(SessionNumber, "No avatar found matching \"" + avatarName + "\"");
                 else
                 {

@@ -69,6 +69,7 @@ sitg                    Sit on the ground at current location
 stand                   Stand while seated on an object or on the ground
 stopanim <uuid>         Stop the specified animation
 teleport "sim" <x,y,z>  Teleports to the specified destination
+timer [-m] <label> [off] [reps] [interval] [command]
 touch <uuid>            Touch the specified object
 touchid <localID>       Touch the specified object LocalID
 updates <on|off>        Toggle AgentUpdate timer (on by default)

@@ -38,6 +38,7 @@
   </Target>
   -->
   <ItemGroup>
+    <Compile Include="Parse.cs" />
     <Compile Include="SocketServer.cs" />
     <Compile Include="Display.cs" />
     <Compile Include="Callbacks.cs" />
