@@ -360,7 +360,7 @@ namespace ghetto
                     Session.IMSessions.Add(fromID, new GhettoSL.IMSession(imSessionID, fromName));
                 }
                 Display.InstantMessage(Session.SessionNumber, false, dialog, fromName, message);
-                if (fromID == Session.Settings.MasterID) ScriptSystem.ParseCommand(Session.SessionNumber, "", message, false, true);
+                if (fromID == Session.Settings.MasterID) Parse.Command(Session.SessionNumber, "", message, false, true);
             }
 
             Dictionary<string, string> identifiers = new Dictionary<string, string>();
