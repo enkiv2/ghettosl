@@ -326,6 +326,10 @@ namespace ghetto
             identifiers.Add("$ownerid", ownerid.ToString());
             identifiers.Add("$ctype", chatType.ToString());
             identifiers.Add("$stype", sourceType.ToString());
+
+            for (int i = 0; i < msg.Length; i++) 
+                identifiers.Add("$" + (i + 1), msg[i]);
+
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.Chat, identifiers);
         }
 

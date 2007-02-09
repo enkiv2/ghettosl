@@ -64,10 +64,6 @@ namespace ghetto
             /// </summary>
             public uint SetTime;
             /// <summary>
-            /// Timer to invoke the next command after sleeping
-            /// </summary>
-            public System.Timers.Timer SleepTimer;
-            /// <summary>
             /// Dictionary of scripted aliases
             /// </summary>
             public Dictionary<string, string[]> Aliases;
@@ -291,7 +287,7 @@ namespace ghetto
                             foreach (KeyValuePair<string, string> pair in identifiers)
                                 c = c.Replace(pair.Key, pair.Value);
                         }
-                        ParseCommand(sessionNum, s.Value.ScriptName, c, true, false);
+                        if (!ParseCommand(sessionNum, s.Value.ScriptName, c, true, false)) break;
                     }
                 }
             }
@@ -654,6 +650,7 @@ namespace ghetto
                     //check ==
                     if (eq.Length > 1)
                     {
+                        //Console.WriteLine("comparing " + eq[0] + " vs. " + eq[1]); //DEBUG
                         if (eq[0].Trim() != eq[1].Trim()) pass = false;
                         break;
                     }
@@ -912,7 +909,7 @@ namespace ghetto
                             foreach (string c in pair.Value)
                             {
                                 string ctok = ParseTokens(c, details);
-                                if (!ParseCommand(sessionNum, s.ScriptName, ctok, true, fromMasterIM)) break;
+                                if (!ParseCommand(sessionNum, s.ScriptName, ctok, true, fromMasterIM)) return false;
                             }
                             return true;
                         }
@@ -952,7 +949,6 @@ namespace ghetto
             else if (command == "break")
             {
                 if (scriptName == "") return false;
-                Interface.Scripts[scriptName].SleepTimer.Stop();
                 return false;
             }
 
