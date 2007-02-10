@@ -139,34 +139,34 @@ namespace ghetto
                         continue;
                     }
 
-                    int val1;
-                    int val2;
+                    float val1;
+                    float val2;
 
                     //check <
                     if (less.Length > 1)
                     {
-                        if (!int.TryParse(less[0].Trim(), out val1) || !int.TryParse(less[1].Trim(), out val2) || val1 >= val2) { pass = false; break; }
+                        if (!float.TryParse(less[0].Trim(), out val1) || !float.TryParse(less[1].Trim(), out val2) || val1 >= val2) { pass = false; break; }
                         continue;
                     }
 
                     //check >
                     if (greater.Length > 1)
                     {
-                        if (!int.TryParse(greater[0].Trim(), out val1) || !int.TryParse(greater[1].Trim(), out val2) || val1 <= val2) { pass = false; break; }
+                        if (!float.TryParse(greater[0].Trim(), out val1) || !float.TryParse(greater[1].Trim(), out val2) || val1 <= val2) { pass = false; break; }
                         continue;
                     }
 
                     //check <=
                     if (lessEq.Length > 1)
                     {
-                        if (!int.TryParse(lessEq[0].Trim(), out val1) || !int.TryParse(lessEq[1].Trim(), out val2) || val1 > val2) { pass = false; break; }
+                        if (!float.TryParse(lessEq[0].Trim(), out val1) || !float.TryParse(lessEq[1].Trim(), out val2) || val1 > val2) { pass = false; break; }
                         continue;
                     }
 
                     //check >=
                     if (greaterEq.Length > 1)
                     {
-                        if (!int.TryParse(greaterEq[0].Trim(), out val1) || !int.TryParse(greaterEq[1].Trim(), out val2) || val1 < val2) { pass = false; break; }
+                        if (!float.TryParse(greaterEq[0].Trim(), out val1) || !float.TryParse(greaterEq[1].Trim(), out val2) || val1 < val2) { pass = false; break; }
                         continue;
                     }
 
@@ -205,29 +205,42 @@ namespace ghetto
             {
                 uint elapsed = Helpers.GetUnixTime() - Interface.Scripts[scriptName].SetTime;
                 ret = ret.Replace("$elapsed", elapsed.ToString());
+                uint sittingOn = Session.Client.Self.SittingOn;
+                LLVector3 myPos;
+                if (sittingOn > 0 && Session.Prims.ContainsKey(sittingOn))
+                {
+                    myPos = Session.Prims[sittingOn].Position + Session.Client.Self.Position;
+                }
+                else myPos = Session.Client.Self.Position;
+                ret = ret.Replace("$distance", Helpers.VecDist(myPos, Interface.Scripts[scriptName].SetTarget).ToString());
             }
 
-            if (Session.Client.Self.SittingOn > 0 && Session.Prims.ContainsKey(Session.Client.Self.SittingOn))
+            if (Session.Client.Network.Connected && Session.Client.Self.SittingOn > 0 && Session.Prims.ContainsKey(Session.Client.Self.SittingOn))
             {
                 ret = ret.Replace("$seattext", Session.Prims[Session.Client.Self.SittingOn].Text);
                 ret = ret.Replace("$seatid", Session.Prims[Session.Client.Self.SittingOn].ID.ToString());
             }
             else ret = ret.Replace("$seattext", "$null").Replace("$seatid", LLUUID.Zero.ToString());
 
-            if (Session.Client.Network.Connected) ret = ret.Replace("$myid", Session.Client.Network.AgentID.ToString());
-            else ret = ret.Replace("$myid", LLUUID.Zero.ToString());
-
-            if (Session.Client.Network.Connected) ret = ret.Replace("$connected", "$true");
-            else ret = ret.Replace("$connected", "$false");
+            if (Session.Client.Network.Connected)
+            {
+                ret = ret.Replace("$myid", Session.Client.Network.AgentID.ToString());
+                ret = ret.Replace("$connected", "$true");
+                ret = ret.Replace("$region", Session.Client.Network.CurrentSim.Name);
+            }
+            else
+            {
+                ret = ret.Replace("$myid", LLUUID.Zero.ToString());
+                ret = ret.Replace("$connected", "$false");
+                ret = ret.Replace("$region", "$null");
+                ret = ret.Replace("$distance", "$null");
+            }            
 
             if (Session.Client.Self.Status.AlwaysRun) ret = ret.Replace("$flying", "$true");
             else ret = ret.Replace("$flying", "$false");
 
             if (Session.Client.Self.Status.Controls.Fly) ret = ret.Replace("$flying", "$true");
             else ret = ret.Replace("$flying", "$false");
-
-            if (Session.Client.Network.Connected) ret = ret.Replace("$region", Session.Client.Network.CurrentSim.Name);
-            else ret = ret.Replace("$region", "$null");
 
             if (Session.Client.Self.SittingOn > 0) ret = ret.Replace("$sitting", "$true");
             else ret = ret.Replace("$sitting", "$false");
@@ -618,7 +631,7 @@ namespace ghetto
                 Session.Client.Self.RequestBalance();
             }
 
-            else if (command == "break")
+            else if (command == "return")
             {
                 if (scriptName == "") return false;
                 return false;
@@ -665,6 +678,16 @@ namespace ghetto
                     Display.InfoResponse(sessionNum, "Paid L$" + amount + " to " + uuid);
                 }
 
+            }
+
+            else if (command == "settarget" && scriptName != "")
+            {
+                LLVector3 target;
+                if (cmd.Length < 2 || !LLVector3.TryParse(details, out target)) {
+                    Display.Help(command);
+                    return false;
+                }
+                else Interface.Scripts[scriptName].SetTarget = target;
             }
 
             else if (command == "settime" && scriptName != "")

@@ -56,13 +56,13 @@ namespace ghetto
             /// </summary>
             public int CurrentStep;
             /// <summary>
-            /// Timestamp of the last "settime" command
-            /// </summary>
-            public uint ScriptTime;
-            /// <summary>
-            /// Timestamp of the last settime event
+            /// Timestamp of the last settime command
             /// </summary>
             public uint SetTime;
+            /// <summary>
+            /// Vector supplied by /settarget
+            /// </summary>
+            public LLVector3 SetTarget;
             /// <summary>
             /// Dictionary of scripted aliases
             /// </summary>
@@ -206,13 +206,14 @@ namespace ghetto
 
             public UserScript(uint sessionNum, string scriptFile)
             {
+                SetTarget = LLVector3.Zero;
                 SetTime = Helpers.GetUnixTime();
                 Aliases = new Dictionary<string, string[]>();
                 Events = new Dictionary<EventTypes, ScriptEvent>();
                 SessionNumber = sessionNum;
                 ScriptName = scriptFile;
                 CurrentStep = 0;
-                ScriptTime = Helpers.GetUnixTime();
+                SetTime = Helpers.GetUnixTime();
                 Variables = new Dictionary<string, string>();
             }
         }
