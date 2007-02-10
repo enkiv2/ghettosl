@@ -94,7 +94,7 @@ namespace ghetto
                 identifiers.Add("$message", message);
                 ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.TeleportFinish, identifiers);
             }
-            else Console.WriteLine("tp: " + status + " - " + message + " - " + flags);
+            else Console.WriteLine("tp: " + status + " - " + message + " - " + flags); //debug
         }
 
         void Objects_OnObjectUpdated(Simulator simulator, ObjectUpdate update, ulong regionHandle, ushort timeDilation)
