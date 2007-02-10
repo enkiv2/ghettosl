@@ -122,7 +122,7 @@ namespace ghetto
                     //check ==
                     if (eq.Length > 1)
                     {
-                        //Console.WriteLine("comparing " + eq[0] + " vs. " + eq[1]); //DEBUG
+                        //Console.WriteLine("comparing ==: " + eq[0] + " vs. " + eq[1]); //DEBUG
                         if (eq[0].Trim() != eq[1].Trim()) pass = false;
                         break;
                     }
@@ -130,6 +130,7 @@ namespace ghetto
                     //check !=
                     if (not.Length > 1)
                     {
+                        //Console.WriteLine("comparing !=: " + not[0] + " vs. " + not[1]); //DEBUG
                         if (not[0].Trim() == not[1].Trim()) pass = false;
                         break;
                     }
