@@ -81,8 +81,8 @@ namespace ghetto
                     if (eq.Length == 1 && not.Length == 1 && less.Length == 1 && greater.Length == 1 && lessEq.Length == 1 && greaterEq.Length == 1 && like.Length == 1 && match.Length == 1)
                     {
                         string val = eq[0].Trim();
-                        if (val == "$false" || val == "$null" || val == "0") pass = false;
-                        break;
+                        if (val == "$false" || val == "$null" || val == "0") { pass = false; break; }
+                        continue;
                     }
 
                     //check "iswm" (wildcards, which are converted to regex)
@@ -95,8 +95,8 @@ namespace ghetto
                         //Console.WriteLine("Comparing {0} LIKE {1} == {2}", v1, v2); //DEBUG
                         string regex = "^" + Regex.Escape(v2).Replace("\\*", ".*").Replace("\\?", ".") + "$";
                         bool isMatch = Regex.IsMatch(v1, regex, RegexOptions.IgnoreCase);
-                        if (!isMatch) pass = false;
-                        break;
+                        if (!isMatch) { pass = false; break; }
+                        continue;
                     }
 
                     //check "match" (regex)
@@ -107,7 +107,7 @@ namespace ghetto
                         try
                         {
                             bool isMatch = Regex.IsMatch(v1, v2, RegexOptions.IgnoreCase);
-                            if (!isMatch) pass = false;
+                            if (!isMatch) { pass = false; break; }
                         }
                         catch
                         {
@@ -116,23 +116,27 @@ namespace ghetto
                         }
                         //Console.WriteLine("Comparing {0} MATCH {1} == {2}", v1, v2, isMatch); //DEBUG
 
-                        break;
+                        continue;
                     }
 
                     //check ==
                     if (eq.Length > 1)
                     {
-                        //Console.WriteLine("comparing ==: " + eq[0] + " vs. " + eq[1]); //DEBUG
-                        if (eq[0].Trim() != eq[1].Trim()) pass = false;
-                        break;
+                        string v1 = eq[0].Trim();
+                        string v2 = eq[1].Trim();
+                        //Console.WriteLine("comparing ==: " + v1 + " vs. " + v2); //DEBUG
+                        if (v1 != v2) { pass = false; break; }
+                        continue;
                     }
 
                     //check !=
                     if (not.Length > 1)
                     {
-                        //Console.WriteLine("comparing !=: " + not[0] + " vs. " + not[1]); //DEBUG
-                        if (not[0].Trim() == not[1].Trim()) pass = false;
-                        break;
+                        string v1 = not[0].Trim();
+                        string v2 = not[1].Trim();
+                        //Console.WriteLine("comparing !=: " + v1 + " vs. " + v2); //DEBUG
+                        if (v1 == v2) { pass = false; break; }
+                        continue;
                     }
 
                     int val1;
@@ -141,29 +145,29 @@ namespace ghetto
                     //check <
                     if (less.Length > 1)
                     {
-                        if (!int.TryParse(less[0].Trim(), out val1) || !int.TryParse(less[1].Trim(), out val2) || val1 >= val2) pass = false;
-                        break;
+                        if (!int.TryParse(less[0].Trim(), out val1) || !int.TryParse(less[1].Trim(), out val2) || val1 >= val2) { pass = false; break; }
+                        continue;
                     }
 
                     //check >
                     if (greater.Length > 1)
                     {
-                        if (!int.TryParse(greater[0].Trim(), out val1) || !int.TryParse(greater[1].Trim(), out val2) || val1 <= val2) pass = false;
-                        break;
+                        if (!int.TryParse(greater[0].Trim(), out val1) || !int.TryParse(greater[1].Trim(), out val2) || val1 <= val2) { pass = false; break; }
+                        continue;
                     }
 
                     //check <=
                     if (lessEq.Length > 1)
                     {
-                        if (!int.TryParse(lessEq[0].Trim(), out val1) || !int.TryParse(lessEq[1].Trim(), out val2) || val1 > val2) pass = false;
-                        break;
+                        if (!int.TryParse(lessEq[0].Trim(), out val1) || !int.TryParse(lessEq[1].Trim(), out val2) || val1 > val2) { pass = false; break; }
+                        continue;
                     }
 
                     //check >=
                     if (greaterEq.Length > 1)
                     {
-                        if (!int.TryParse(greaterEq[0].Trim(), out val1) || !int.TryParse(greaterEq[1].Trim(), out val2) || val1 < val2) pass = false;
-                        break;
+                        if (!int.TryParse(greaterEq[0].Trim(), out val1) || !int.TryParse(greaterEq[1].Trim(), out val2) || val1 < val2) { pass = false; break; }
+                        continue;
                     }
 
                 }

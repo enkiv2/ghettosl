@@ -151,6 +151,15 @@ namespace ghetto
                 {
                     if (av.Name == FollowName)
                     {
+                        LLVector3 target;
+                        if (av.SittingOn > 0 && Prims.ContainsKey(av.SittingOn))
+                        {
+                            target = Prims[av.SittingOn].Position + av.Position;
+                        }
+                        else
+                        {
+                            target = av.Position;
+                        }
                         //Console.WriteLine(av.Position); //DEBUG
                         if (Helpers.VecDist(Client.Self.Position, av.Position) > 3)
                         {
