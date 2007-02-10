@@ -70,41 +70,18 @@ namespace ghetto
             public bool Login()
             {
                 Display.InfoResponse(SessionNumber, "Logging in as " + Settings.FirstName + " " + Settings.LastName + "...");
-                //Dictionary<string, object> loginParams = DefaultLoginValues(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", "root66@gmail.com");
                 if (Settings.URI == "") return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", "last", "root66@gmail.com", false);
                 else
                 {
                     string start = Settings.URI;
-                    //Console.WriteLine(start); //debug
+                    Console.WriteLine(start); //DEBUG
                     return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", start, "root66@gmail.com", false);
                 }
             }
 
-            public bool RideWith(string name)
+            public string Name
             {
-                uint localID = FindAgentByName(name);
-                if (localID < 1) Display.InfoResponse(SessionNumber, "Avatar not found matching \"" + name + "\"");
-                else if (Avatars[localID].SittingOn < 1) Display.InfoResponse(SessionNumber, Avatars[localID].Name + " is not sitting.");
-                else if (!Prims.ContainsKey(Avatars[localID].SittingOn)) Display.Error(SessionNumber, "Object info missing for local ID " + localID);
-                else
-                {
-                    Client.Self.RequestSit(Prims[localID].ID, LLVector3.Zero);
-                    Client.Self.Sit();
-                    return true;
-                }
-                return false;
-            }
-
-            public void ScriptDialogReply(int channel, LLUUID objectid, string message)
-            {
-                ScriptDialogReplyPacket reply = new ScriptDialogReplyPacket();
-                reply.AgentData.AgentID = Client.Network.AgentID;
-                reply.AgentData.SessionID = Client.Network.SessionID;
-                reply.Data.ButtonIndex = 0;
-                reply.Data.ChatChannel = channel;
-                reply.Data.ObjectID = objectid;
-                reply.Data.ButtonLabel = Helpers.StringToField(message);
-                Client.Network.SendPacket(reply);
+                get { return Settings.FirstName + " " + Settings.LastName; }
             }
 
             public uint FindObjectByText(string textValue)
@@ -155,17 +132,70 @@ namespace ghetto
                 return localID;
             }
 
+            public void Follow(string avatarName)
+            {
+                uint avatar = FindAgentByName(avatarName);
+                if (avatar < 1) Display.InfoResponse(SessionNumber, "No avatar found matching \"" + avatarName + "\"");
+                else
+                {
+                    FollowName = Avatars[avatar].Name;
+                    Display.InfoResponse(SessionNumber, "Following " + FollowName + "...");
+                    FollowTimer.Start();
+                }
+            }
+
+            void FollowTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+            {
+                Client.Self.Status.SendUpdate();
+                foreach (Avatar av in Avatars.Values)
+                {
+                    if (av.Name == FollowName)
+                    {
+                        //Console.WriteLine(av.Position); //DEBUG
+                        if (Helpers.VecDist(Client.Self.Position, av.Position) > 3)
+                        {
+                            Client.Self.AutoPilotLocal((int)av.Position.X, (int)av.Position.Y, av.Position.Z);
+                        }
+                        return;
+                    }
+                }
+                Display.InfoResponse(SessionNumber, "Lost track of " + FollowName + " - following disabled");
+                FollowTimer.Stop();
+            }
+
+            public bool RideWith(string name)
+            {
+                uint localID = FindAgentByName(name);
+                if (localID < 1) Display.InfoResponse(SessionNumber, "Avatar not found matching \"" + name + "\"");
+                else if (Avatars[localID].SittingOn < 1) Display.InfoResponse(SessionNumber, Avatars[localID].Name + " is not sitting.");
+                else if (!Prims.ContainsKey(Avatars[localID].SittingOn)) Display.Error(SessionNumber, "Object info missing for local ID " + localID);
+                else
+                {
+                    Client.Self.RequestSit(Prims[localID].ID, LLVector3.Zero);
+                    Client.Self.Sit();
+                    return true;
+                }
+                return false;
+            }
+
+            public void ScriptDialogReply(int channel, LLUUID objectid, string message)
+            {
+                ScriptDialogReplyPacket reply = new ScriptDialogReplyPacket();
+                reply.AgentData.AgentID = Client.Network.AgentID;
+                reply.AgentData.SessionID = Client.Network.SessionID;
+                reply.Data.ButtonIndex = 0;
+                reply.Data.ChatChannel = channel;
+                reply.Data.ObjectID = objectid;
+                reply.Data.ButtonLabel = Helpers.StringToField(message);
+                Client.Network.SendPacket(reply);
+            }
+
             public void UpdateAppearance()
             {
                 Display.InfoResponse(SessionNumber, "Loading appearance from asset server...");
                 AppearanceManager aManager;
                 aManager = new AppearanceManager(Client);
                 aManager.BeginAgentSendAppearance();
-            }
-
-            public string Name
-            {
-                get { return Settings.FirstName + " " + Settings.LastName; }
             }
 
             /// <summary>
@@ -208,38 +238,7 @@ namespace ghetto
                 FollowTimer.AutoReset = true;
                 FollowTimer.Elapsed += new System.Timers.ElapsedEventHandler(FollowTimer_Elapsed);
             }
-
-            public void Follow(string avatarName)
-            {
-                uint avatar = FindAgentByName(avatarName);
-                if (avatar < 1) Display.InfoResponse(SessionNumber, "No avatar found matching \"" + avatarName + "\"");
-                else
-                {
-                    FollowName = Avatars[avatar].Name;
-                    Display.InfoResponse(SessionNumber, "Following " + FollowName + "...");                    
-                    FollowTimer.Start();
-                }
-            }
-
-            void FollowTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-            {
-                Client.Self.Status.SendUpdate();
-                foreach (Avatar av in Avatars.Values)
-                {
-                    if (av.Name == FollowName)
-                    {
-                        //Console.WriteLine(av.Position); //DEBUG
-                        if (Helpers.VecDist(Client.Self.Position, av.Position) > 3)
-                        {
-                            Client.Self.AutoPilotLocal((int)av.Position.X, (int)av.Position.Y, av.Position.Z);
-                        }
-                        return;
-                    }
-                }
-                Display.InfoResponse(SessionNumber, "Lost track of " + FollowName + " - following disabled");
-                FollowTimer.Stop();
-            }
-        }
+       }
 
         /// <summary>
         /// Used for tracking IM session details
