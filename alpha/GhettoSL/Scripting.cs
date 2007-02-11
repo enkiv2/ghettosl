@@ -255,7 +255,8 @@ namespace ghetto
                     limited = true;
                     RepeatsRemaining--;
                 }
-                if (!Parse.Command(sessionNum, "", Command, true, false) || (limited && RepeatsRemaining == 0))
+                CommandResult result = Parse.Command(sessionNum, "", Command, true, false);
+                if ((limited && RepeatsRemaining == 0) || result == CommandResult.InvalidUsage || result == CommandResult.UnexpectedError)
                 {
                     Interface.Sessions[sessionNum].Timers[Name].Stop();
                     Interface.Sessions[sessionNum].Timers.Remove(Name);
@@ -281,6 +282,16 @@ namespace ghetto
                 ScriptName = scriptName;
                 //EventType = eventType;
             }
+        }
+
+        //Returned by Parse.Command
+        public enum CommandResult
+        {
+            NoError = 0,
+            Return = 1,
+            ConditionFailed = 2,
+            InvalidUsage = 3,
+            UnexpectedError = 4
         }
 
         //Used by scripted events
@@ -322,15 +333,34 @@ namespace ghetto
             {
                 if (s.Value.Events.ContainsKey(eventType))
                 {
-                    foreach (String command in s.Value.Events[eventType].Commands)
+                    bool checkElse = false;
+                    foreach (string command in s.Value.Events[eventType].Commands)
                     {
-                        string c = command;
+                        //FIXME - make sure we don't need to trim command first
+                        string[] splitSpace = { " " };
+                        string[] cmd = command.Split(splitSpace, StringSplitOptions.RemoveEmptyEntries);
+                        string arg = cmd[0].ToLower();
+
+                        if (!checkElse)
+                        {
+                            if (arg == "elseif" || arg == "else") continue;
+                        }
+
+                        checkElse = false;
+
+                        string newCommand = command;
+
                         if (identifiers != null)
                         {
                             foreach (KeyValuePair<string, string> pair in identifiers)
-                                c = c.Replace(pair.Key, pair.Value);
+                                newCommand = newCommand.Replace(pair.Key, pair.Value);
                         }
-                        if (!Parse.Command(sessionNum, s.Value.ScriptName, c, true, false)) break;
+                        CommandResult result = Parse.Command(sessionNum, s.Value.ScriptName, newCommand, true, false);
+                        if (arg == "if" || arg == "elseif")
+                        {
+                            if (result == CommandResult.ConditionFailed) checkElse = true;
+                            else checkElse = false;
+                        }
                     }
                 }
             }

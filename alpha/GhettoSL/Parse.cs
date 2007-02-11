@@ -486,7 +486,7 @@ namespace ghetto
         }
 
 
-        public static bool Command(uint sessionNum, string scriptName, string commandString, bool parseVariables, bool fromMasterIM)
+        public static ScriptSystem.CommandResult Command(uint sessionNum, string scriptName, string commandString, bool parseVariables, bool fromMasterIM)
         {
 
             //DEBUG - testing scriptName value
@@ -495,14 +495,14 @@ namespace ghetto
 
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
 
-            if (scriptName != "" && !Interface.Scripts.ContainsKey(scriptName)) return false; //invalid or unloaded script
+            if (scriptName != "" && !Interface.Scripts.ContainsKey(scriptName)) return ScriptSystem.CommandResult.UnexpectedError; //invalid or unloaded script
 
             //First we clean up the original command string, removing whitespace and command slashes
             string commandToParse = commandString.Trim();
             while (commandToParse.Length > 0 && commandToParse.Substring(0, 1) == "/")
             {
                 commandToParse = commandToParse.Substring(1).Trim();
-                if (commandToParse.Length == 0) return true;
+                if (commandToParse.Length == 0) return ScriptSystem.CommandResult.NoError;
             }
 
             //Next we save the unparsed command, split it by spaces, for commands like /set and /inc
@@ -524,7 +524,7 @@ namespace ghetto
             //If they are invalid, the entire function will return false, halting a parent script.
             //If they are valid but just fail, the command will halt, but it returns true.
             //FIXME - add "else" and multi-line "if/end if" routines
-            if (command == "if")
+            if (command == "if" || command == "elseif")
             {
                 string conditions = "";
                 string[] ifCmd = new string[0];
@@ -540,14 +540,14 @@ namespace ghetto
                         if (i >= cmd.Length - 1)
                         {
                             Display.Error(sessionNum, "Script error: Missing statement after THEN");
-                            return false;
+                            return ScriptSystem.CommandResult.InvalidUsage;
                         }
                         commandStart = i + 1;
                     }
                     else if (i >= cmd.Length - 1)
                     {
                         Display.Error(sessionNum, "Script error: IF without THEN");
-                        return false;
+                        return ScriptSystem.CommandResult.InvalidUsage;
                     }
                     else
                     {
@@ -555,7 +555,7 @@ namespace ghetto
                         conditions += cmd[i];
                     }
                 }
-                if (!Conditions(sessionNum, conditions)) return true; //condition failed, but no errors
+                if (!Conditions(sessionNum, conditions)) return ScriptSystem.CommandResult.ConditionFailed; //condition failed, but no errors
                 cmd = ifCmd;
                 command = cmd[0].ToLower();
             }
@@ -591,12 +591,14 @@ namespace ghetto
                     {
                         if (command == pair.Key.ToLower())
                         {
+                            ScriptSystem.CommandResult result = ScriptSystem.CommandResult.NoError;
                             foreach (string c in pair.Value)
                             {
                                 string ctok = Tokens(c, details);
-                                if (!Command(sessionNum, s.ScriptName, ctok, true, fromMasterIM)) return false;
+                                ScriptSystem.CommandResult aResult = Command(sessionNum, s.ScriptName, ctok, true, fromMasterIM);
+                                if (aResult != ScriptSystem.CommandResult.NoError && aResult != ScriptSystem.CommandResult.ConditionFailed) return result;
                             }
-                            return true;
+                            return ScriptSystem.CommandResult.NoError;
                         }
                     }
                 }
@@ -609,7 +611,7 @@ namespace ghetto
                 if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out anim))
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
                 Session.Client.Self.AnimationStart(anim);
             }
@@ -618,9 +620,9 @@ namespace ghetto
             {
                 int channel = Session.LastDialogChannel;
                 LLUUID id = Session.LastDialogID;
-                if (cmd.Length < 2) { Display.Help(command); return false; }
+                if (cmd.Length < 2) { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
                 else if (channel < 0 || id == LLUUID.Zero) Display.Error(sessionNum, "No dialogs received. Try /dialog <channel> <id> <message>.");
-                else if (Command(sessionNum, scriptName, "dialog " + channel + " " + id + " " + details, parseVariables, fromMasterIM))
+                else if (Command(sessionNum, scriptName, "dialog " + channel + " " + id + " " + details, parseVariables, fromMasterIM) == ScriptSystem.CommandResult.NoError)
                 {
                     Display.InfoResponse(sessionNum, "Dialog reply sent.");
                 }
@@ -633,8 +635,7 @@ namespace ghetto
 
             else if (command == "return")
             {
-                if (scriptName == "") return false;
-                return false;
+                return ScriptSystem.CommandResult.Return;
             }
 
             else if (command == "paybytext" || command == "paybyname")
@@ -643,7 +644,7 @@ namespace ghetto
                 if (cmd.Length < 3 || !int.TryParse(cmd[1], out amount))
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
                 uint localID = 0;
                 LLUUID uuid = LLUUID.Zero;
@@ -656,7 +657,7 @@ namespace ghetto
                     if (!Session.Prims.ContainsKey(localID))
                     {
                         Display.Error(sessionNum, "Missing info for local ID " + localID);
-                        return false; //FIXME - should this return false and stop scripts?
+                        return ScriptSystem.CommandResult.UnexpectedError; //FIXME - should this return false and stop scripts?
                     }
                     uuid = Session.Prims[localID].ID;
                 }
@@ -666,11 +667,11 @@ namespace ghetto
                     if (!Session.Avatars.ContainsKey(localID))
                     {
                         Display.Error(sessionNum, "Missing info for local ID " + localID);
-                        return false; //FIXME - should this return false and stop scripts?
+                        return ScriptSystem.CommandResult.UnexpectedError; //FIXME - should this return false and stop scripts?
                     }
                     uuid = Session.Avatars[localID].ID;
                 }
-                else return false; //this should never happen
+                else return ScriptSystem.CommandResult.UnexpectedError; //this should never happen
 
                 if (localID > 0)
                 {
@@ -685,7 +686,7 @@ namespace ghetto
                 LLVector3 target;
                 if (cmd.Length < 2 || !LLVector3.TryParse(details, out target)) {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
                 else Interface.Scripts[scriptName].SetTarget = target;
             }
@@ -697,7 +698,7 @@ namespace ghetto
 
             else if (command == "sitbytext")
             {
-                if (cmd.Length < 2) { Display.Help(command); return false; }
+                if (cmd.Length < 2) { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
                 uint localID = Session.FindObjectByText(details.ToLower());
                 if (localID > 0)
                 {
@@ -708,9 +709,8 @@ namespace ghetto
                     Session.Client.Self.Status.Controls.SitOnGround = false;
                     Session.Client.Self.Status.Controls.StandUp = false;
                     Session.Client.Self.Status.SendUpdate();
-                    return true;
                 }
-                Display.InfoResponse(sessionNum, "No matching objects found.");
+                else Display.InfoResponse(sessionNum, "No matching objects found.");
             }
 
             else if (command == "clear")
@@ -725,7 +725,7 @@ namespace ghetto
                 if (cmd.Length <= 3 || !int.TryParse(cmd[1], out channel) || !LLUUID.TryParse(cmd[2], out objectid))
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
                 Display.SendMessage(sessionNum, channel, objectid, details);
                 Session.ScriptDialogReply(channel, objectid, details);
@@ -735,14 +735,14 @@ namespace ghetto
             {
                 //FIXME - remember folder and allow dir/ls without args
                 //FIXME - move DirList function to UserSession and move output to Display class
-                if (cmd.Length < 2) { Display.Help(command); return false; }
+                if (cmd.Length < 2) { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
                 ScriptSystem.DirList(sessionNum, details);
             }
 
             else if (command == "echo")
             {
                 //FIXME - move to Display.Echo
-                if (cmd.Length < 1) return true;
+                if (cmd.Length < 1) return ScriptSystem.CommandResult.NoError;
                 Console.WriteLine(details);
             }
 
@@ -789,7 +789,7 @@ namespace ghetto
 
             else if (command == "follow")
             {
-                if (cmd.Length < 2) { Display.Help(command); return false; }
+                if (cmd.Length < 2) { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
                 if (cmd.Length == 1 || cmd[1].ToLower() == "on")
                 {
                     if (Session.FollowName == "")
@@ -823,7 +823,7 @@ namespace ghetto
                 if (cmd.Length < 2 || !LLVector3.TryParse(details, out target))
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
                 Session.Client.Self.AutoPilotLocal((int)target.X, (int)target.Y, target.Z);
             }
@@ -848,7 +848,7 @@ namespace ghetto
                 if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out groupID))
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
                 Session.Client.Groups.BeginGetGroupRoles(groupID, new GroupManager.GroupRolesCallback(ScriptSystem.GroupRolesHandler));
             }
@@ -861,7 +861,7 @@ namespace ghetto
                 if (cmd.Length < 4 || !LLUUID.TryParse(cmd[1], out inviteeID) || !LLUUID.TryParse(cmd[2], out groupID) || !LLUUID.TryParse(cmd[3], out roleID))
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
                 InviteGroupRequestPacket p = new InviteGroupRequestPacket();
                 InviteGroupRequestPacket.InviteDataBlock b = new InviteGroupRequestPacket.InviteDataBlock();
@@ -888,7 +888,7 @@ namespace ghetto
                 if (cmd.Length < 2 || (flag != "on" && flag != "off"))
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
                 if (flag == "off")
                 {
@@ -907,7 +907,7 @@ namespace ghetto
                 if (cmd.Length < 3 || !LLUUID.TryParse(cmd[1], out target))
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
                 Session.Client.Self.InstantMessage(target, details);
             }
@@ -973,7 +973,7 @@ namespace ghetto
                             catch
                             {
                                 Display.Error(sessionNum, "/look: invalid regular expression");
-                                return false;
+                                return ScriptSystem.CommandResult.InvalidUsage;
                             }
                         }
                     }
@@ -1001,7 +1001,7 @@ namespace ghetto
             {
                 if (cmd.Length < 2 || cmd[1].ToLower() == "on") Session.Client.Self.Status.Controls.Mouselook = true;
                 else if (cmd[1].ToLower() == "off") Session.Client.Self.Status.Controls.Mouselook = false;
-                else { Display.Error(sessionNum, command); return false; }
+                else { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
             }
 
             else if (command == "pay")
@@ -1011,7 +1011,7 @@ namespace ghetto
                 if (cmd.Length < 3 || !int.TryParse(cmd[1], out amount) || !LLUUID.TryParse(cmd[2], out id))
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
                 Session.Client.Self.GiveMoney(id, amount, "");
             }
@@ -1022,12 +1022,12 @@ namespace ghetto
                 if (cmd.Length < 2 || !int.TryParse(cmd[1], out amount))
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
                 else if (Session.Settings.MasterID == LLUUID.Zero)
                 {
                     Display.Error(sessionNum, "MasterID not defined");
-                    return false;
+                    return ScriptSystem.CommandResult.UnexpectedError;
                 }
                 else
                 {
@@ -1050,7 +1050,7 @@ namespace ghetto
                 else
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
             }
 
@@ -1070,7 +1070,7 @@ namespace ghetto
                 else if (cmd.Length < 3)
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
                 else
                 {
@@ -1083,7 +1083,7 @@ namespace ghetto
                             if (match != LLUUID.Zero)
                             {
                                 Display.Error(sessionNum, "\"" + cmd[1] + "\" could refer to more than one active IM session.");
-                                return false;
+                                return ScriptSystem.CommandResult.InvalidUsage;
                             }
                             match = pair.Key;
                         }
@@ -1136,7 +1136,7 @@ namespace ghetto
                 )
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
 
                 Session.Client.Self.Status.Camera.BodyRotation = Helpers.Axis2Rot(new LLVector3(x, y, z));
@@ -1157,7 +1157,7 @@ namespace ghetto
                 else
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
             }
 
@@ -1168,7 +1168,7 @@ namespace ghetto
 
             else if (command == "script")
             {
-                return LoadScriptCommand(sessionNum, cmd);
+                if (!LoadScriptCommand(sessionNum, cmd)) return ScriptSystem.CommandResult.UnexpectedError;
             }
 
             else if (command == "s" || command == "session")
@@ -1181,13 +1181,13 @@ namespace ghetto
                         {
                             Command(pair.Key, scriptName, details, parseVariables, fromMasterIM);
                         }
-                        return true;
+                        return ScriptSystem.CommandResult.NoError;
                     }
                     uint switchTo;
                     if (!uint.TryParse(cmd[1], out switchTo) || switchTo < 1 || !Interface.Sessions.ContainsKey(switchTo))
                     {
                         Display.Error(sessionNum, "Invalid session number");
-                        return false;
+                        return ScriptSystem.CommandResult.InvalidUsage;
                     }
                     else if (cmd.Length == 2)
                     {
@@ -1210,12 +1210,12 @@ namespace ghetto
                 if (unparsedCommand.Length < 2 || (unparsedCommand.Length > 2 && !int.TryParse(Variables(sessionNum, unparsedCommand[2], scriptName), out amount)))
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
                 ScriptSystem.UserScript Script = Interface.Scripts[scriptName];
                 int value = 0;
                 string variableName = unparsedCommand[1];
-                if (Script.Variables.ContainsKey(variableName) && !int.TryParse(Script.Variables[variableName], out value)) return false;
+                if (Script.Variables.ContainsKey(variableName) && !int.TryParse(Script.Variables[variableName], out value)) return ScriptSystem.CommandResult.InvalidUsage;
                 //FIXME - change in the following code, int + "" to a proper string-to-int conversion
                 else if (Script.Variables.ContainsKey(variableName)) Script.Variables[variableName] = "" + (value + amount);
                 else Script.Variables.Add(variableName, "" + amount);
@@ -1227,7 +1227,7 @@ namespace ghetto
                 if (unparsedCommand.Length < 3 || unparsedCommand[1].Substring(0, 1) != "%")
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
                 details = "";
                 for (int d = 2; d < unparsedCommand.Length; d++)
@@ -1253,7 +1253,7 @@ namespace ghetto
                 if (cmd.Length < 2 || LLUUID.TryParse(cmd[1], out target))
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
                 Session.Client.Self.Status.Controls.SitOnGround = false;
                 Session.Client.Self.Status.Controls.StandUp = false;
@@ -1302,7 +1302,7 @@ namespace ghetto
                 if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out anim))
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
                 Session.Client.Self.AnimationStop(anim);
             }
@@ -1312,7 +1312,7 @@ namespace ghetto
                 if (cmd.Length < 2)
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
 
                 //assumed values
@@ -1332,7 +1332,7 @@ namespace ghetto
                         if (!LLVector3.TryParse(String.Join(" ", v), out target))
                         {
                             Display.Help(command);
-                            return false;
+                            return ScriptSystem.CommandResult.InvalidUsage;
                         }
                     }
                 }
@@ -1348,7 +1348,7 @@ namespace ghetto
                 if (cmd.Length < 2 || !ulong.TryParse(cmd[1], out handle))
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
                 Session.Client.Self.Teleport(handle, new LLVector3(128, 128, 0));
             }
@@ -1357,7 +1357,7 @@ namespace ghetto
             {
                 if (cmd.Length < 3) {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
                 else if (cmd[2] == "off")
                 {
@@ -1366,7 +1366,6 @@ namespace ghetto
                         Session.Timers.Remove(cmd[1]);
                         Display.InfoResponse(sessionNum, "Timer \"" + cmd[1] + "\" halted");
                     }
-                    return true;
                 }
                 else
                 {
@@ -1387,7 +1386,7 @@ namespace ghetto
                     if (!int.TryParse(cmd[start + 1], out repeats) || !int.TryParse(cmd[start + 2], out interval))
                     {
                         Display.Help(command);
-                        return false;
+                        return ScriptSystem.CommandResult.InvalidUsage;
                     }
                     string m;
                     if (milliseconds) m = "ms";
@@ -1396,7 +1395,6 @@ namespace ghetto
                     ScriptSystem.UserTimer timer = new ScriptSystem.UserTimer(sessionNum, name, interval, milliseconds, repeats, details);
                     if (!Session.Timers.ContainsKey(name)) Session.Timers.Add(name, timer);
                     else Session.Timers[name] = timer;
-                    return true;
                 }
             }
 
@@ -1406,7 +1404,7 @@ namespace ghetto
                 if (cmd.Length < 2 || LLUUID.TryParse(cmd[1], out findID))
                 {
                     Display.Help(command);
-                    return false;
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
                 lock (Session.Prims)
                 {
@@ -1423,14 +1421,14 @@ namespace ghetto
 
             else if (command == "touchid")
             {
-                if (cmd.Length < 2) { Display.Help(command); return false; }
+                if (cmd.Length < 2) { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
                 uint touchid;
                 if (uint.TryParse(cmd[1], out touchid)) Session.Client.Self.Touch(touchid);
             }
 
             else if (command == "updates")
             {
-                if (cmd.Length < 2) { Display.Help(command); return false; }
+                if (cmd.Length < 2) { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
                 string toggle = cmd[1].ToLower();
                 if (toggle == "on")
                 {
@@ -1442,7 +1440,7 @@ namespace ghetto
                     Display.InfoResponse(sessionNum, "Update timer OFF");
                     Session.Client.Self.Status.UpdateTimer.Stop();
                 }
-                else { Display.Help(command); return false; }
+                else { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
             }
 
             else if (command == "walk")
@@ -1463,10 +1461,10 @@ namespace ghetto
             else
             {
                 Display.InfoResponse(sessionNum, "Unknown command: " + command.ToUpper());
-                return false;
+                return ScriptSystem.CommandResult.InvalidUsage;
             }
 
-            return true;
+            return ScriptSystem.CommandResult.NoError;
         }
 
 
