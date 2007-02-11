@@ -124,7 +124,7 @@ namespace ghetto
                     {
                         string v1 = eq[0].Trim();
                         string v2 = eq[1].Trim();
-                        //Console.WriteLine("comparing ==: " + v1 + " vs. " + v2); //DEBUG
+                        Console.WriteLine("comparing ==: " + v1 + " vs. " + v2); //DEBUG
                         if (v1 != v2) { pass = false; break; }
                         continue;
                     }

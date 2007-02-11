@@ -158,6 +158,13 @@ namespace ghetto
             identifiers.Add("$id", objectID.ToString());
             identifiers.Add("$channel", chatChannel.ToString());
             identifiers.Add("$message", message);
+
+            string[] splitSpace = { " " };
+            string[] msg = message.Split(splitSpace, StringSplitOptions.RemoveEmptyEntries);
+
+            for (int i = 0; i < msg.Length; i++)
+                identifiers.Add("$" + (i + 1), msg[i]);
+
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.ScriptDialog, identifiers);
         }
 
