@@ -61,7 +61,7 @@ namespace ghetto
 
             Session.Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(Callback_AlertMessage));
             Session.Client.Network.RegisterCallback(PacketType.MoneyBalanceReply, new NetworkManager.PacketCallback(Callback_MoneyBalanceReply));
-
+            Session.Client.Network.RegisterCallback(PacketType.HealthMessage, new NetworkManager.PacketCallback(Callback_HealthMessage));
 
             //Session.Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(Callback_TeleportFinish));
             Session.Client.Self.OnTeleport += new MainAvatar.TeleportCallback(Self_OnTeleport);
@@ -172,6 +172,12 @@ namespace ghetto
         {
             AlertMessagePacket p = (AlertMessagePacket)packet;
             Display.AlertMessage(Session.SessionNumber, Helpers.FieldToString(p.AlertData.Message));
+        }
+
+        void Callback_HealthMessage(Packet packet, Simulator sim)
+        {
+            HealthMessagePacket reply = (HealthMessagePacket)packet;
+            Display.Health(Session.SessionNumber, reply.HealthData.Health);
         }
 
         void Callback_MoneyBalanceReply(Packet packet, Simulator sim)
