@@ -134,12 +134,12 @@ events. The following event types are supported:
 Event Name		Associated Identifiers
 
 Connect ...............
-Chat .................. $name $id $message
+Chat .................. $name $id $message $pos
 Disconnect. ...........
 GetItem ............... $item $itemid
 GetMoney .............. $name $amount
 GiveMoney ............. $name $amount
-IM .................... $name $id $dialog $message
+IM .................... $name $id $dialog $message $pos
 ScriptDialog .......... $name $id $channel $message
 Sit ...................
 TeleportFinish ........

@@ -339,6 +339,7 @@ namespace ghetto
             identifiers.Add("$ownerid", ownerid.ToString());
             identifiers.Add("$ctype", chatType.ToString());
             identifiers.Add("$stype", sourceType.ToString());
+            identifiers.Add("$pos", position.ToString());
 
             for (int i = 0; i < msg.Length; i++) 
                 identifiers.Add("$" + (i + 1), msg[i]);
@@ -381,6 +382,7 @@ namespace ghetto
             identifiers.Add("$message", message);
             identifiers.Add("$id", fromID.ToString());
             identifiers.Add("$dialog", dialog.ToString());
+            identifiers.Add("$pos", position.ToString());
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.IM, identifiers);
 
         }
