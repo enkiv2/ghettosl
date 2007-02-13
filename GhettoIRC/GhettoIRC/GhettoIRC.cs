@@ -11,9 +11,14 @@ namespace GhettoIRC
         AsyncCallback DataCallback;
         string buffer;
 
+        public delegate void OnIRCReceivedLineCallback(string message);
+        public event OnIRCReceivedLineCallback OnReceivedLine;
+
+
         public IRCClient()
         {
             buffer = "";
+            OnReceivedLine += new OnIRCReceivedLineCallback(ReceivedLine);
         }
 
         public void Login(string ipAddress, int port, string nickname, string username, string realname)
@@ -21,7 +26,8 @@ namespace GhettoIRC
             try
             {
                 IPAddress ip;
-                if (!IPAddress.TryParse(ipAddress, out ip)) {
+                if (!IPAddress.TryParse(ipAddress, out ip))
+                {
                     Console.WriteLine("Invalid IP address specified.");
                     return;
                 }
@@ -58,7 +64,7 @@ namespace GhettoIRC
         {
             try
             {
-                byte[] byData = System.Text.Encoding.ASCII.GetBytes(message+"\r\n");
+                byte[] byData = System.Text.Encoding.ASCII.GetBytes(message + "\r\n");
                 if (sockIRC != null) sockIRC.Send(byData);
             }
             catch (SocketException se)
@@ -123,7 +129,7 @@ namespace GhettoIRC
                 int i;
                 for (i = 0; i < lines.Length - 1; i++)
                 {
-                    if (lines[i].Trim().Length > 0) ReceivedLine(lines[i]);
+                    if (lines[i].Trim().Length > 0) FireOnIRCReceivedLine(lines[i]);
                 }
                 buffer = lines[i];
             }
@@ -131,12 +137,15 @@ namespace GhettoIRC
 
         void ReceivedLine(string message)
         {
+            Console.WriteLine(message);
+        }
+
+        protected void FireOnIRCReceivedLine(string message)
+        {
             string[] splitSpace = { " " };
             string[] tokens = message.Split(splitSpace, StringSplitOptions.None);
-
             if (tokens[0] == "PING" && tokens.Length > 1) SendCommand("PONG " + tokens[1]);
-
-            Console.WriteLine(message);
+            if (OnReceivedLine != null) OnReceivedLine(message); //trigger callback
         }
 
     }
