@@ -92,9 +92,9 @@ namespace ghetto
                         string v2 = like[1].Trim();
                         if (v1.Length == 0) v1 = "$null";
                         if (v2.Length == 0) v2 = "$null";
-                        //Console.WriteLine("Comparing {0} LIKE {1} == {2}", v1, v2); //DEBUG
                         string regex = "^" + Regex.Escape(v2).Replace("\\*", ".*").Replace("\\?", ".") + "$";
                         bool isMatch = Regex.IsMatch(v1, regex, RegexOptions.IgnoreCase);
+                        Console.WriteLine("Comparing {0} ISWM {1} == {2}", v1, v2, isMatch); //DEBUG
                         if (!isMatch) { pass = false; break; }
                         continue;
                     }
@@ -477,14 +477,60 @@ namespace ghetto
             }
             else
             {
-                int a = Interface.Scripts[scriptFile].Aliases.Count;
-                int e = Interface.Scripts[scriptFile].Events.Count;
+                ScriptSystem.UserScript script = Interface.Scripts[scriptFile];
+                int a = script.Aliases.Count;
+                int e = script.Events.Count;
                 Display.InfoResponse(0, "Loaded " + a + " alias(es) and " + e + " event(s).");
-                ScriptSystem.TriggerEvents(sessionNum, ScriptSystem.EventTypes.Load, null);
+                //ScriptSystem.TriggerEvents(sessionNum, ScriptSystem.EventTypes.Load, null);
+                if (script.Events.ContainsKey(ScriptSystem.EventTypes.Load))
+                {
+                    CommandArray(sessionNum, scriptFile, script.Events[ScriptSystem.EventTypes.Load].Commands, null);
+                }
                 return true;
             }
         }
 
+
+        public static void CommandArray(uint sessionNum, string scriptName, string[] commands, Dictionary<string,string> identifiers)
+        {
+            bool checkElse = false;
+            foreach (string command in commands)
+            {
+                if (command.Substring(0, 1) == ";") continue;
+
+                //FIXME - make sure we don't need to trim command first
+                string[] splitSpace = { " " };
+                string[] cmd = command.Split(splitSpace, StringSplitOptions.RemoveEmptyEntries);
+                string arg = cmd[0].ToLower();
+
+                if (!checkElse)
+                {
+                    if (arg == "elseif" || arg == "else") continue;
+                }
+
+                checkElse = false;
+
+                string newCommand = command; //FIXME - parse tokens and variables
+
+                //Gets $1 $2 $3 etc from $message
+                string tokmessage = "";
+                if (identifiers != null && identifiers.ContainsKey("$message")) tokmessage = identifiers["$message"];
+                else tokmessage = "";
+                newCommand = Parse.Tokens(newCommand, tokmessage);
+
+                if (identifiers != null)
+                {
+                    foreach (KeyValuePair<string, string> pair in identifiers)
+                        newCommand = newCommand.Replace(pair.Key, pair.Value);
+                }
+                ScriptSystem.CommandResult result = Parse.Command(sessionNum, scriptName, newCommand, true, false);
+                if (arg == "if" || arg == "elseif")
+                {
+                    if (result == ScriptSystem.CommandResult.ConditionFailed) checkElse = true;
+                    else checkElse = false;
+                }
+            }
+        }
 
         public static ScriptSystem.CommandResult Command(uint sessionNum, string scriptName, string commandString, bool parseVariables, bool fromMasterIM)
         {
@@ -559,6 +605,18 @@ namespace ghetto
                 cmd = ifCmd;
                 command = cmd[0].ToLower();
             }
+            else if (command == "else")
+            {
+                string c = "";
+                for (int i = 1; i < cmd.Length; i++)
+                {
+                    if (c != "") c += " ";
+                    c +=  cmd[i];
+                }
+                cmd = c.Split(splitChar);
+                if (cmd.Length > 0) command = cmd[0];
+                else return ScriptSystem.CommandResult.InvalidUsage;
+            }
 
             //The purpose of this part is to separate the message from the rest of the command.
             //For example, in the command "im some-uuid-here Hi there!", details = "Hi there!"
@@ -580,7 +638,6 @@ namespace ghetto
                 details += cmd[detailsStart];
                 detailsStart++;
             }
-
             
             //Check for user-defined aliases
             lock (Interface.Scripts)
@@ -591,14 +648,20 @@ namespace ghetto
                     {
                         if (command == pair.Key.ToLower())
                         {
-                            ScriptSystem.CommandResult result = ScriptSystem.CommandResult.NoError;
-                            foreach (string c in pair.Value)
-                            {
-                                string ctok = Tokens(c, details);
-                                ScriptSystem.CommandResult aResult = Command(sessionNum, s.ScriptName, ctok, true, fromMasterIM);
-                                if (aResult != ScriptSystem.CommandResult.NoError && aResult != ScriptSystem.CommandResult.ConditionFailed) return result;
-                            }
-                            return ScriptSystem.CommandResult.NoError;
+                            //ScriptSystem.CommandResult result = ScriptSystem.CommandResult.NoError;
+
+                            Dictionary<string, string> identifiers = new Dictionary<string, string>();
+                            identifiers.Add("$message", details);
+                            Parse.CommandArray(sessionNum, s.ScriptName, pair.Value, identifiers);
+
+                            //foreach (string c in pair.Value)
+                            //{
+                            //    string ctok = Tokens(c, details);
+                            //    ScriptSystem.CommandResult aResult = Command(sessionNum, s.ScriptName, ctok, true, fromMasterIM);
+                            //    if (aResult != ScriptSystem.CommandResult.NoError && aResult != ScriptSystem.CommandResult.ConditionFailed) return result;
+                            //}
+
+                            return ScriptSystem.CommandResult.NoError; //FIXME - make Parse.CommandArray return a CommandResult
                         }
                     }
                 }
