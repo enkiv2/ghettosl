@@ -74,6 +74,7 @@ touch <uuid>            Touch the specified object
 touchid <localID>       Touch the specified object LocalID
 updates <on|off>        Toggle AgentUpdate timer (on by default)
 walk                    Disable running
+wear <itemid> [point]   Attach an object from inventory after /dir
 whisper                 Whisper the specified message to users within 5m
 who                     List avatars within viewing range
 

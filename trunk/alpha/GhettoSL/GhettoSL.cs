@@ -55,6 +55,7 @@ namespace ghetto
             public Dictionary<uint, Avatar> Avatars;
             public Dictionary<uint, Primitive> Prims;
             public Dictionary<string, ScriptSystem.UserTimer> Timers;
+            public Dictionary<LLUUID, libsecondlife.InventorySystem.InventoryItem> Inventory;
             public LLUUID LastDialogID;
             public int LastDialogChannel;
             public int MoneySpent;
@@ -231,6 +232,7 @@ namespace ghetto
                 Balance = -1;
                 Friends = new Dictionary<LLUUID, Avatar>();
                 IMSessions = new Dictionary<LLUUID, IMSession>();
+                Inventory = new Dictionary<LLUUID, libsecondlife.InventorySystem.InventoryItem>();
                 Prims = new Dictionary<uint, Primitive>();
                 Timers = new Dictionary<string, ScriptSystem.UserTimer>();
                 LastDialogChannel = -1;

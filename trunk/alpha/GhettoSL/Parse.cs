@@ -26,6 +26,7 @@
 */
 
 using libsecondlife;
+using libsecondlife.InventorySystem;
 using libsecondlife.Packets;
 using System;
 using System.Collections.Generic;
@@ -186,12 +187,11 @@ namespace ghetto
             string ret = originalString;
 
             //parse $identifiers
-            ret = ret.Replace("$null", "");
             ret = ret.Replace("$nullkey", LLUUID.Zero.ToString());
             ret = ret.Replace("$myfirst", Session.Settings.FirstName);
             ret = ret.Replace("$mylast", Session.Settings.LastName);
             ret = ret.Replace("$myname", Session.Name);
-            ret = ret.Replace("$mypos", Display.VectorString(Session.Client.Self.Position));
+            ret = ret.Replace("$mypos", Session.Client.Self.Position.ToString());
             ret = ret.Replace("$mypos.x", Session.Client.Self.Position.X.ToString());
             ret = ret.Replace("$mypos.y", Session.Client.Self.Position.Y.ToString());
             ret = ret.Replace("$mypos.z", Session.Client.Self.Position.Z.ToString());
@@ -203,7 +203,8 @@ namespace ghetto
 
             if (scriptName != "")
             {
-                uint elapsed = Helpers.GetUnixTime() - Interface.Scripts[scriptName].SetTime;
+                ScriptSystem.UserScript script = Interface.Scripts[scriptName];
+                uint elapsed = Helpers.GetUnixTime() - script.SetTime;
                 ret = ret.Replace("$elapsed", elapsed.ToString());
                 uint sittingOn = Session.Client.Self.SittingOn;
                 LLVector3 myPos;
@@ -212,7 +213,8 @@ namespace ghetto
                     myPos = Session.Prims[sittingOn].Position + Session.Client.Self.Position;
                 }
                 else myPos = Session.Client.Self.Position;
-                ret = ret.Replace("$distance", Helpers.VecDist(myPos, Interface.Scripts[scriptName].SetTarget).ToString());
+                ret = ret.Replace("$target", script.SetTarget.ToString());
+                ret = ret.Replace("$distance", Helpers.VecDist(myPos, script.SetTarget).ToString());
             }
 
             if (Session.Client.Network.Connected && Session.Client.Self.SittingOn > 0 && Session.Prims.ContainsKey(Session.Client.Self.SittingOn))
@@ -254,6 +256,7 @@ namespace ghetto
                 }
             }
 
+            ret = ret.Replace("$null", "");
             return ret;
         }
 
@@ -696,6 +699,18 @@ namespace ghetto
                 Session.Client.Self.RequestBalance();
             }
 
+            else if (command == "detachall")
+            {
+                //FIXME - detach all worn objects
+                List<uint> attachments = new List<uint>();
+                foreach (KeyValuePair<uint, Primitive> pair in Session.Prims)
+                {
+                    if (pair.Value.ParentID == Session.Client.Self.LocalID) attachments.Add(pair.Value.LocalID);
+                }
+                Session.Client.Objects.DetachObjects(Session.Client.Network.CurrentSim, attachments);
+                Display.InfoResponse(sessionNum, "Detached " + attachments.Count + " objects");                                
+            }
+
             else if (command == "return")
             {
                 return ScriptSystem.CommandResult.Return;
@@ -747,7 +762,8 @@ namespace ghetto
             else if (command == "settarget" && scriptName != "")
             {
                 LLVector3 target;
-                if (cmd.Length < 2 || !LLVector3.TryParse(details, out target)) {
+                if (cmd.Length < 2 || !LLVector3.TryParse(details, out target))
+                {
                     Display.Help(command);
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
@@ -1302,7 +1318,7 @@ namespace ghetto
                 ScriptSystem.UserScript Script = Interface.Scripts[scriptName];
                 if (Script.Variables.ContainsKey(variableName)) Script.Variables[variableName] = Variables(sessionNum, details, scriptName);
                 else Script.Variables.Add(variableName, Variables(sessionNum, details, scriptName));
-            
+
             }
 
             else if (command == "shout")
@@ -1418,7 +1434,8 @@ namespace ghetto
 
             else if (command == "timer")
             {
-                if (cmd.Length < 3) {
+                if (cmd.Length < 3)
+                {
                     Display.Help(command);
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
@@ -1435,7 +1452,8 @@ namespace ghetto
                 {
                     string flags = "";
                     int start = 1;
-                    if (cmd[1].Substring(0, 1) == "-") {
+                    if (cmd[1].Substring(0, 1) == "-")
+                    {
                         flags = cmd[1];
                         start++;
                     }
@@ -1510,6 +1528,52 @@ namespace ghetto
             else if (command == "walk")
             {
                 Session.Client.Self.Status.AlwaysRun = false;
+            }
+
+            else if (command == "wear")
+            {
+                LLUUID itemid;
+                if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out itemid))
+                {
+                    Display.Help(command);
+                    return ScriptSystem.CommandResult.InvalidUsage;
+                }
+
+                if (!Session.Inventory.ContainsKey(itemid))
+                {
+                    Display.Error(sessionNum, "Asset id not found in inventory cache");
+                    return ScriptSystem.CommandResult.UnexpectedError;
+                }
+
+                InventoryItem item = Session.Inventory[itemid];
+
+                if (cmd.Length > 2)
+                {
+                    ObjectManager.AttachmentPoint point = ObjectManager.AttachmentPoint.RightHand;
+                    string p = cmd[2].ToLower();
+                    if (p == "skull") point = ObjectManager.AttachmentPoint.Skull;
+                    else if (p == "chest") point = ObjectManager.AttachmentPoint.Chest;
+                    else if (p == "lhand") point = ObjectManager.AttachmentPoint.LeftHand;
+                    else if (p == "lhip") point = ObjectManager.AttachmentPoint.LeftHip;
+                    else if (p == "llleg") point = ObjectManager.AttachmentPoint.LeftLowerLeg;
+                    else if (p == "mouth") point = ObjectManager.AttachmentPoint.Mouth;
+                    else if (p == "nose") point = ObjectManager.AttachmentPoint.Nose;
+                    else if (p == "pelvis") point = ObjectManager.AttachmentPoint.Pelvis;
+                    else if (p == "rhand") point = ObjectManager.AttachmentPoint.RightHand;
+                    else if (p == "rhip") point = ObjectManager.AttachmentPoint.RightHip;
+                    else if (p == "rlleg") point = ObjectManager.AttachmentPoint.RightLowerLeg;
+                    else if (p == "spine") point = ObjectManager.AttachmentPoint.Spine;
+                    //FIXME - support all other points
+
+                    else
+                    {
+                        Display.InfoResponse(sessionNum, "Unknown attachment point \"" + p + "\" - using object default");
+                        point = ObjectManager.AttachmentPoint.Default;
+                    }
+                    item.Attach(point);
+                }
+                else item.Attach();
+                Display.InfoResponse(sessionNum, "Attached: " + item.Name + " (" + item.Description + ")");
             }
 
             else if (command == "whisper")

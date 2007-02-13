@@ -374,6 +374,9 @@ namespace ghetto
                 if (!(inv is InventoryItem)) return;
 
                 InventoryItem item = (InventoryItem)inv;
+
+                if (!Session.Inventory.ContainsKey(item.ItemID)) Session.Inventory.Add(item.ItemID, item);
+
                 string type;
 
                 if (inv is InventoryNotecard)
