@@ -333,35 +333,7 @@ namespace ghetto
             {
                 if (s.Value.Events.ContainsKey(eventType))
                 {
-                    bool checkElse = false;
-                    foreach (string command in s.Value.Events[eventType].Commands)
-                    {
-                        //FIXME - make sure we don't need to trim command first
-                        string[] splitSpace = { " " };
-                        string[] cmd = command.Split(splitSpace, StringSplitOptions.RemoveEmptyEntries);
-                        string arg = cmd[0].ToLower();
-
-                        if (!checkElse)
-                        {
-                            if (arg == "elseif" || arg == "else") continue;
-                        }
-
-                        checkElse = false;
-
-                        string newCommand = command;
-
-                        if (identifiers != null)
-                        {
-                            foreach (KeyValuePair<string, string> pair in identifiers)
-                                newCommand = newCommand.Replace(pair.Key, pair.Value);
-                        }
-                        CommandResult result = Parse.Command(sessionNum, s.Value.ScriptName, newCommand, true, false);
-                        if (arg == "if" || arg == "elseif")
-                        {
-                            if (result == CommandResult.ConditionFailed) checkElse = true;
-                            else checkElse = false;
-                        }
-                    }
+                    Parse.CommandArray(sessionNum, s.Value.ScriptName, s.Value.Events[eventType].Commands, identifiers);
                 }
             }
         }
