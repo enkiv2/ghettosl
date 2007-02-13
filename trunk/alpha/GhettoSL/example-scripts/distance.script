@@ -1,0 +1,19 @@
+event Load
+{
+  marklocation
+}
+
+event Chat
+{
+  if ($1 == !follow) then go $pos
+  elseif ($1 == !mark) then marklocation
+  elseif ($1 == !dist) then say I am $distance meters away from %origin
+  elseif ($1 == !return) then go %origin
+}
+
+alias marklocation
+{
+  set %origin $mypos
+  settarget %origin
+  say Ok, my new home is %origin.
+}
