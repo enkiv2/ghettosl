@@ -69,6 +69,7 @@ namespace ghetto
 
         void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
         {
+            //Console.WriteLine("NEW AVATAR:" + avatar.Name); //DEBUG
             lock (Session.Avatars)
             {
                 if (!Session.Avatars.ContainsKey(avatar.LocalID)) Session.Avatars.Add(avatar.LocalID, avatar);
