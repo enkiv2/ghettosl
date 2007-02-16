@@ -181,7 +181,7 @@ namespace ghetto
                 else if (!Prims.ContainsKey(Avatars[localID].SittingOn)) Display.Error(SessionNumber, "Object info missing for local ID " + localID);
                 else
                 {
-                    Client.Self.RequestSit(Prims[localID].ID, LLVector3.Zero);
+                    Client.Self.RequestSit(Prims[Avatars[localID].SittingOn].ID, LLVector3.Zero);
                     Client.Self.Sit();
                     return true;
                 }

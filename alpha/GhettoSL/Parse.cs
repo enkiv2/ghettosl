@@ -1445,7 +1445,6 @@ namespace ghetto
                     {
                         Session.Timers[cmd[1]].Stop();
                         Session.Timers.Remove(cmd[1]);
-                        Display.InfoResponse(sessionNum, "Timer \"" + cmd[1] + "\" halted");
                     }
                 }
                 else
@@ -1477,6 +1476,15 @@ namespace ghetto
                     ScriptSystem.UserTimer timer = new ScriptSystem.UserTimer(sessionNum, name, interval, milliseconds, repeats, details);
                     if (!Session.Timers.ContainsKey(name)) Session.Timers.Add(name, timer);
                     else Session.Timers[name] = timer;
+                }
+            }
+
+            else if (command == "timers")
+            {
+                foreach (KeyValuePair<string, ScriptSystem.UserTimer> pair in Session.Timers)
+                {
+                    //FIXME - move to Display
+                    Display.InfoResponse(sessionNum, Display.Pad(pair.Key, 15) + " " + Display.Pad(pair.Value.RepeatsRemaining.ToString(), 3) + " " + pair.Value.Command);
                 }
             }
 
