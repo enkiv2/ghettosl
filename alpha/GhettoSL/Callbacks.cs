@@ -67,6 +67,81 @@ namespace ghetto
             Session.Client.Self.OnTeleport += new MainAvatar.TeleportCallback(Self_OnTeleport);
         }
 
+        void Self_OnInstantMessage(LLUUID fromAgentID, string fromAgentName, LLUUID toAgentID, uint parentEstateID, LLUUID regionID, LLVector3 position, MainAvatar.InstantMessageDialog dialog, bool groupIM, LLUUID imSessionID, DateTime timestamp, string message, MainAvatar.InstantMessageOnline offline, byte[] binaryBucket)
+        {
+
+            if (dialog == MainAvatar.InstantMessageDialog.RequestTeleport)
+            {
+                Display.InfoResponse(Session.SessionNumber, "Teleport lure received from " + fromAgentID + ": " + message);
+                if (fromAgentID == Session.Settings.MasterID || (message.Length > 0 && message == Session.Settings.PassPhrase))
+                {
+                    Session.Client.Self.TeleportLureRespond(fromAgentID, true);
+                }
+            }
+            else if (dialog == MainAvatar.InstantMessageDialog.MessageFromObject)
+            {
+                Display.InstantMessage(Session.SessionNumber, dialog, fromAgentName, message);
+            }
+            else if (dialog == MainAvatar.InstantMessageDialog.InventoryOffered)
+            {
+                //handled by Inventory_OnInventoryItemReceived
+            }
+            else
+            {
+                if (!Session.IMSessions.ContainsKey(fromAgentID))
+                {
+                    Session.IMSessions.Add(fromAgentID, new GhettoSL.IMSession(imSessionID, fromAgentName));
+                }
+                Display.InstantMessage(Session.SessionNumber, dialog, fromAgentName, message);
+                if (fromAgentID == Session.Settings.MasterID) Parse.Command(Session.SessionNumber, "", message, false, true);
+            }
+
+            Dictionary<string, string> identifiers = new Dictionary<string, string>();
+            identifiers.Add("$name", fromAgentName);
+            identifiers.Add("$message", message);
+            identifiers.Add("$id", fromAgentID.ToString());
+            identifiers.Add("$dialog", dialog.ToString());
+            identifiers.Add("$pos", position.ToString());
+            ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.IM, identifiers);
+
+        }
+
+        void Self_OnChat(string message, MainAvatar.ChatAudibleLevel audible, MainAvatar.ChatType type, MainAvatar.ChatSourceType sourceType, string fromName, LLUUID id, LLUUID ownerid, LLVector3 position)
+        {
+            if (type == MainAvatar.ChatType.StartTyping || type == MainAvatar.ChatType.StartTyping || audible != MainAvatar.ChatAudibleLevel.Fully) return;
+
+            if (!Session.Settings.DisplayChat) return;
+
+            char[] splitChar = { ' ' };
+            string[] msg = message.Split(splitChar);
+
+            bool action;
+            if (msg[0].ToLower() == "/me")
+            {
+                action = true;
+                message = String.Join(" ", msg, 1, msg.Length - 1);
+            }
+            else action = false;
+
+            Display.Chat(Session.SessionNumber, fromName, message, action, type, sourceType);
+
+            if (id == Session.Client.Network.AgentID) return;
+
+            Dictionary<string, string> identifiers = new Dictionary<string, string>();
+            identifiers.Add("$name", fromName);
+            identifiers.Add("$message", message);
+            identifiers.Add("$id", id.ToString());
+            identifiers.Add("$ownerid", ownerid.ToString());
+            identifiers.Add("$ctype", type.ToString());
+            identifiers.Add("$stype", sourceType.ToString());
+            identifiers.Add("$pos", position.ToString());
+
+            for (int i = 0; i < msg.Length; i++)
+                identifiers.Add("$" + (i + 1), msg[i]);
+
+            ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.Chat, identifiers);
+        }
+
         void Objects_OnNewAvatar(Simulator simulator, Avatar avatar, ulong regionHandle, ushort timeDilation)
         {
             //Console.WriteLine("NEW AVATAR:" + avatar.Name); //DEBUG
@@ -140,7 +215,7 @@ namespace ghetto
         void Inventory_OnInventoryItemReceived(LLUUID fromAgentID, string fromAgentName, uint parentEstateID, LLUUID regionID, LLVector3 position, DateTime timestamp, libsecondlife.InventorySystem.InventoryItem item)
         {
             Display.InventoryItemReceived(Session.SessionNumber, fromAgentID, fromAgentName, parentEstateID, regionID, position, timestamp, item);
-            Dictionary<string,string> identifiers = new Dictionary<string,string>();
+            Dictionary<string, string> identifiers = new Dictionary<string, string>();
             identifiers.Add("$name", fromAgentName);
             identifiers.Add("$id", fromAgentID.ToString());
             identifiers.Add("$item", item.Name);
@@ -311,81 +386,6 @@ namespace ghetto
                 }
             }
         }
-
-        void Self_OnChat(string message, byte audible, byte chatType, byte sourceType, string fromName, LLUUID id, LLUUID ownerid, LLVector3 position)
-        {
-            if (chatType > 3 || audible < 1) return;
-
-            if (!Session.Settings.DisplayChat) return;
-
-            char[] splitChar = { ' ' };
-            string[] msg = message.Split(splitChar);
-
-            bool action;
-            if (msg[0].ToLower() == "/me")
-            {
-                action = true;
-                message = String.Join(" ", msg, 1, msg.Length - 1);
-            }
-            else action = false;
-            
-            Display.Chat(Session.SessionNumber, fromName, message, action, chatType, sourceType);
-
-            if (id == Session.Client.Network.AgentID) return;
-
-            Dictionary<string, string> identifiers = new Dictionary<string, string>();
-            identifiers.Add("$name", fromName);
-            identifiers.Add("$message", message);
-            identifiers.Add("$id", id.ToString());
-            identifiers.Add("$ownerid", ownerid.ToString());
-            identifiers.Add("$ctype", chatType.ToString());
-            identifiers.Add("$stype", sourceType.ToString());
-            identifiers.Add("$pos", position.ToString());
-
-            for (int i = 0; i < msg.Length; i++) 
-                identifiers.Add("$" + (i + 1), msg[i]);
-
-            ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.Chat, identifiers);
-        }
-
-
-        void Self_OnInstantMessage(LLUUID fromID, string fromName, LLUUID toAgentID, uint parentEstateID, LLUUID regionID, LLVector3 position, byte dialog, bool groupIM, LLUUID imSessionID, DateTime timestamp, string message, byte offline, byte[] binaryBucket)
-        {
-
-            if (dialog == (int)MainAvatar.InstantMessageDialog.RequestTeleport)
-            {
-                Display.InfoResponse(Session.SessionNumber, "Teleport lure received from " + fromName + ": " + message);
-                if (fromID == Session.Settings.MasterID || (message.Length > 0 && message == Session.Settings.PassPhrase))
-                {
-                    Session.Client.Self.TeleportLureRespond(fromID, true);
-                }
-            }
-            else if (dialog == (int)MainAvatar.InstantMessageDialog.MessageFromObject)
-            {
-                Display.InstantMessage(Session.SessionNumber, true, dialog, fromName, message);
-            }
-            else if (dialog == (int)MainAvatar.InstantMessageDialog.InventoryOffered)
-            {
-                //handled by Inventory_OnInventoryItemReceived
-            }
-            else
-            {
-                if (!Session.IMSessions.ContainsKey(fromID))
-                {
-                    Session.IMSessions.Add(fromID, new GhettoSL.IMSession(imSessionID, fromName));
-                }
-                Display.InstantMessage(Session.SessionNumber, false, dialog, fromName, message);
-                if (fromID == Session.Settings.MasterID) Parse.Command(Session.SessionNumber, "", message, false, true);
-            }
-
-            Dictionary<string, string> identifiers = new Dictionary<string, string>();
-            identifiers.Add("$name", fromName);
-            identifiers.Add("$message", message);
-            identifiers.Add("$id", fromID.ToString());
-            identifiers.Add("$dialog", dialog.ToString());
-            identifiers.Add("$pos", position.ToString());
-            ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.IM, identifiers);
-
-        }
     }
+ 
 }
