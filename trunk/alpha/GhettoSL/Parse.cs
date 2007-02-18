@@ -935,6 +935,13 @@ namespace ghetto
                 Session.Client.Self.Status.SendUpdate();
             }
 
+            else if (command == "gc")
+            {
+                Display.InfoResponse(sessionNum, "Performing garbage collection...");
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+
             else if (command == "groups")
             {
                 Display.GroupList(sessionNum);
