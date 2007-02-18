@@ -150,6 +150,8 @@ namespace ghetto
                 if (!Session.Avatars.ContainsKey(avatar.LocalID)) Session.Avatars.Add(avatar.LocalID, avatar);
                 else Session.Avatars[avatar.LocalID] = avatar;
             }
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
         }
 
         void Network_OnDisconnected(NetworkManager.DisconnectType reason, string message)
