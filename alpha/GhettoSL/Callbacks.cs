@@ -108,7 +108,7 @@ namespace ghetto
 
         void Self_OnChat(string message, MainAvatar.ChatAudibleLevel audible, MainAvatar.ChatType type, MainAvatar.ChatSourceType sourceType, string fromName, LLUUID id, LLUUID ownerid, LLVector3 position)
         {
-            if (type == MainAvatar.ChatType.StartTyping || type == MainAvatar.ChatType.StartTyping || audible != MainAvatar.ChatAudibleLevel.Fully) return;
+            if (type == MainAvatar.ChatType.StartTyping || type == MainAvatar.ChatType.StopTyping || audible != MainAvatar.ChatAudibleLevel.Fully) return;
 
             if (!Session.Settings.DisplayChat) return;
 
