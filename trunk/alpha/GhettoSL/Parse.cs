@@ -1355,7 +1355,7 @@ namespace ghetto
             else if (command == "sit")
             {
                 LLUUID target;
-                if (cmd.Length < 2 || LLUUID.TryParse(cmd[1], out target))
+                if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out target))
                 {
                     Display.Help(command);
                     return ScriptSystem.CommandResult.InvalidUsage;
