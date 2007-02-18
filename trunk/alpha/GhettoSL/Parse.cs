@@ -670,8 +670,19 @@ namespace ghetto
                 }
             }
 
+
+            //Check for "/1 text" for channel 1, etc
+
+            int chatChannel;
+            if (int.TryParse(cmd[0], out chatChannel))
+            {
+                Session.Client.Self.Chat(details, chatChannel, MainAvatar.ChatType.Normal);
+                Display.SendMessage(sessionNum, chatChannel, LLUUID.Zero, details);
+            }
+
             //And on to the actual commands...
-            if (command == "anim")
+
+            else if (command == "anim")
             {
                 LLUUID anim;
                 if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out anim))
