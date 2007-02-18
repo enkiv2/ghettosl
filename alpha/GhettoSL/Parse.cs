@@ -759,6 +759,14 @@ namespace ghetto
 
             }
 
+            else if (command == "setmaster")
+            {
+                LLUUID master;
+                if (cmd.Length != 2 || LLUUID.TryParse(cmd[1], out master)) return ScriptSystem.CommandResult.InvalidUsage;
+                Session.Settings.MasterID = master;
+                Display.InfoResponse(sessionNum, "Set master to " + cmd[1]);
+            }
+
             else if (command == "settarget" && scriptName != "")
             {
                 LLVector3 target;
