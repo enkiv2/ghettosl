@@ -229,7 +229,8 @@ namespace ghetto
             public void Stop()
             {
                 Timer.Stop();
-                Display.InfoResponse(sessionNum, "Timer \"" + Name + "\" halted");                
+                Timer.AutoReset = false;
+                Display.InfoResponse(sessionNum, "Timer \"" + Name + "\" halted");
             }
 
             public UserTimer(uint sessionNumber, string name, int interval, bool milliseconds, int repeats, string command)
@@ -259,6 +260,7 @@ namespace ghetto
                 if ((limited && RepeatsRemaining == 0) || result == CommandResult.InvalidUsage || result == CommandResult.UnexpectedError)
                 {
                     Interface.Sessions[sessionNum].Timers[Name].Stop();
+                    Interface.Sessions[sessionNum].Timers[Name] = null;
                     Interface.Sessions[sessionNum].Timers.Remove(Name);
                 }
             }

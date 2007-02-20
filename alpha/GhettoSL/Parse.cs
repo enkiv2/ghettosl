@@ -1014,7 +1014,12 @@ namespace ghetto
                     Display.Help(command);
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
-                Session.Client.Self.InstantMessage(target, details);
+
+                if (Session.IMSessions.ContainsKey(target))
+                {
+                    Session.Client.Self.InstantMessage(target, details, Session.IMSessions[target].IMSessionID);
+                }
+                else Session.Client.Self.InstantMessage(target, details);
             }
 
             else if (command == "land")
@@ -1414,6 +1419,8 @@ namespace ghetto
 
             else if (command == "teleport" || command == "tp")
             {
+                if (!Session.Client.Network.Connected) { Display.Error(sessionNum, "Not connected"); return ScriptSystem.CommandResult.UnexpectedError; }
+
                 if (cmd.Length < 2)
                 {
                     Display.Help(command);
