@@ -625,7 +625,7 @@ namespace ghetto
             //For example, in the command "im some-uuid-here Hi there!", details = "Hi there!"
             string details = "";
             int detailsStart = 1;
-            if (command == "im" || command == "lure" || command == "re" || command == "s" || command == "session" || command == "paybytext" || command == "paybyname") detailsStart++;
+            if (command == "cam" || command == "im" || command == "lure" || command == "re" || command == "s" || command == "session" || command == "paybytext" || command == "paybyname") detailsStart++;
             else if (command == "dialog") detailsStart += 2;
             else if (command == "timer" && cmd.Length > 1)
             {
@@ -670,6 +670,10 @@ namespace ghetto
                 }
             }
 
+
+            string[] okIfNotConnected = { "exit", "login", "s", "session", "sessions", "stats", "timer" };
+
+            
 
             //Check for "/1 text" for channel 1, etc
 
@@ -1109,9 +1113,34 @@ namespace ghetto
 
             else if (command == "mlook")
             {
-                if (cmd.Length < 2 || cmd[1].ToLower() == "on") Session.Client.Self.Status.Controls.Mouselook = true;
-                else if (cmd[1].ToLower() == "off") Session.Client.Self.Status.Controls.Mouselook = false;
-                else { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
+                if (cmd.Length < 2 || cmd[1].ToLower() == "on")
+                {
+                    Session.Client.Self.Status.Controls.Mouselook = true;
+                    Display.InfoResponse(sessionNum, "Mouselook enabled");
+                }
+                else if (cmd[1].ToLower() == "off")
+                {
+                    Session.Client.Self.Status.Controls.Mouselook = false;
+                    Display.InfoResponse(sessionNum, "Mouselook disabled");
+                }
+                else {
+                    Display.Help(command);
+                    return ScriptSystem.CommandResult.InvalidUsage;
+                }
+            }
+
+            else if (command == "shoot")
+            {
+                bool inMouselook = Session.Client.Self.Status.Controls.Mouselook;
+                if (!inMouselook) Session.Client.Self.Status.Controls.Mouselook = true;
+                Session.Client.Self.Status.Controls.MLButtonDown = true;
+                Session.Client.Self.Status.SendUpdate();
+                Session.Client.Self.Status.Controls.MLButtonDown = false;
+                Session.Client.Self.Status.Controls.MLButtonUp = true;
+                Session.Client.Self.Status.SendUpdate();
+                Session.Client.Self.Status.Controls.MLButtonUp = false;
+                if (!inMouselook) Session.Client.Self.Status.Controls.Mouselook = false;
+                Session.Client.Self.Status.SendUpdate();
             }
 
             else if (command == "pay")
@@ -1233,24 +1262,82 @@ namespace ghetto
                 Session.RideWith(details);
             }
 
-            else if (command == "rot" || command == "rotate")
+
+            else if (command == "rotto")
             {
-                char[] space = { ' ' };
-                string vString = details.Replace("<", "").Replace(">", "").Replace(",", " ");
-                string[] v = vString.Split(space, StringSplitOptions.RemoveEmptyEntries);
-                float x; float y; float z;
-                if (v.Length != 3
-                    || !float.TryParse(v[0].Trim(), out x)
-                    || !float.TryParse(v[1].Trim(), out y)
-                    || !float.TryParse(v[2].Trim(), out z)
-                )
+                LLVector3 target;
+                if (cmd.Length < 2 || !LLVector3.TryParse(details, out target))
+                {
+                    Display.Help(command);
+                    return ScriptSystem.CommandResult.InvalidUsage;
+                }
+                LLVector3 myPos = Session.Client.Self.Position;
+                uint sittingOn = Session.Client.Self.SittingOn;
+                if (sittingOn > 0)
+                {
+                    if (Session.Prims.ContainsKey(sittingOn)) myPos = Session.Prims[sittingOn].Position;
+                    else
+                    {
+                        Display.Error(sessionNum, "Missing object info for current seat");
+                        return ScriptSystem.CommandResult.UnexpectedError;
+                    }
+                }
+                //Console.WriteLine("Between " + myPos + " and " + target + " == " + Helpers.RotBetween(mypos, target)); //DEBUG
+                LLQuaternion newRot = Helpers.RotBetween(new LLVector3(1, 0, 0), Helpers.VecNorm(target - myPos));
+                Session.Client.Self.Status.Camera.BodyRotation = newRot;
+                Session.Client.Self.Status.SendUpdate();
+            }
+            else if (command == "brot")
+            {
+                LLVector3 target;
+                if (cmd.Length < 2 || !LLVector3.TryParse(details, out target))
+                {
+                    Display.Help(command);
+                    return ScriptSystem.CommandResult.InvalidUsage;
+                }
+                Session.Client.Self.Status.Camera.BodyRotation = Helpers.Axis2Rot(target);
+                Session.Client.Self.Status.SendUpdate();
+            }
+            else if (command == "hrot")
+            {
+                LLVector3 target;
+                if (cmd.Length < 2 || !LLVector3.TryParse(details, out target))
+                {
+                    Display.Help(command);
+                    return ScriptSystem.CommandResult.InvalidUsage;
+                }
+                Session.Client.Self.Status.Camera.HeadRotation = Helpers.Axis2Rot(target);
+                Session.Client.Self.Status.SendUpdate();
+            }
+            else if (command == "cam")
+            {
+                LLVector3 target;
+                if (cmd.Length < 3 || !LLVector3.TryParse(details, out target))
+                {
+                    Display.Help(command);
+                    return ScriptSystem.CommandResult.InvalidUsage;
+                }
+                string arg = cmd[1].ToLower();
+                if (arg != "center" && arg != "left" && arg != "up" && arg != "at")
                 {
                     Display.Help(command);
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
 
-                Session.Client.Self.Status.Camera.BodyRotation = Helpers.Axis2Rot(new LLVector3(x, y, z));
+                char[] space = { ' ' };
+                string vString = details.Replace("<", "").Replace(">", "").Replace(",", " ");
+                string[] v = vString.Split(space, StringSplitOptions.RemoveEmptyEntries);
+
+                if (arg == "center") Session.Client.Self.Status.Camera.CameraCenter = target;
+                else if (arg == "at") Session.Client.Self.Status.Camera.CameraAtAxis = target;
+                else if (arg == "left") Session.Client.Self.Status.Camera.CameraLeftAxis = target;
+                else if (arg == "up") Session.Client.Self.Status.Camera.CameraUpAxis = target;
+
+                Session.Client.Self.Status.SendUpdate();
+                Display.InfoResponse(sessionNum, "Camera settings updated");
             }
+
+
 
             else if (command == "run" || command == "running")
             {
@@ -1312,6 +1399,13 @@ namespace ghetto
                     }
                 }
                 else Display.SessionList();
+            }
+
+            else if (command == "search")
+            {
+                //FIXME - add group, land, etc searching
+
+
             }
 
             else if (command == "inc" && scriptName != "")
