@@ -670,10 +670,20 @@ namespace ghetto
                 }
             }
 
-
-            string[] okIfNotConnected = { "exit", "login", "s", "session", "sessions", "stats", "timer" };
-
-            
+            if (!Session.Client.Network.Connected)
+            {
+                string[] okIfNotConnected = { "echo", "exit", "login", "s", "session", "sessions", "script", "stats", "timer" };
+                int ok;
+                for (ok = 0; ok < okIfNotConnected.Length; ok++)
+                {
+                    if (okIfNotConnected[ok] == command) break;
+                }
+                if (ok == okIfNotConnected.Length)
+                {
+                    Display.Error(sessionNum, "/" + command + " Not connected");
+                    return ScriptSystem.CommandResult.UnexpectedError;
+                }
+            }
 
             //Check for "/1 text" for channel 1, etc
 
@@ -1134,11 +1144,13 @@ namespace ghetto
                 bool inMouselook = Session.Client.Self.Status.Controls.Mouselook;
                 if (!inMouselook) Session.Client.Self.Status.Controls.Mouselook = true;
                 Session.Client.Self.Status.Controls.MLButtonDown = true;
+                Session.Client.Self.Status.Controls.FinishAnim = true;
                 Session.Client.Self.Status.SendUpdate();
                 Session.Client.Self.Status.Controls.MLButtonDown = false;
                 Session.Client.Self.Status.Controls.MLButtonUp = true;
                 Session.Client.Self.Status.SendUpdate();
                 Session.Client.Self.Status.Controls.MLButtonUp = false;
+                Session.Client.Self.Status.Controls.FinishAnim = false;
                 if (!inMouselook) Session.Client.Self.Status.Controls.Mouselook = false;
                 Session.Client.Self.Status.SendUpdate();
             }
@@ -1271,21 +1283,7 @@ namespace ghetto
                     Display.Help(command);
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
-                LLVector3 myPos = Session.Client.Self.Position;
-                uint sittingOn = Session.Client.Self.SittingOn;
-                if (sittingOn > 0)
-                {
-                    if (Session.Prims.ContainsKey(sittingOn)) myPos = Session.Prims[sittingOn].Position;
-                    else
-                    {
-                        Display.Error(sessionNum, "Missing object info for current seat");
-                        return ScriptSystem.CommandResult.UnexpectedError;
-                    }
-                }
-                //Console.WriteLine("Between " + myPos + " and " + target + " == " + Helpers.RotBetween(mypos, target)); //DEBUG
-                LLQuaternion newRot = Helpers.RotBetween(new LLVector3(1, 0, 0), Helpers.VecNorm(target - myPos));
-                Session.Client.Self.Status.Camera.BodyRotation = newRot;
-                Session.Client.Self.Status.SendUpdate();
+                Session.TurnToward(target);
             }
             else if (command == "brot")
             {
