@@ -672,7 +672,7 @@ namespace ghetto
 
             if (!Session.Client.Network.Connected)
             {
-                string[] okIfNotConnected = { "echo", "exit", "login", "s", "session", "sessions", "script", "stats", "timer" };
+                string[] okIfNotConnected = { "echo", "exit", "login", "relog", "s", "session", "sessions", "script", "stats", "timer" };
                 int ok;
                 for (ok = 0; ok < okIfNotConnected.Length; ok++)
                 {
