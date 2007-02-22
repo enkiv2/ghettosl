@@ -680,7 +680,7 @@ namespace ghetto
                 }
                 if (ok == okIfNotConnected.Length)
                 {
-                    Display.Error(sessionNum, "/" + command + " Not connected");
+                    Display.Error(sessionNum, "/" + command + ": Not connected");
                     return ScriptSystem.CommandResult.UnexpectedError;
                 }
             }
