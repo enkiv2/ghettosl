@@ -257,7 +257,7 @@ namespace ghetto
                     RepeatsRemaining--;
                 }
                 CommandResult result = Parse.Command(sessionNum, "", Command, true, false);
-                if ((limited && RepeatsRemaining == 0) || result == CommandResult.InvalidUsage || result == CommandResult.UnexpectedError)
+                if ((limited && RepeatsRemaining == 0) || (result != CommandResult.NoError && result != CommandResult.ConditionFailed && result != CommandResult.Return))
                 {
                     Interface.Sessions[sessionNum].Timers[Name].Stop();
                     Interface.Sessions[sessionNum].Timers[Name] = null;

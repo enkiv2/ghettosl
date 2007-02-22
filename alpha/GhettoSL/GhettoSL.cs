@@ -135,6 +135,7 @@ namespace ghetto
 
             public void Follow(string avatarName)
             {
+                if (!Client.Network.Connected) return;
                 uint avatar = FindAgentByName(avatarName);
                 if (avatar < 1) Display.InfoResponse(SessionNumber, "No avatar found matching \"" + avatarName + "\"");
                 else
@@ -161,11 +162,15 @@ namespace ghetto
                         {
                             target = av.Position;
                         }
+
+                        TurnToward(av.Position);
+
                         //Console.WriteLine(av.Position); //DEBUG
                         if (Helpers.VecDist(Client.Self.Position, av.Position) > 3)
                         {
                             Client.Self.AutoPilotLocal((int)av.Position.X, (int)av.Position.Y, av.Position.Z);
                         }
+                        
                         return;
                     }
                 }
@@ -175,6 +180,7 @@ namespace ghetto
 
             public bool RideWith(string name)
             {
+                if (!Client.Network.Connected) return false;
                 uint localID = FindAgentByName(name);
                 if (localID < 1) Display.InfoResponse(SessionNumber, "Avatar not found matching \"" + name + "\"");
                 else if (Avatars[localID].SittingOn < 1) Display.InfoResponse(SessionNumber, Avatars[localID].Name + " is not sitting.");
@@ -190,6 +196,7 @@ namespace ghetto
 
             public void ScriptDialogReply(int channel, LLUUID objectid, string message)
             {
+                if (!Client.Network.Connected) return;
                 ScriptDialogReplyPacket reply = new ScriptDialogReplyPacket();
                 reply.AgentData.AgentID = Client.Network.AgentID;
                 reply.AgentData.SessionID = Client.Network.SessionID;
@@ -200,8 +207,29 @@ namespace ghetto
                 Client.Network.SendPacket(reply);
             }
 
+            public void TurnToward(LLVector3 target)
+            {
+                if (!Client.Network.Connected) return;
+                LLVector3 myPos = Client.Self.Position;
+                uint sittingOn = Client.Self.SittingOn;
+                if (sittingOn > 0)
+                {
+                    if (Prims.ContainsKey(sittingOn)) myPos = Prims[sittingOn].Position;
+                    else
+                    {
+                        Display.Error(SessionNumber, "Missing object info for current seat");
+                        return;
+                    }
+                }
+                //Console.WriteLine("Between " + myPos + " and " + target + " == " + Helpers.RotBetween(mypos, target)); //DEBUG
+                LLQuaternion newRot = Helpers.RotBetween(new LLVector3(1, 0, 0), Helpers.VecNorm(target - myPos));
+                Client.Self.Status.Camera.BodyRotation = newRot;
+                Client.Self.Status.SendUpdate();
+            }
+
             public void UpdateAppearance()
             {
+                if (!Client.Network.Connected) return;
                 Display.InfoResponse(SessionNumber, "Loading appearance from asset server...");
                 AppearanceManager aManager;
                 aManager = new AppearanceManager(Client);

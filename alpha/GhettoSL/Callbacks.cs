@@ -47,9 +47,7 @@ namespace ghetto
             //Session.Client.Network.OnSimDisconnected += new NetworkManager.SimDisconnectCallback(Network_OnSimDisconnected);
 
             Session.Client.Network.OnDisconnected += new NetworkManager.DisconnectCallback(Network_OnDisconnected);
-
             Session.Client.Objects.OnNewAvatar += new ObjectManager.NewAvatarCallback(Objects_OnNewAvatar);
-
             Session.Client.Objects.OnAvatarSitChanged += new ObjectManager.AvatarSitChanged(Objects_OnAvatarSitChanged);
             Session.Client.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
             Session.Client.Objects.OnObjectKilled += new ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
@@ -58,6 +56,8 @@ namespace ghetto
             Session.Client.Self.OnChat += new MainAvatar.ChatCallback(Self_OnChat);
             Session.Client.Self.OnScriptDialog += new MainAvatar.ScriptDialogCallback(Self_OnScriptDialog);
             Session.Client.Self.OnInstantMessage += new MainAvatar.InstantMessageCallback(Self_OnInstantMessage);
+
+            Session.Client.Network.RegisterCallback(PacketType.AgentAnimation, new NetworkManager.PacketCallback(Callback_AgentAnimation));
 
             Session.Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(Callback_AlertMessage));
             Session.Client.Network.RegisterCallback(PacketType.MoneyBalanceReply, new NetworkManager.PacketCallback(Callback_MoneyBalanceReply));
@@ -244,6 +244,18 @@ namespace ghetto
                 identifiers.Add("$" + (i + 1), msg[i]);
 
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.ScriptDialog, identifiers);
+        }
+
+        void Callback_AgentAnimation(Packet packet, Simulator sim)
+        {
+            AgentAnimationPacket reply = (AgentAnimationPacket)packet;
+            //FIXME - add Animation event?
+            if (reply.AgentData.AgentID != Session.Client.Network.AgentID) return;
+
+            foreach (AgentAnimationPacket.AnimationListBlock b in reply.AnimationList)
+            {
+                Console.WriteLine("anim: " + b.AnimID + " : " + b.StartAnim); //DEBUG
+            }
         }
 
         void Callback_AlertMessage(Packet packet, Simulator sim)
