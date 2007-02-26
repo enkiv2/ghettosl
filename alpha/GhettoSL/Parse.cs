@@ -409,7 +409,7 @@ namespace ghetto
             //FIXME - move this to a callback for login-failed and add login-failed event
             if (!Session.Login())
             {
-                Display.Error(1, "Login failed");
+                Display.Error(Session.SessionNumber, "Login failed");
             }
 
             return true;
@@ -439,8 +439,12 @@ namespace ghetto
                 if (cmd.Length < 3) { Display.Help(arg); return false; }
                 scriptFile = cmd[2];
                 if (Interface.Scripts.ContainsKey(cmd[2])) Display.InfoResponse(sessionNum, "No such script loaded. For a list of active scripts, use /scripts.");
-                else Interface.Scripts.Remove(cmd[2]);
-                Interface.Scripts[cmd[2]] = null;
+                else
+                {
+                    Interface.Scripts.Remove(cmd[2]);
+                    Interface.Scripts[cmd[2]] = null;
+                }
+                
                 if (scriptFile == cmd[2]) return false; //script unloaded itself
                 else return true;
             }
@@ -1364,6 +1368,11 @@ namespace ghetto
             else if (command == "script")
             {
                 if (!LoadScriptCommand(sessionNum, cmd)) return ScriptSystem.CommandResult.UnexpectedError;
+            }
+
+            else if (command == "scripts")
+            {
+                Display.ScriptList();
             }
 
             else if (command == "s" || command == "session")

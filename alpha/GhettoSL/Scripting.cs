@@ -230,6 +230,7 @@ namespace ghetto
             {
                 Timer.Stop();
                 Timer.AutoReset = false;
+                Timer.Dispose();
                 Display.InfoResponse(sessionNum, "Timer \"" + Name + "\" halted");
             }
 
@@ -260,6 +261,7 @@ namespace ghetto
                 if ((limited && RepeatsRemaining == 0) || (result != CommandResult.NoError && result != CommandResult.ConditionFailed && result != CommandResult.Return))
                 {
                     Interface.Sessions[sessionNum].Timers[Name].Stop();
+                    //System.Timers.Timer t = (System.Timers.Timer)sender;
                     Interface.Sessions[sessionNum].Timers[Name] = null;
                     Interface.Sessions[sessionNum].Timers.Remove(Name);
                 }
