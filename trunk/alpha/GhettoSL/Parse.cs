@@ -187,6 +187,7 @@ namespace ghetto
             string ret = originalString;
 
             //parse $identifiers
+            ret = ret.Replace("$script", scriptName);
             ret = ret.Replace("$nullkey", LLUUID.Zero.ToString());
             ret = ret.Replace("$myfirst", Session.Settings.FirstName);
             ret = ret.Replace("$mylast", Session.Settings.LastName);
@@ -676,7 +677,7 @@ namespace ghetto
 
             if (!Session.Client.Network.Connected)
             {
-                string[] okIfNotConnected = { "echo", "exit", "login", "relog", "s", "session", "sessions", "script", "scripts", "stats", "timer" };
+                string[] okIfNotConnected = { "echo", "exit", "login", "relog", "s", "session", "sessions", "script", "scripts", "stats", "timer", "timers" };
                 int ok;
                 for (ok = 0; ok < okIfNotConnected.Length; ok++)
                 {
@@ -997,7 +998,7 @@ namespace ghetto
                     Display.Help(command);
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
-                Session.Client.Groups.BeginGetGroupRoles(groupID, new GroupManager.GroupRolesCallback(ScriptSystem.GroupRolesHandler));
+                Session.Client.Groups.BeginGetGroupRoles(groupID);
             }
 
             else if (command == "groupinvite")
@@ -1751,6 +1752,12 @@ namespace ghetto
             else if (command == "who")
             {
                 Display.Who(sessionNum);
+            }
+
+            else if (command == "whois")
+            {
+                //FIXME - add whois
+                
             }
 
             else
