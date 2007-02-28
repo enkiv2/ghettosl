@@ -372,7 +372,7 @@ namespace ghetto
                 Display.Error(Session.SessionNumber, "Folder not found: " + folder);
                 return;
             }
-            iFolder.RequestDownloadContents(false, true, true, false).RequestComplete.WaitOne(15000, false);
+            iFolder.RequestDownloadContents(false, true, true).RequestComplete.WaitOne(15000, false);
             foreach (InventoryBase inv in iFolder.GetContents())
             {
                 if (!(inv is InventoryItem)) return;

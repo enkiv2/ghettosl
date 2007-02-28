@@ -676,7 +676,7 @@ namespace ghetto
 
             if (!Session.Client.Network.Connected)
             {
-                string[] okIfNotConnected = { "echo", "exit", "login", "relog", "s", "session", "sessions", "script", "stats", "timer" };
+                string[] okIfNotConnected = { "echo", "exit", "login", "relog", "s", "session", "sessions", "script", "scripts", "stats", "timer" };
                 int ok;
                 for (ok = 0; ok < okIfNotConnected.Length; ok++)
                 {
@@ -832,6 +832,30 @@ namespace ghetto
             else if (command == "clear")
             {
                 Console.Clear();
+            }
+
+            else if (command == "delete")
+            {
+                LLUUID itemid;
+                if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out itemid))
+                {
+                    Display.Help(command);
+                    return ScriptSystem.CommandResult.InvalidUsage;
+                }
+
+                if (!Session.Inventory.ContainsKey(itemid))
+                {
+                    Display.Error(sessionNum, "Asset id not found in inventory cache");
+                    return ScriptSystem.CommandResult.UnexpectedError;
+                }
+
+                InventoryItem item = Session.Inventory[itemid];
+
+                string name = item.Name;
+                item.Delete();
+                Session.Inventory.Remove(itemid);
+
+                Display.InfoResponse(sessionNum, "Deleted item \"" + name + "\".");
             }
 
             else if (command == "dialog")
@@ -1137,7 +1161,8 @@ namespace ghetto
                     Session.Client.Self.Status.Controls.Mouselook = false;
                     Display.InfoResponse(sessionNum, "Mouselook disabled");
                 }
-                else {
+                else
+                {
                     Display.Help(command);
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
