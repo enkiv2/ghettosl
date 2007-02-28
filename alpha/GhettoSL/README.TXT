@@ -92,6 +92,7 @@ $mypos.z .............. Avatar's Z position, in decimal format
 $myid ................. Avatar UUID (or LLUUID.Zero if not connected)
 $master ............... Master UUID (or UUID.Zero if none specified)
 $session .............. Returns the session number that it is called from
+$script ............... Returns the name of the script executing a command
 $connected ............ Returns $true if connected, $false if not
 $flying ............... Returns $true if flying/hovering, $false if not
 $sitting .............. Returns $true if sitting, $false if not
@@ -99,7 +100,6 @@ $region ............... Current region (or $null if not connected)
 $balance .............. L$ balance (or -1 if there is a problem retrieving)
 $earned ............... L$ earned since session was created
 $spent ................ L$ spent since session was created
-
 
 
 3. ALIASES

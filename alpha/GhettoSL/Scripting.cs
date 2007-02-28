@@ -431,14 +431,5 @@ namespace ghetto
             }
         }
 
-        public static void GroupRolesHandler(Dictionary<LLUUID, GroupRole> roles)
-        {
-            //FIXME - move to display
-            foreach (GroupRole role in roles.Values)
-            {
-                Console.WriteLine(role.ID + " " + role.Name + " \"" + role.Title + "\"");
-            }
-        }
-
     }
 }

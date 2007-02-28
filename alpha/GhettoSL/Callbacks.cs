@@ -57,7 +57,10 @@ namespace ghetto
             Session.Client.Self.OnScriptDialog += new MainAvatar.ScriptDialogCallback(Self_OnScriptDialog);
             Session.Client.Self.OnInstantMessage += new MainAvatar.InstantMessageCallback(Self_OnInstantMessage);
 
-            Session.Client.Network.RegisterCallback(PacketType.AgentAnimation, new NetworkManager.PacketCallback(Callback_AgentAnimation));
+            Session.Client.Groups.OnCurrentGroups += new GroupManager.CurrentGroupsCallback(Groups_OnCurrentGroups);
+            Session.Client.Groups.OnGroupRoles += new GroupManager.GroupRolesCallback(Groups_OnGroupRoles);
+
+            Session.Client.Network.RegisterCallback(PacketType.AgentAnimation, new NetworkManager.PacketCallback(Callback_AgentAnimation)); //DEBUG?
 
             Session.Client.Network.RegisterCallback(PacketType.AlertMessage, new NetworkManager.PacketCallback(Callback_AlertMessage));
             Session.Client.Network.RegisterCallback(PacketType.MoneyBalanceReply, new NetworkManager.PacketCallback(Callback_MoneyBalanceReply));
@@ -65,6 +68,16 @@ namespace ghetto
 
             //Session.Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(Callback_TeleportFinish));
             Session.Client.Self.OnTeleport += new MainAvatar.TeleportCallback(Self_OnTeleport);
+        }
+
+        void Groups_OnGroupRoles(Dictionary<LLUUID, GroupRole> roles)
+        {
+            Display.GroupRoles(roles);
+        }
+
+        void Groups_OnCurrentGroups(Dictionary<LLUUID, Group> groups)
+        {
+            Session.Groups = groups;
         }
 
         void Self_OnInstantMessage(LLUUID fromAgentID, string fromAgentName, LLUUID toAgentID, uint parentEstateID, LLUUID regionID, LLVector3 position, MainAvatar.InstantMessageDialog dialog, bool groupIM, LLUUID imSessionID, DateTime timestamp, string message, MainAvatar.InstantMessageOnline offline, byte[] binaryBucket)
@@ -348,7 +361,7 @@ namespace ghetto
 
             Session.UpdateAppearance();
 
-            Session.Client.Groups.BeginGetCurrentGroups(new GroupManager.CurrentGroupsCallback(GroupsUpdatedHandler));
+            //Session.Client.Groups.BeginGetCurrentGroups(new GroupManager.CurrentGroupsCallback(GroupsUpdatedHandler));
 
             Session.Client.Grid.RequestEstateSims(GridManager.MapLayerType.Terrain);
 
@@ -370,11 +383,6 @@ namespace ghetto
         //    Display.Disconnected(Session.SessionNumber, reason.ToString());
         //    ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.Disconnect, null);
         //}
-
-        void GroupsUpdatedHandler(Dictionary<LLUUID, libsecondlife.Group> groups)
-        {
-            Session.Groups = groups;
-        }
 
         void Objects_OnNewPrim(Simulator simulator, Primitive prim, ulong regionHandle, ushort timeDilation)
         {
