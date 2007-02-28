@@ -259,6 +259,7 @@ namespace ghetto
                 Avatars = new Dictionary<uint, Avatar>();
                 Balance = -1;
                 Friends = new Dictionary<LLUUID, Avatar>();
+                Groups = new Dictionary<LLUUID, libsecondlife.Group>();
                 IMSessions = new Dictionary<LLUUID, IMSession>();
                 Inventory = new Dictionary<LLUUID, libsecondlife.InventorySystem.InventoryItem>();
                 Prims = new Dictionary<uint, Primitive>();
