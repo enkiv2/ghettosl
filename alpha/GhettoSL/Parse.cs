@@ -376,6 +376,10 @@ namespace ghetto
                     Session.Settings.PassPhrase = ScriptSystem.QuoteArg(cmd, index + 1);
                 else if (!lastArg && (arg == "-s" || arg == "-script"))
                     Session.Settings.Script = ScriptSystem.QuoteArg(cmd, index + 1);
+                else if (arg == "-home")
+                {
+                    Session.Settings.URI = "home";
+                }
                 else if (arg == "-here")
                 {
                     GhettoSL.UserSession fromSession = Interface.Sessions[sessionNum];
@@ -857,6 +861,29 @@ namespace ghetto
                 Session.Inventory.Remove(itemid);
 
                 Display.InfoResponse(sessionNum, "Deleted item \"" + name + "\".");
+            }
+
+            else if (command == "detach")
+            {
+                LLUUID itemid;
+                if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out itemid))
+                {
+                    Display.Help(command);
+                    return ScriptSystem.CommandResult.InvalidUsage;
+                }
+
+                if (!Session.Inventory.ContainsKey(itemid))
+                {
+                    Display.Error(sessionNum, "Asset id not found in inventory cache");
+                    return ScriptSystem.CommandResult.UnexpectedError;
+                }
+
+                InventoryItem item = Session.Inventory[itemid];
+
+                string name = item.Name;
+                item.Detach();
+
+                Display.InfoResponse(sessionNum, "Detached item \"" + name + "\".");
             }
 
             else if (command == "dialog")
@@ -1641,10 +1668,12 @@ namespace ghetto
 
             else if (command == "timers")
             {
+                string arg = cmd[1].ToLower();
                 foreach (KeyValuePair<string, ScriptSystem.UserTimer> pair in Session.Timers)
                 {
                     //FIXME - move to Display
-                    Display.InfoResponse(sessionNum, Display.Pad(pair.Key, 15) + " " + Display.Pad(pair.Value.RepeatsRemaining.ToString(), 3) + " " + pair.Value.Command);
+                    if (arg == "off") pair.Value.Stop();
+                    else Display.InfoResponse(sessionNum, Display.Pad(pair.Key, 15) + " " + Display.Pad(pair.Value.RepeatsRemaining.ToString(), 3) + " " + pair.Value.Command);
                 }
             }
 
