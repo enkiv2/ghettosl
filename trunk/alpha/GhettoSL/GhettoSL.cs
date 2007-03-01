@@ -70,12 +70,15 @@ namespace ghetto
 
             public bool Login()
             {
-                Display.InfoResponse(SessionNumber, "Logging in as " + Settings.FirstName + " " + Settings.LastName + "...");
-                if (Settings.URI == "") return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", "last", "root66@gmail.com", false);
+                if (Settings.URI == "")
+                {
+                    Display.InfoResponse(SessionNumber, "Logging in as " + Settings.FirstName + " " + Settings.LastName + "...");
+                    return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", "last", "root66@gmail.com", false);
+                }
                 else
                 {
                     string start = Settings.URI;
-                    Console.WriteLine(start); //DEBUG
+                    Display.InfoResponse(SessionNumber, "Logging in as " + Settings.FirstName + " " + Settings.LastName + "... (Location: " + start + ")");
                     return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", start, "root66@gmail.com", false);
                 }
             }
