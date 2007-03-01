@@ -409,6 +409,7 @@ namespace ghetto
                 //FIXME - Add RelogTimer to UserSession, in place of this
                 if (Session != null) Session.Client.Network.Logout();
                 Thread.Sleep(1000);
+                Session.Client = new SecondLife();
             }
 
             //FIXME - move this to a callback for login-failed and add login-failed event
@@ -681,7 +682,7 @@ namespace ghetto
 
             if (!Session.Client.Network.Connected)
             {
-                string[] okIfNotConnected = { "echo", "exit", "login", "relog", "s", "session", "sessions", "script", "scripts", "stats", "timer", "timers" };
+                string[] okIfNotConnected = { "clear", "echo", "exit", "login", "inc", "relog", "return", "s", "session", "sessions", "set", "script", "scripts", "stats", "timer", "timers" };
                 int ok;
                 for (ok = 0; ok < okIfNotConnected.Length; ok++)
                 {
@@ -1668,7 +1669,8 @@ namespace ghetto
 
             else if (command == "timers")
             {
-                string arg = cmd[1].ToLower();
+                string arg = "";
+                if (cmd.Length > 1) arg = cmd[1].ToLower();
                 foreach (KeyValuePair<string, ScriptSystem.UserTimer> pair in Session.Timers)
                 {
                     //FIXME - move to Display
