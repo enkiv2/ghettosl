@@ -235,6 +235,7 @@ namespace ghetto
             identifiers.Add("$id", fromAgentID.ToString());
             identifiers.Add("$item", item.Name);
             identifiers.Add("$itemid", item.ItemID.ToString());
+            identifiers.Add("$type", item.Type.ToString());
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.GetItem, identifiers);
         }
 

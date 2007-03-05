@@ -374,8 +374,6 @@ namespace ghetto
                     Session.Settings.SendUpdates = false;
                 else if (!lastArg && (arg == "-p" || arg == "-pass" || arg == "-passphrase"))
                     Session.Settings.PassPhrase = ScriptSystem.QuoteArg(cmd, index + 1);
-                else if (!lastArg && (arg == "-s" || arg == "-script"))
-                    Session.Settings.Script = ScriptSystem.QuoteArg(cmd, index + 1);
                 else if (arg == "-home")
                 {
                     Session.Settings.URI = "home";

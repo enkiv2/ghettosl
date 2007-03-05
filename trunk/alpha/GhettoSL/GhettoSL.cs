@@ -323,7 +323,6 @@ namespace ghetto
             public bool SendUpdates;
             public string CampChairMatchText;
             public string FollowName;
-            public string Script;
             public string URI;
             public UserSessionSettings()
             {
