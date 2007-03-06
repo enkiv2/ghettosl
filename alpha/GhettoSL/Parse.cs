@@ -442,11 +442,14 @@ namespace ghetto
             {
                 if (cmd.Length < 3) { Display.Help(arg); return false; }
                 scriptFile = cmd[2];
-                if (Interface.Scripts.ContainsKey(cmd[2])) Display.InfoResponse(sessionNum, "No such script loaded. For a list of active scripts, use /scripts.");
+                if (!Interface.Scripts.ContainsKey(cmd[2])) Display.InfoResponse(sessionNum, "No such script loaded. For a list of active scripts, use /scripts.");
                 else
                 {
-                    Interface.Scripts.Remove(cmd[2]);
-                    Interface.Scripts[cmd[2]] = null;
+                    lock (Interface.Scripts)
+                    {
+                        Interface.Scripts.Remove(cmd[2]);
+                        Display.InfoResponse(sessionNum, "Unloaded script: " + cmd[2]);
+                    }
                 }
                 
                 if (scriptFile == cmd[2]) return false; //script unloaded itself
@@ -1669,11 +1672,18 @@ namespace ghetto
             {
                 string arg = "";
                 if (cmd.Length > 1) arg = cmd[1].ToLower();
-                foreach (KeyValuePair<string, ScriptSystem.UserTimer> pair in Session.Timers)
+                if (Session.Timers.Count == 0)
                 {
-                    //FIXME - move to Display
-                    if (arg == "off") pair.Value.Stop();
-                    else Display.InfoResponse(sessionNum, Display.Pad(pair.Key, 15) + " " + Display.Pad(pair.Value.RepeatsRemaining.ToString(), 3) + " " + pair.Value.Command);
+                    Display.InfoResponse(sessionNum, "No active timers for this session");
+                }
+                else
+                {
+                    foreach (KeyValuePair<string, ScriptSystem.UserTimer> pair in Session.Timers)
+                    {
+                        //FIXME - move to Display
+                        if (arg == "off") pair.Value.Stop();
+                        else Display.InfoResponse(sessionNum, Display.Pad(pair.Key, 15) + " " + Display.Pad(pair.Value.RepeatsRemaining.ToString(), 3) + " " + pair.Value.Command);
+                    }
                 }
             }
 
@@ -1760,6 +1770,8 @@ namespace ghetto
                     else if (p == "rhip") point = ObjectManager.AttachmentPoint.RightHip;
                     else if (p == "rlleg") point = ObjectManager.AttachmentPoint.RightLowerLeg;
                     else if (p == "spine") point = ObjectManager.AttachmentPoint.Spine;
+                    else if (p == "hudtop") point = ObjectManager.AttachmentPoint.HUDTop;
+                    else if (p == "hudbottom") point = ObjectManager.AttachmentPoint.HUDBottom;
                     //FIXME - support all other points
 
                     else
