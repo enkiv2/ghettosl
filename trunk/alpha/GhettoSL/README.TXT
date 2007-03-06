@@ -51,7 +51,7 @@ land                     Disable flying
 listen                   Same as /quiet off
 look [text]              Display info about area, or searches by prim text
 pay <amount> <uuid>      Pay the specified avatar or object
-paybytext <amt> <text>   Pay an object with text matching <text>
+paybytext <amt> <text>   Pay an object with text regex-matching <text>
 payme <amount>           Pay the specified amount to $masterid, if defined
 quiet [on|off]           Toggle the display of object/avatar chat
 re [name] [message]      List IM sessions or reply by partial name match
@@ -64,13 +64,14 @@ session <#> [command]    Switch or send a command to another session
 script <scriptName>      Execute the specified script file
 shout <message>          Shout the specified message to users within 100m
 sit <uuid>               Sit on the specified UUID
-sitbytext <text>         Find a chair with text matching the specified string
+sitbytext <text>         Find a chair with text regex-matching <text>
 sitg                     Sit on the ground at current location
 stand                    Stand while seated on an object or on the ground
 stopanim <uuid>          Stop the specified animation
 teleport "sim" <x,y,z>   Teleport to the specified destination
 timer [-m] <label> [off] [reps] [interval] [command]
 touch <uuid>             Touch the specified object
+touchbytext <text>       Touch an object with text regex-matching <text>
 touchid <localID>        Touch the specified object LocalID
 updates <on|off>         Toggle AgentUpdate timer (on by default)
 walk                     Disable running

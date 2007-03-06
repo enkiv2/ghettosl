@@ -144,11 +144,10 @@ namespace ghetto
                     ret.Value.PassPhrase = ScriptSystem.QuoteArg(args, i + 1);
                 else if (!lastArg && (arg == "-s" || arg == "-script"))
                 {
-                    string script = ScriptSystem.QuoteArg(args, i + 1);
-                    Console.WriteLine("FIXME: Load script " + script);
+                    string scriptCommand = "script " + ScriptSystem.QuoteArg(args, i + 1);
+                    char[] splitChar = { ' ' };
+                    Parse.LoadScriptCommand(1, scriptCommand.Split(splitChar));
                 }
-
-
                 else if (arg.Length > 13 && arg.Substring(0, 13) == "secondlife://")
                 {
                     string url = ScriptSystem.QuoteArg(args, i);
