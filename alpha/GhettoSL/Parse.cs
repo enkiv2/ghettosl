@@ -836,6 +836,18 @@ namespace ghetto
                 else Display.InfoResponse(sessionNum, "No matching objects found.");
             }
 
+            else if (command == "touchbytext")
+            {
+                if (cmd.Length < 2) { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
+                uint localID = Session.FindObjectByText(details.ToLower());
+                if (localID > 0)
+                {
+                    Display.InfoResponse(sessionNum, "Match found. Touching...");
+                    Session.Client.Self.Touch(localID);
+                }
+                else Display.InfoResponse(sessionNum, "No matching objects found.");
+            }
+
             else if (command == "clear")
             {
                 Console.Clear();
@@ -1690,7 +1702,7 @@ namespace ghetto
             else if (command == "touch")
             {
                 LLUUID findID;
-                if (cmd.Length < 2 || LLUUID.TryParse(cmd[1], out findID))
+                if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out findID))
                 {
                     Display.Help(command);
                     return ScriptSystem.CommandResult.InvalidUsage;
