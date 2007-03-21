@@ -334,11 +334,14 @@ namespace ghetto
         public static void TriggerEvents(uint sessionNum, ScriptSystem.EventTypes eventType, Dictionary<string, string> identifiers)
         {
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
-            foreach (KeyValuePair<string, ScriptSystem.UserScript> s in Interface.Scripts)
+            lock (Interface.Scripts)
             {
-                if (s.Value.Events.ContainsKey(eventType))
+                foreach (KeyValuePair<string, ScriptSystem.UserScript> s in Interface.Scripts)
                 {
-                    Parse.CommandArray(sessionNum, s.Value.ScriptName, s.Value.Events[eventType].Commands, identifiers);
+                    if (s.Value.Events.ContainsKey(eventType))
+                    {
+                        Parse.CommandArray(sessionNum, s.Value.ScriptName, s.Value.Events[eventType].Commands, identifiers);
+                    }
                 }
             }
         }

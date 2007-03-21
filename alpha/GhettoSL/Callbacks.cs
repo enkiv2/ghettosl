@@ -55,6 +55,7 @@ namespace ghetto
             session.Client.OnLogMessage += new SecondLife.LogCallback(Client_OnLogMessage);
             Session.Client.Self.OnChat += new MainAvatar.ChatCallback(Self_OnChat);
             Session.Client.Self.OnScriptDialog += new MainAvatar.ScriptDialogCallback(Self_OnScriptDialog);
+            Session.Client.Self.OnScriptQuestion += new MainAvatar.ScriptQuestionCallback(Self_OnScriptQuestion);
             Session.Client.Self.OnInstantMessage += new MainAvatar.InstantMessageCallback(Self_OnInstantMessage);
 
             Session.Client.Groups.OnCurrentGroups += new GroupManager.CurrentGroupsCallback(Groups_OnCurrentGroups);
@@ -68,6 +69,12 @@ namespace ghetto
 
             //Session.Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(Callback_TeleportFinish));
             Session.Client.Self.OnTeleport += new MainAvatar.TeleportCallback(Self_OnTeleport);
+        }
+
+        void Self_OnScriptQuestion(LLUUID taskID, LLUUID itemID, string objectName, string objectOwner, int questions)
+        {
+            //FIXME - move to display
+            Console.WriteLine(objectName + " owned by " + objectOwner + " has requested the following permissions: " + questions);
         }
 
         void Groups_OnGroupRoles(Dictionary<LLUUID, GroupRole> roles)
@@ -275,7 +282,9 @@ namespace ghetto
         void Callback_AlertMessage(Packet packet, Simulator sim)
         {
             AlertMessagePacket p = (AlertMessagePacket)packet;
-            Display.AlertMessage(Session.SessionNumber, Helpers.FieldToString(p.AlertData.Message));
+            StringBuilder sb = new StringBuilder();
+            Helpers.FieldToString(sb, p.AlertData.Message);
+            Display.AlertMessage(Session.SessionNumber, sb.ToString());
         }
 
         void Callback_HealthMessage(Packet packet, Simulator sim)
@@ -287,7 +296,9 @@ namespace ghetto
         void Callback_MoneyBalanceReply(Packet packet, Simulator sim)
         {
             MoneyBalanceReplyPacket reply = (MoneyBalanceReplyPacket)packet;
-            string desc = Helpers.FieldToString(reply.MoneyData.Description);
+            StringBuilder sb = new StringBuilder();
+            Helpers.FieldToString(sb, reply.MoneyData.Description);
+            string desc = sb.ToString();
             string name = "";
             int amount = 0;
 
