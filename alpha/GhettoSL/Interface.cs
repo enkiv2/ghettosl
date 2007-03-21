@@ -53,8 +53,13 @@ namespace ghetto
             Console.WriteLine(Environment.NewLine + "Running on platform " + platform);
             Random random = new Random();
 
-
             Display.IntroArt(random.Next(1, 3));
+
+            Scripts = new Dictionary<string, ScriptSystem.UserScript>();
+            Sessions = new Dictionary<uint, GhettoSL.UserSession>(); //user sessions
+
+            CurrentSession = 1;
+            Sessions.Add(1, new GhettoSL.UserSession(1));
 
             KeyValuePair<bool,GhettoSL.UserSessionSettings> loginParams = ParseCommandArguments(args);
 
@@ -70,17 +75,10 @@ namespace ghetto
                 Console.WriteLine("-s  -script <file> ..... load the specified script (for script help, /help scripts)");
                 return;
             }
+           
+            Sessions[1].Settings = loginParams.Value;
 
-            GhettoSL.UserSession session = new GhettoSL.UserSession(1);
-            session.Settings = loginParams.Value;
-
-            Scripts = new Dictionary<string, ScriptSystem.UserScript>();
-            Sessions = new Dictionary<uint, GhettoSL.UserSession>(); //user sessions
-            
-            CurrentSession = 1;
-            Sessions.Add(1, session);
-
-            //Load autoexec.script
+           //Load autoexec.script
             if (File.Exists("autoexec.script"))
             {
                 Scripts.Add("autoexec.script", new ScriptSystem.UserScript(1, "autoexec.script"));
