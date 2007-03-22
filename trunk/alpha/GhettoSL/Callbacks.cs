@@ -71,10 +71,10 @@ namespace ghetto
             Session.Client.Self.OnTeleport += new MainAvatar.TeleportCallback(Self_OnTeleport);
         }
 
-        void Self_OnScriptQuestion(LLUUID taskID, LLUUID itemID, string objectName, string objectOwner, int questions)
+        void Self_OnScriptQuestion(LLUUID taskID, LLUUID itemID, string objectName, string objectOwner, MainAvatar.ScriptPermission questions)
         {
             //FIXME - move to display
-            Console.WriteLine(objectName + " owned by " + objectOwner + " has requested the following permissions: " + questions);
+            Console.WriteLine(objectName + " owned by " + objectOwner + " has requested the following permissions: " + questions.ToString());
         }
 
         void Groups_OnGroupRoles(Dictionary<LLUUID, GroupRole> roles)
@@ -375,7 +375,7 @@ namespace ghetto
 
             //Session.Client.Groups.BeginGetCurrentGroups(new GroupManager.CurrentGroupsCallback(GroupsUpdatedHandler));
 
-            Session.Client.Grid.RequestEstateSims(GridManager.MapLayerType.Terrain);
+            //Session.Client.Grid.RequestEstateSims(GridManager.MapLayerType.Terrain); //FIXME - get new function name frm jh?
 
             Session.Client.Self.Status.UpdateTimer.Start();
 
