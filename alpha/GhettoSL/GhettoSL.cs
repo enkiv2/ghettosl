@@ -31,7 +31,7 @@ using System.Text.RegularExpressions;
 using libsecondlife;
 using libsecondlife.Packets;
 using libsecondlife.AssetSystem;
-using libsecondlife.Utilities;
+//using libsecondlife.Utilities;
 
 namespace ghetto
 {
@@ -157,16 +157,24 @@ namespace ghetto
                     if (av.Name == FollowName)
                     {
                         LLVector3 target;
-                        if (av.SittingOn > 0 && Prims.ContainsKey(av.SittingOn))
+                        if (av.SittingOn > 0)
                         {
-                            target = Prims[av.SittingOn].Position + av.Position;
+                            if (Prims.ContainsKey(av.SittingOn))
+                            {
+                                target = Prims[av.SittingOn].Position + av.Position;
+                            }
+                            else
+                            {
+                                //FIXME - show an error about missing object info?
+                                return;
+                            }
                         }
                         else
                         {
                             target = av.Position;
                         }
 
-                        TurnToward(av.Position);
+                        TurnToward(target);                        
 
                         //Console.WriteLine(av.Position); //DEBUG
                         if (Helpers.VecDist(Client.Self.Position, av.Position) > 3)
