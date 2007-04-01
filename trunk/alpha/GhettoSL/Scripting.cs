@@ -28,7 +28,7 @@
 using libsecondlife;
 using libsecondlife.Packets;
 using libsecondlife.InventorySystem;
-using libsecondlife.Utilities;
+//using libsecondlife.Utilities;
 using System;
 using System.IO;
 using System.Collections.Generic;

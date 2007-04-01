@@ -242,7 +242,7 @@ namespace ghetto
             if (Session.Client.Self.Status.AlwaysRun) ret = ret.Replace("$flying", "$true");
             else ret = ret.Replace("$flying", "$false");
 
-            if (Session.Client.Self.Status.Controls.Fly) ret = ret.Replace("$flying", "$true");
+            if (Session.Client.Self.Status.Fly) ret = ret.Replace("$flying", "$true");
             else ret = ret.Replace("$flying", "$false");
 
             if (Session.Client.Self.SittingOn > 0) ret = ret.Replace("$sitting", "$true");
@@ -407,7 +407,7 @@ namespace ghetto
                 //FIXME - Add RelogTimer to UserSession, in place of this
                 if (Session != null) Session.Client.Network.Logout();
                 Thread.Sleep(1000);
-                Session.Client = new SecondLife();
+                //Session.Client = new SecondLife(); //FIXME - clear client data when relogging
             }
 
             //FIXME - move this to a callback for login-failed and add login-failed event
@@ -683,7 +683,7 @@ namespace ghetto
 
             if (!Session.Client.Network.Connected)
             {
-                string[] okIfNotConnected = { "clear", "echo", "exit", "login", "inc", "relog", "return", "s", "session", "sessions", "set", "script", "scripts", "stats", "timer", "timers" };
+                string[] okIfNotConnected = { "clear", "echo", "exit", "login", "inc", "quit", "relog", "return", "s", "session", "sessions", "set", "script", "scripts", "stats", "timer", "timers" };
                 int ok;
                 for (ok = 0; ok < okIfNotConnected.Length; ok++)
                 {
@@ -829,8 +829,8 @@ namespace ghetto
                     Session.Client.Self.RequestSit(Session.Prims[localID].ID, LLVector3.Zero);
                     Session.Client.Self.Sit();
                     //Session.Client.Self.Status.Controls.FinishAnim = false;
-                    Session.Client.Self.Status.Controls.SitOnGround = false;
-                    Session.Client.Self.Status.Controls.StandUp = false;
+                    Session.Client.Self.Status.SitOnGround = false;
+                    Session.Client.Self.Status.StandUp = false;
                     Session.Client.Self.Status.SendUpdate();
                 }
                 else Display.InfoResponse(sessionNum, "No matching objects found.");
@@ -943,21 +943,21 @@ namespace ghetto
             {
                 if (cmd.Length == 1 || cmd[1].ToLower() == "on")
                 {
-                    if (Session.Client.Self.Status.Controls.Fly)
+                    if (Session.Client.Self.Status.Fly)
                     {
                         Display.InfoResponse(sessionNum, "You are already flying.");
                     }
                     else
                     {
-                        Session.Client.Self.Status.Controls.Fly = true;
+                        Session.Client.Self.Status.Fly = true;
                         Display.InfoResponse(sessionNum, "Suddenly, you feel weightless...");
                     }
                 }
                 else if (cmd[1].ToLower() == "off")
                 {
-                    if (Session.Client.Self.Status.Controls.Fly)
+                    if (Session.Client.Self.Status.Fly)
                     {
-                        Session.Client.Self.Status.Controls.Fly = false;
+                        Session.Client.Self.Status.Fly = false;
                         Display.InfoResponse(sessionNum, "You drop to the ground.");
                     }
                     else
@@ -1013,9 +1013,9 @@ namespace ghetto
             else if (command == "fixme")
             {
                 Session.UpdateAppearance();
-                Session.Client.Self.Status.Controls.FinishAnim = true;
+                Session.Client.Self.Status.FinishAnim = true;
                 Session.Client.Self.Status.SendUpdate();
-                Session.Client.Self.Status.Controls.FinishAnim = false;
+                Session.Client.Self.Status.FinishAnim = false;
                 Session.Client.Self.Status.SendUpdate();
             }
 
@@ -1108,7 +1108,7 @@ namespace ghetto
 
             else if (command == "land")
             {
-                Session.Client.Self.Status.Controls.Fly = false;
+                Session.Client.Self.Status.Fly = false;
                 Session.Client.Self.Status.SendUpdate();
             }
 
@@ -1195,12 +1195,12 @@ namespace ghetto
             {
                 if (cmd.Length < 2 || cmd[1].ToLower() == "on")
                 {
-                    Session.Client.Self.Status.Controls.Mouselook = true;
+                    Session.Client.Self.Status.Mouselook = true;
                     Display.InfoResponse(sessionNum, "Mouselook enabled");
                 }
                 else if (cmd[1].ToLower() == "off")
                 {
-                    Session.Client.Self.Status.Controls.Mouselook = false;
+                    Session.Client.Self.Status.Mouselook = false;
                     Display.InfoResponse(sessionNum, "Mouselook disabled");
                 }
                 else
@@ -1212,17 +1212,17 @@ namespace ghetto
 
             else if (command == "shoot")
             {
-                bool inMouselook = Session.Client.Self.Status.Controls.Mouselook;
-                if (!inMouselook) Session.Client.Self.Status.Controls.Mouselook = true;
-                Session.Client.Self.Status.Controls.MLButtonDown = true;
-                Session.Client.Self.Status.Controls.FinishAnim = true;
+                bool inMouselook = Session.Client.Self.Status.Mouselook;
+                if (!inMouselook) Session.Client.Self.Status.Mouselook = true;
+                Session.Client.Self.Status.MLButtonDown = true;
+                Session.Client.Self.Status.FinishAnim = true;
                 Session.Client.Self.Status.SendUpdate();
-                Session.Client.Self.Status.Controls.MLButtonDown = false;
-                Session.Client.Self.Status.Controls.MLButtonUp = true;
+                Session.Client.Self.Status.MLButtonDown = false;
+                Session.Client.Self.Status.MLButtonUp = true;
                 Session.Client.Self.Status.SendUpdate();
-                Session.Client.Self.Status.Controls.MLButtonUp = false;
-                Session.Client.Self.Status.Controls.FinishAnim = false;
-                if (!inMouselook) Session.Client.Self.Status.Controls.Mouselook = false;
+                Session.Client.Self.Status.MLButtonUp = false;
+                Session.Client.Self.Status.FinishAnim = false;
+                if (!inMouselook) Session.Client.Self.Status.Mouselook = false;
                 Session.Client.Self.Status.SendUpdate();
             }
 
@@ -1533,8 +1533,8 @@ namespace ghetto
                     Display.Help(command);
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
-                Session.Client.Self.Status.Controls.SitOnGround = false;
-                Session.Client.Self.Status.Controls.StandUp = false;
+                Session.Client.Self.Status.SitOnGround = false;
+                Session.Client.Self.Status.StandUp = false;
                 Session.Client.Self.RequestSit(target, LLVector3.Zero);
                 Session.Client.Self.Sit();
                 Session.Client.Self.Status.SendUpdate();
@@ -1542,9 +1542,9 @@ namespace ghetto
 
             else if (command == "sitg")
             {
-                Session.Client.Self.Status.Controls.SitOnGround = true;
+                Session.Client.Self.Status.SitOnGround = true;
                 Session.Client.Self.Status.SendUpdate();
-                Session.Client.Self.Status.Controls.SitOnGround = false;
+                Session.Client.Self.Status.SitOnGround = false;
             }
 
             /*
@@ -1563,10 +1563,10 @@ namespace ghetto
 
             else if (command == "stand")
             {
-                Session.Client.Self.Status.Controls.SitOnGround = false;
-                Session.Client.Self.Status.Controls.StandUp = true;
+                Session.Client.Self.Status.SitOnGround = false;
+                Session.Client.Self.Status.StandUp = true;
                 Session.Client.Self.Status.SendUpdate();
-                Session.Client.Self.Status.Controls.StandUp = false;
+                Session.Client.Self.Status.StandUp = false;
             }
 
             else if (command == "stats")

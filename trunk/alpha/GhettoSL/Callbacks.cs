@@ -283,7 +283,7 @@ namespace ghetto
         {
             AlertMessagePacket p = (AlertMessagePacket)packet;
             StringBuilder sb = new StringBuilder();
-            Helpers.FieldToString(sb, p.AlertData.Message);
+            Helpers.FieldToUTF8String(p.AlertData.Message);
             Display.AlertMessage(Session.SessionNumber, sb.ToString());
         }
 
@@ -296,9 +296,7 @@ namespace ghetto
         void Callback_MoneyBalanceReply(Packet packet, Simulator sim)
         {
             MoneyBalanceReplyPacket reply = (MoneyBalanceReplyPacket)packet;
-            StringBuilder sb = new StringBuilder();
-            Helpers.FieldToString(sb, reply.MoneyData.Description);
-            string desc = sb.ToString();
+            string desc = Helpers.FieldToUTF8String(reply.MoneyData.Description);
             string name = "";
             int amount = 0;
 
