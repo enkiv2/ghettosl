@@ -1052,16 +1052,8 @@ namespace ghetto
                     Display.Help(command);
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
-                InviteGroupRequestPacket p = new InviteGroupRequestPacket();
-                InviteGroupRequestPacket.InviteDataBlock b = new InviteGroupRequestPacket.InviteDataBlock();
-                b.InviteeID = inviteeID;
-                b.RoleID = roleID;
-                p.InviteData[0] = b;
-                p.GroupData.GroupID = groupID;
-                p.AgentData.AgentID = Session.Client.Network.AgentID;
-                p.AgentData.SessionID = Session.Client.Network.SessionID;
                 Display.InfoResponse(sessionNum, "Inviting user " + inviteeID + " to group " + groupID + " with the role " + roleID + ".");
-                Session.Client.Network.SendPacket(p);
+                Session.Client.Groups.AddToRole(groupID, roleID, inviteeID);
             }
 
             else if (command == "help")
