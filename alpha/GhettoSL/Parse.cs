@@ -853,6 +853,25 @@ namespace ghetto
                 Console.Clear();
             }
 
+            else if (command == "crouch")
+            {
+                if (cmd.Length == 1 || cmd[1].ToLower() == "on")
+                {
+                    Session.Client.Self.Status.UpNeg = true;
+                    Session.Client.Self.Status.SendUpdate();
+                }
+                else if (cmd.Length > 1 && cmd[1].ToLower() == "off")
+                {
+                    Session.Client.Self.Status.UpNeg = false;
+                    Session.Client.Self.Status.FinishAnim = true;
+                    Session.Client.Self.Status.SendUpdate();
+                    Session.Client.Self.Status.FinishAnim = false;
+                }
+                else {
+                    Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage;
+                }
+            }
+
             else if (command == "delete")
             {
                 LLUUID itemid;
@@ -1098,10 +1117,33 @@ namespace ghetto
                 else Session.Client.Self.InstantMessage(target, details);
             }
 
+            else if (command == "jump")
+            {
+                if (cmd.Length == 1 || cmd[1].ToLower() == "on")
+                {
+                    Session.Client.Self.Status.UpPos = true;
+                    Session.Client.Self.Status.SendUpdate();
+                }
+                else if (cmd.Length > 1 && cmd[1].ToLower() == "off")
+                {
+                    Session.Client.Self.Status.UpPos = false;
+                    Session.Client.Self.Status.FinishAnim = true;
+                    Session.Client.Self.Status.SendUpdate();
+                    Session.Client.Self.Status.FinishAnim = false;
+                }
+                else
+                {
+                    Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage;
+                }
+            }
+
             else if (command == "land")
             {
                 Session.Client.Self.Status.Fly = false;
+                Session.Client.Self.Status.FinishAnim = true;
                 Session.Client.Self.Status.SendUpdate();
+                Session.Client.Self.Status.FinishAnim = false;
+                //Session.Client.Self.Status.SendUpdate();
             }
 
             else if (command == "listen")
@@ -1216,6 +1258,23 @@ namespace ghetto
                 Session.Client.Self.Status.FinishAnim = false;
                 if (!inMouselook) Session.Client.Self.Status.Mouselook = false;
                 Session.Client.Self.Status.SendUpdate();
+            }
+
+            else if (command == "particles")
+            {
+                lock (Session.Prims)
+                {
+                    foreach (KeyValuePair<uint, Primitive> obj in Session.Prims)
+                    {
+                        if (obj.Value.ParticleSys.Pattern != Primitive.ParticleSystem.SourcePattern.None)
+                        {
+                            Console.WriteLine(obj.Value.ID.ToStringHyphenated() + " "
+                                + Display.VectorString(obj.Value.Position) + " "
+                                + obj.Value.ParentID
+                            );
+                        }
+                    }
+                }
             }
 
             else if (command == "pay")
@@ -1337,7 +1396,6 @@ namespace ghetto
                 Session.RideWith(details);
             }
 
-
             else if (command == "rotto")
             {
                 LLVector3 target;
@@ -1348,6 +1406,7 @@ namespace ghetto
                 }
                 Session.TurnToward(target);
             }
+
             else if (command == "brot")
             {
                 LLVector3 target;
@@ -1510,6 +1569,11 @@ namespace ghetto
                 if (Script.Variables.ContainsKey(variableName)) Script.Variables[variableName] = Variables(sessionNum, details, scriptName);
                 else Script.Variables.Add(variableName, Variables(sessionNum, details, scriptName));
 
+            }
+
+            else if (command == "sethome")
+            {
+                Session.Client.Self.SetHome();
             }
 
             else if (command == "shout")
@@ -1802,7 +1866,7 @@ namespace ghetto
             else if (command == "whois")
             {
                 //FIXME - add whois
-                
+
             }
 
             else
