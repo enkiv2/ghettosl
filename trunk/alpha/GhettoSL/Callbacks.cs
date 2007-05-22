@@ -41,6 +41,7 @@ namespace ghetto
         public CallbackManager(GhettoSL.UserSession session)
         {
             Session = session;
+            Session.Client.Avatars.OnAvatarNames += new AvatarManager.AvatarNamesCallback(Avatars_OnAvatarNames);
             Session.Client.Inventory.OnInventoryItemReceived += new libsecondlife.InventorySystem.InventoryManager.On_InventoryItemReceived(Inventory_OnInventoryItemReceived);
             Session.Client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
             Session.Client.Network.OnCurrentSimChanged += new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
@@ -102,9 +103,10 @@ namespace ghetto
             {
                 Display.InstantMessage(Session.SessionNumber, dialog, fromAgentName, message);
             }
-            else if (dialog == MainAvatar.InstantMessageDialog.InventoryOffered)
+            else if (dialog == MainAvatar.InstantMessageDialog.TaskInventoryOffered)
             {
-                //handled by Inventory_OnInventoryItemReceived
+                Console.WriteLine("POSSIBLE SPAM: " + fromAgentName + " gave you: " + message);
+                Session.Client.Avatars.RequestAvatarName(fromAgentID);
             }
             else
             {
@@ -124,6 +126,14 @@ namespace ghetto
             identifiers.Add("$pos", position.ToString());
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.IM, identifiers);
 
+        }
+
+        void Avatars_OnAvatarNames(Dictionary<LLUUID, string> names)
+        {
+            foreach (KeyValuePair<LLUUID, string> pair in names)
+            {
+                Console.WriteLine(pair.Key.ToStringHyphenated() + " = " + pair.Value);
+            }
         }
 
         void Self_OnChat(string message, MainAvatar.ChatAudibleLevel audible, MainAvatar.ChatType type, MainAvatar.ChatSourceType sourceType, string fromName, LLUUID id, LLUUID ownerid, LLVector3 position)
