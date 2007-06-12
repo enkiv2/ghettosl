@@ -36,49 +36,51 @@ CONTENTS
 
 1. COMMANDS:
 ---------------------------------------------------------------------------
-anim <uuid>              Start the specified animation
-answer <text>            Answer the last-received script dialog
-brot <x,y,z>             rotate your avatar's body (Z affects direction)
-clear                    Clear the console display
-delete <inventoryID>     Delete the specified inventory item
-dir <path>               View inventory folder contents
-fly [on|off]             Toggles avatar flying
-follow <name|off|on>     Follow the specified avatar, or toggle following
-go <x,y,z>               Move to the specified coordinates using autopilot
-groups                   Lists information about groups you are in
-hrot <x,y,z>             rotate your avatar's head (does this do anything?)
-land                     Disable flying
-listen                   Same as /quiet off
-look [text]              Display info about area, or searches by prim text
-pay <amount> <uuid>      Pay the specified avatar or object
-paybytext <amt> <text>   Pay an object with text regex-matching <text>
-payme <amount>           Pay the specified amount to $masterid, if defined
-quiet [on|off]           Toggle the display of object/avatar chat
-re [name] [message]      List IM sessions or reply by partial name match
-relog                    Log out and back in
-ride <name>              Sit on the same object as the specified name
-roles <groupID>          List role information for the specified group ID
-rotto <position>         Rotate your avatar's body to face toward <position>
-run [on|off]             Toggles avatar running
-session <#> [command]    Switch or send a command to another session
-script <scriptName>      Execute the specified script file
-shout <message>          Shout the specified message to users within 100m
-sit <uuid>               Sit on the specified UUID
-sitbytext <text>         Find a chair with text regex-matching <text>
-sitg                     Sit on the ground at current location
-stand                    Stand while seated on an object or on the ground
-stopanim <uuid>          Stop the specified animation
-teleport "sim" <x,y,z>   Teleport to the specified destination
-timer [-m] <label> [off] [reps] [interval] [command]
-touch <uuid>             Touch the specified object
-touchbytext <text>       Touch an object with text regex-matching <text>
-touchid <localID>        Touch the specified object LocalID
-updates <on|off>         Toggle AgentUpdate timer (on by default)
-walk                     Disable running
-wear <itemid> [point]    Attach an object from inventory after /dir
-whisper                  Whisper the specified message to users within 5m
-who                      List avatars within viewing range
-
+ anim <uuid>              Start the specified animation
+ answer <text>            Answer the last-received script dialog
+ brot <x,y,z>             rotate your avatar's body (Z affects direction)
+ clear                    Clear the console display
+ delete <inventoryID>     Delete the specified inventory item
+ dir <path>               View inventory folder contents
+ fly [on|off]             Toggles avatar flying
+ follow <name|off|on>     Follow the specified avatar, or toggle following
+ go <x,y,z>               Move to the specified coordinates using autopilot
+ groups                   Lists information about groups you are in
+ home                     Teleport to your home location
+ hrot <x,y,z>             rotate your avatar's head (does this do anything?)
+ land                     Disable flying
+ listen                   Same as /quiet off
+ look [text]              Display info about area, or searches by prim text
+ particles                Show the ID and location of prims with particles
+ pay <amount> <uuid>      Pay the specified avatar or object
+ paybytext <amt> <text>   Pay an object with text regex-matching <text>
+ payme <amount>           Pay the specified amount to $masterid, if defined
+ quiet [on|off]           Toggle the display of object/avatar chat
+ re [name] [message]      List IM sessions or reply by partial name match
+ relog                    Log out and back in
+ ride <name>              Sit on the same object as the specified name
+ roles <groupID>          List role information for the specified group ID
+ rotto <position>         Rotate your avatar's body to face toward <position>
+ run [on|off]             Toggles avatar running
+ session <#> [command]    Switch or send a command to another session
+ sethome                  Sets your home position to the current location
+ script <scriptName>      Execute the specified script file
+ shout <message>          Shout the specified message to users within 100m
+ sit <uuid>               Sit on the specified UUID
+ sitbytext <text>         Find a chair with text regex-matching <text>
+ sitg                     Sit on the ground at current location
+ stand                    Stand while seated on an object or on the ground
+ stopanim <uuid>          Stop the specified animation
+ teleport "sim" <x,y,z>   Teleport to the specified destination
+ timer [-m] <label> [off] [reps] [interval] [command]
+ touch <uuid>             Touch the specified object
+ touchbytext <text>       Touch an object with text regex-matching <text>
+ touchid <localID>        Touch the specified object LocalID
+ updates <on|off>         Toggle AgentUpdate timer (on by default)
+ walk                     Disable running
+ wear <itemid> [point]    Attach an object from inventory after /dir
+ whisper                  Whisper the specified message to users within 5m
+ who                      List avatars within viewing range
 
 
 2. DEFAULT IDENTIFIERS:
