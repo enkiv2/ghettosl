@@ -1018,6 +1018,21 @@ namespace ghetto
                 else Session.Follow(details);
             }
 
+            else if (command == "friend")
+            {
+                LLUUID targetID;
+                if (cmd.Length > 1 && cmd[1] == "-r")
+                {
+                    if (cmd.Length < 3 || !LLUUID.TryParse(cmd[2], out targetID)) { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
+                    Session.Client.Friends.RemoveFriend(targetID);
+                }
+                else
+                {
+                    if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out targetID)) { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
+                    Session.Client.Friends.RequestFriendship(targetID);
+                }
+            }
+
             else if (command == "go")
             {
                 LLVector3 target;
@@ -1080,6 +1095,11 @@ namespace ghetto
                 string topic = "";
                 if (cmd.Length > 1) topic = cmd[1];
                 Display.Help(topic);
+            }
+
+            else if (command == "home")
+            {
+                Session.Client.Self.Teleport(LLUUID.Zero);
             }
 
             else if (command == "http")
