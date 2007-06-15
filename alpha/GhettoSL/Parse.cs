@@ -1775,6 +1775,16 @@ namespace ghetto
                 }
             }
 
+            else if (command == "topscripts")
+            {
+                Session.Client.Network.CurrentSim.Estate.GetTopScripts();
+            }
+
+            else if (command == "topcolliders")
+            {
+                Session.Client.Network.CurrentSim.Estate.GetTopScripts();
+            }
+
             else if (command == "touch")
             {
                 LLUUID findID;

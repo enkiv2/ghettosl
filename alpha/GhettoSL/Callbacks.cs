@@ -72,6 +72,24 @@ namespace ghetto
             Session.Client.Self.OnTeleport += new MainAvatar.TeleportCallback(Self_OnTeleport);
         }
 
+        void Estate_OnGetTopColliders(int objectCount, List<EstateTools.EstateTask> Tasks)
+        {
+            //FIXME - Send results to Display class
+            foreach (EstateTools.EstateTask task in Tasks)
+            {
+                if (task.Score > 0.1) Console.WriteLine(Math.Round(task.Score, 5) + " - " + task.OwnerName.PadRight(20) + " - " + task.TaskName);
+            }
+        }
+
+        void Estate_OnGetTopScripts(int objectCount, List<EstateTools.EstateTask> Tasks)
+        {
+            //FIXME - Send results to Display class
+            foreach (EstateTools.EstateTask task in Tasks)
+            {
+                if (task.Score > 0.1) Console.WriteLine(Math.Round(task.Score, 5) + " - " + task.OwnerName.PadRight(20) + " - " + task.TaskName);
+            }
+        }
+
         void Self_OnScriptQuestion(LLUUID taskID, LLUUID itemID, string objectName, string objectOwner, MainAvatar.ScriptPermission questions)
         {
             //FIXME - move to display
@@ -242,6 +260,8 @@ namespace ghetto
             //FIXME - add event?
             Display.SimChanged(Session.SessionNumber, PreviousSimulator, Session.Client.Network.CurrentSim);
             Session.Avatars = new Dictionary<uint, Avatar>();
+            Session.Client.Network.CurrentSim.Estate.OnGetTopScripts += new EstateTools.GetTopScriptsReply(Estate_OnGetTopScripts);
+            Session.Client.Network.CurrentSim.Estate.OnGetTopColliders += new EstateTools.GetTopCollidersReply(Estate_OnGetTopColliders);
         }
 
         void Inventory_OnInventoryItemReceived(LLUUID fromAgentID, string fromAgentName, uint parentEstateID, LLUUID regionID, LLVector3 position, DateTime timestamp, libsecondlife.InventorySystem.InventoryItem item)
