@@ -149,7 +149,7 @@ namespace ghetto
                 else if (arg.Length > 13 && arg.Substring(0, 13) == "secondlife://")
                 {
                     string url = ScriptSystem.QuoteArg(args, i);
-                    ret.Value.URI = "uri:" + url.Substring(13, arg.Length - 13).Replace("%20", " ").Replace("/", "&");
+                    ret.Value.URI = "uri:" + url.Substring(13, arg.Length - 13).Replace("%20", " ").ToLower().Replace("/", "&");
                 }
 
             }
