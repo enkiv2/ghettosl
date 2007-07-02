@@ -430,7 +430,7 @@ namespace ghetto
                 if (iName.Length > 18) iName = iName.Substring(0, 18) + "...";
                 Console.Write(Display.Pad(iName, 22) + " ");
                 Display.SetColor(ConsoleColor.DarkGray);
-                Console.Write(Display.Pad(item.ItemID.ToString(), 34) + "\n");
+                Console.Write(Display.Pad(item.ItemID.ToStringHyphenated(), 34) + "\n");
                 Display.SetColor(ConsoleColor.Gray);
             }
         }

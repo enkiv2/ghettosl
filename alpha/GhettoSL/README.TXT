@@ -80,6 +80,7 @@ CONTENTS
  walk                     Disable running
  wear <itemid> [point]    Attach an object from inventory after /dir
  whisper                  Whisper the specified message to users within 5m
+ whois                    Look up an agent by name
  who                      List avatars within viewing range
 
 

@@ -33,10 +33,11 @@ namespace ghetto
             try
             {
                 sockListen = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                IPEndPoint ipLocal = new IPEndPoint(IPAddress.Any, port);
+                IPEndPoint ipLocal = new IPEndPoint(IPAddress.Loopback, port);
                 sockListen.Bind(ipLocal);
                 sockListen.Listen(MAX_QUEUE);
                 sockListen.BeginAccept(new AsyncCallback(OnClientConnect), null);
+                Console.WriteLine("HTTP: Listening (" + ipLocal + ")");
                 return true;
             }
 
@@ -49,6 +50,7 @@ namespace ghetto
 
         public void DisableServer()
         {
+            Console.WriteLine("HTTP: Server disabled");
             CloseSockets();
         }
         
@@ -85,8 +87,7 @@ namespace ghetto
                 if (socketCallback == null) socketCallback = new AsyncCallback(OnDataReceived);
                 Packet packet = new Packet();
                 packet.CurrentSocket = socket;
-                socket.BeginReceive(packet.DataBuffer, 0, packet.DataBuffer.Length,
-                                   SocketFlags.None, socketCallback, packet);
+                socket.BeginReceive(packet.DataBuffer, 0, packet.DataBuffer.Length, SocketFlags.None, socketCallback, packet);
             }
             catch (SocketException se)
             {

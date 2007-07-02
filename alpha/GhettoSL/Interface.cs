@@ -165,7 +165,7 @@ namespace ghetto
         {
             string read = Console.ReadLine();
 
-            if (read.Length < 1)
+            if (read == null || read.Length < 1)
                 return true;
             else if (read.Length > 1 && read.Substring(0, 2) == "//")
                 Parse.Command(CurrentSession, "", read.Substring(2), true, false);
