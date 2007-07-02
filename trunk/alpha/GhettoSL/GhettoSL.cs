@@ -330,6 +330,12 @@ namespace ghetto
                 FollowTimer.Enabled = false;
                 FollowTimer.AutoReset = true;
                 FollowTimer.Elapsed += new System.Timers.ElapsedEventHandler(FollowTimer_Elapsed);
+                Console.CancelKeyPress += new ConsoleCancelEventHandler(Console_CancelKeyPress);
+            }
+
+            void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
+            {
+                Client.Network.Logout();
             }
        }
 

@@ -42,6 +42,7 @@ namespace ghetto
         {
             Session = session;
             Session.Client.Avatars.OnAvatarNames += new AvatarManager.AvatarNamesCallback(Avatars_OnAvatarNames);
+            Session.Client.Directory.OnDirPeopleReply += new DirectoryManager.DirPeopleReplyCallback(Directory_OnDirPeopleReply);
             Session.Client.Inventory.OnInventoryItemReceived += new libsecondlife.InventorySystem.InventoryManager.On_InventoryItemReceived(Inventory_OnInventoryItemReceived);
             Session.Client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
             Session.Client.Network.OnCurrentSimChanged += new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
@@ -70,6 +71,15 @@ namespace ghetto
 
             //Session.Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(Callback_TeleportFinish));
             Session.Client.Self.OnTeleport += new MainAvatar.TeleportCallback(Self_OnTeleport);
+        }
+
+        void Directory_OnDirPeopleReply(LLUUID queryID, List<DirectoryManager.AgentSearchData> matchedPeople)
+        {
+            foreach (DirectoryManager.AgentSearchData av in matchedPeople)
+            {
+                string name = av.FirstName + " " + av.LastName;
+                Console.WriteLine(name.PadRight(20) + " " + av.AgentID.ToStringHyphenated());
+            }
         }
 
         void Estate_OnGetTopColliders(int objectCount, List<EstateTools.EstateTask> Tasks)
@@ -139,7 +149,7 @@ namespace ghetto
             Dictionary<string, string> identifiers = new Dictionary<string, string>();
             identifiers.Add("$name", fromAgentName);
             identifiers.Add("$message", message);
-            identifiers.Add("$id", fromAgentID.ToString());
+            identifiers.Add("$id", fromAgentID.ToStringHyphenated());
             identifiers.Add("$dialog", dialog.ToString());
             identifiers.Add("$pos", position.ToString());
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.IM, identifiers);
@@ -178,8 +188,8 @@ namespace ghetto
             Dictionary<string, string> identifiers = new Dictionary<string, string>();
             identifiers.Add("$name", fromName);
             identifiers.Add("$message", message);
-            identifiers.Add("$id", id.ToString());
-            identifiers.Add("$ownerid", ownerid.ToString());
+            identifiers.Add("$id", id.ToStringHyphenated());
+            identifiers.Add("$ownerid", ownerid.ToStringHyphenated());
             identifiers.Add("$ctype", type.ToString());
             identifiers.Add("$stype", sourceType.ToString());
             identifiers.Add("$pos", position.ToString());
@@ -269,9 +279,9 @@ namespace ghetto
             Display.InventoryItemReceived(Session.SessionNumber, fromAgentID, fromAgentName, parentEstateID, regionID, position, timestamp, item);
             Dictionary<string, string> identifiers = new Dictionary<string, string>();
             identifiers.Add("$name", fromAgentName);
-            identifiers.Add("$id", fromAgentID.ToString());
+            identifiers.Add("$id", fromAgentID.ToStringHyphenated());
             identifiers.Add("$item", item.Name);
-            identifiers.Add("$itemid", item.ItemID.ToString());
+            identifiers.Add("$itemid", item.ItemID.ToStringHyphenated());
             identifiers.Add("$type", item.Type.ToString());
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.GetItem, identifiers);
         }
@@ -284,7 +294,7 @@ namespace ghetto
 
             Dictionary<string, string> identifiers = new Dictionary<string, string>();
             identifiers.Add("$name", objectName);
-            identifiers.Add("$id", objectID.ToString());
+            identifiers.Add("$id", objectID.ToStringHyphenated());
             identifiers.Add("$channel", chatChannel.ToString());
             identifiers.Add("$message", message);
 

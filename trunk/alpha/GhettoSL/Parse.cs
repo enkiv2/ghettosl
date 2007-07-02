@@ -197,7 +197,7 @@ namespace ghetto
             ret = ret.Replace("$mypos.y", Session.Client.Self.Position.Y.ToString());
             ret = ret.Replace("$mypos.z", Session.Client.Self.Position.Z.ToString());
             ret = ret.Replace("$session", Session.SessionNumber.ToString());
-            ret = ret.Replace("$master", Session.Settings.MasterID.ToString());
+            ret = ret.Replace("$master", Session.Settings.MasterID.ToStringHyphenated());
             ret = ret.Replace("$balance", Session.Balance.ToString());
             ret = ret.Replace("$earned", Session.MoneyReceived.ToString());
             ret = ret.Replace("$spent", Session.MoneySpent.ToString());
@@ -221,13 +221,12 @@ namespace ghetto
             if (Session.Client.Network.Connected && Session.Client.Self.SittingOn > 0 && Session.Prims.ContainsKey(Session.Client.Self.SittingOn))
             {
                 ret = ret.Replace("$seattext", Session.Prims[Session.Client.Self.SittingOn].Text);
-                ret = ret.Replace("$seatid", Session.Prims[Session.Client.Self.SittingOn].ID.ToString());
+                ret = ret.Replace("$seatid", Session.Prims[Session.Client.Self.SittingOn].ID.ToStringHyphenated());
             }
-            else ret = ret.Replace("$seattext", "$null").Replace("$seatid", LLUUID.Zero.ToString());
-
+            else ret = ret.Replace("$seattext", "$null").Replace("$seatid", LLUUID.Zero.ToStringHyphenated());
             if (Session.Client.Network.Connected)
             {
-                ret = ret.Replace("$myid", Session.Client.Network.AgentID.ToString());
+                ret = ret.Replace("$myid", Session.Client.Network.AgentID.ToStringHyphenated());
                 ret = ret.Replace("$connected", "$true");
                 ret = ret.Replace("$region", Session.Client.Network.CurrentSim.Name);
             }
@@ -636,7 +635,7 @@ namespace ghetto
             //For example, in the command "im some-uuid-here Hi there!", details = "Hi there!"
             string details = "";
             int detailsStart = 1;
-            if (command == "cam" || command == "im" || command == "lure" || command == "re" || command == "s" || command == "session" || command == "paybytext" || command == "paybyname") detailsStart++;
+            if (command == "cam" || command == "estate" || command == "im" || command == "lure" || command == "re" || command == "s" || command == "session" || command == "paybytext" || command == "paybyname") detailsStart++;
             else if (command == "dialog") detailsStart += 2;
             else if (command == "timer" && cmd.Length > 1)
             {
@@ -735,6 +734,17 @@ namespace ghetto
                 Session.Client.Self.RequestBalance();
             }
 
+            else if (command == "restartsim")
+            {
+                Session.Client.Network.CurrentSim.Estate.RestartRegion();
+            }
+
+            else if (command == "cancelrestart")
+            {
+                Session.Client.Network.CurrentSim.Estate.CancelRestart();
+            }
+
+
             else if (command == "detachall")
             {
                 //FIXME - detach all worn objects
@@ -744,7 +754,7 @@ namespace ghetto
                     if (pair.Value.ParentID == Session.Client.Self.LocalID) attachments.Add(pair.Value.LocalID);
                 }
                 Session.Client.Objects.DetachObjects(Session.Client.Network.CurrentSim, attachments);
-                Display.InfoResponse(sessionNum, "Detached " + attachments.Count + " objects");                                
+                Display.InfoResponse(sessionNum, "Detached " + attachments.Count + " objects");
             }
 
             else if (command == "return")
@@ -867,7 +877,8 @@ namespace ghetto
                     Session.Client.Self.Status.SendUpdate();
                     Session.Client.Self.Status.FinishAnim = false;
                 }
-                else {
+                else
+                {
                     Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage;
                 }
             }
@@ -945,6 +956,43 @@ namespace ghetto
                 //FIXME - move to Display.Echo
                 if (cmd.Length < 1) return ScriptSystem.CommandResult.NoError;
                 Console.WriteLine(details);
+            }
+
+            else if (command == "eban")
+            {
+                LLUUID target;
+                if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out target)) { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
+                //FIXME - add display
+                Session.Client.Network.CurrentSim.Estate.BanUser(target);
+            }
+
+            else if (command == "eunban")
+            {
+                LLUUID target;
+                if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out target)) { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
+                //FIXME - add display
+                Session.Client.Network.CurrentSim.Estate.UnbanUser(target);
+            }
+
+            else if (command == "ekick")
+            {
+                LLUUID target;
+                if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out target)) { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
+                //FIXME - add display
+                Session.Client.Network.CurrentSim.Estate.KickUser(target);
+            }
+
+            else if (command == "ekill")
+            {
+                LLUUID target;
+                if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out target)) { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
+                Session.Client.Network.CurrentSim.Estate.TeleportHomeUser(target);
+            }
+
+            else if (command == "estate")
+            {
+                if (cmd.Length < 2) { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
+                Session.Client.Network.CurrentSim.Estate.EstateOwnerMessage(cmd[1], details);
             }
 
             else if (command == "events")
@@ -1236,13 +1284,12 @@ namespace ghetto
                 if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out target))
                 {
                     Display.Help(command);
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
                 string reason;
                 if (cmd.Length > 2) reason = details;
                 else reason = "Join me in " + Session.Client.Network.CurrentSim.Name + "!";
-
-                //FIXME - Add teleport lure
-
+                Session.Client.Self.SendTeleportLure(target, reason);
             }
 
             else if (command == "mlook")
@@ -1477,8 +1524,6 @@ namespace ghetto
                 Display.InfoResponse(sessionNum, "Camera settings updated");
             }
 
-
-
             else if (command == "run" || command == "running")
             {
                 if (cmd.Length == 1 || cmd[1].ToLower() == "on")
@@ -1546,11 +1591,10 @@ namespace ghetto
                 else Display.SessionList();
             }
 
-            else if (command == "search")
+            else if (command == "whois")
             {
                 //FIXME - add group, land, etc searching
-
-
+                Session.Client.Directory.StartPeopleSearch(DirectoryManager.DirFindFlags.People, details, 0);
             }
 
             else if (command == "inc" && scriptName != "")
@@ -1601,6 +1645,11 @@ namespace ghetto
                 Session.Client.Self.Chat(details, 0, MainAvatar.ChatType.Shout);
             }
 
+            else if (command == "simmessage")
+            {
+                Session.Client.Network.CurrentSim.Estate.SimulatorMessage(details);
+            }
+
             else if (command == "sit")
             {
                 LLUUID target;
@@ -1636,6 +1685,40 @@ namespace ghetto
                 return false; //pause script
             }
             */
+
+            else if (command == "spooftouch")
+            {
+                LLUUID from;
+                LLUUID findID;
+                if (cmd.Length < 3 || !LLUUID.TryParse(cmd[1], out from) || !LLUUID.TryParse(cmd[2], out findID))
+                {
+                    return ScriptSystem.CommandResult.InvalidUsage;
+                }
+                lock (Session.Prims)
+                {
+                    foreach (Primitive prim in Session.Prims.Values)
+                    {
+                        if (prim.ID != findID) continue;
+
+                        ObjectGrabPacket grab = new ObjectGrabPacket();
+                        grab.AgentData.AgentID = from;
+                        grab.AgentData.SessionID = LLUUID.Zero;
+                        grab.ObjectData.LocalID = prim.LocalID;
+                        grab.ObjectData.GrabOffset = new LLVector3(0, 0, 0);
+                        Session.Client.Network.SendPacket(grab);
+
+                        ObjectDeGrabPacket degrab = new ObjectDeGrabPacket();
+                        degrab.AgentData.AgentID = from;
+                        degrab.AgentData.SessionID = LLUUID.Zero;
+                        degrab.ObjectData.LocalID = prim.LocalID;
+                        Session.Client.Network.SendPacket(degrab);
+
+                        Display.InfoResponse(sessionNum, "You touch an object...");
+                        return ScriptSystem.CommandResult.NoError;
+                    }
+                }
+                Display.Error(sessionNum, "Object not found");
+            }
 
             else if (command == "stand")
             {
@@ -1800,7 +1883,7 @@ namespace ghetto
                         if (prim.ID != findID) continue;
                         Session.Client.Self.Touch(prim.LocalID);
                         Display.InfoResponse(sessionNum, "You touch an object...");
-                        break;
+                        return ScriptSystem.CommandResult.NoError;
                     }
                 }
                 Display.Error(sessionNum, "Object not found");
