@@ -1,0 +1,10 @@
+obj\Release\ResolveAssemblyReference.cache
+bin\Release\GhettoIRC.dll
+bin\Release\GhettoIRC.pdb
+obj\Release\GhettoIRC.dll
+obj\Release\GhettoIRC.pdb
+bin\Debug\GhettoIRC.dll
+bin\Debug\GhettoIRC.pdb
+obj\Debug\ResolveAssemblyReference.cache
+obj\Debug\GhettoIRC.dll
+obj\Debug\GhettoIRC.pdb
