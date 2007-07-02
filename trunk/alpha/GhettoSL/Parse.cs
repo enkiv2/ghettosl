@@ -1865,7 +1865,7 @@ namespace ghetto
 
             else if (command == "topcolliders")
             {
-                Session.Client.Network.CurrentSim.Estate.GetTopScripts();
+                Session.Client.Network.CurrentSim.Estate.GetTopColliders();
             }
 
             else if (command == "touch")
