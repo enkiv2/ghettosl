@@ -283,8 +283,8 @@ namespace ghetto
             {
                 if (!Client.Network.Connected) return;
                 Display.InfoResponse(SessionNumber, "Loading appearance from asset server...");
-                AppearanceManager aManager;
-                aManager = new AppearanceManager(Client);
+                libsecondlife.AssetSystem.AppearanceManager aManager;
+                aManager = new libsecondlife.AssetSystem.AppearanceManager(Client);
                 aManager.BeginAgentSendAppearance();
             }
 
