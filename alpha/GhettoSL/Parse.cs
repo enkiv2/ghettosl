@@ -951,6 +951,11 @@ namespace ghetto
                 ScriptSystem.DirList(sessionNum, details);
             }
 
+            else if (command == "dwell")
+            {
+                
+            }
+
             else if (command == "echo")
             {
                 //FIXME - move to Display.Echo
