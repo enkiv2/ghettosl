@@ -43,7 +43,7 @@ namespace ghetto
             Session = session;
             Session.Client.Avatars.OnAvatarNames += new AvatarManager.AvatarNamesCallback(Avatars_OnAvatarNames);
             Session.Client.Directory.OnDirPeopleReply += new DirectoryManager.DirPeopleReplyCallback(Directory_OnDirPeopleReply);
-            Session.Client.Inventory.OnInventoryItemReceived += new libsecondlife.InventorySystem.InventoryManager.On_InventoryItemReceived(Inventory_OnInventoryItemReceived);
+            Session.Client.Inventory.OnInventoryObjectReceived += new InventoryManager.InventoryObjectReceived(Inventory_OnInventoryObjectReceived);
             Session.Client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
             Session.Client.Network.OnCurrentSimChanged += new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
             //Session.Client.Network.OnSimDisconnected += new NetworkManager.SimDisconnectCallback(Network_OnSimDisconnected);
@@ -116,7 +116,7 @@ namespace ghetto
             Session.Groups = groups;
         }
 
-        void Self_OnInstantMessage(LLUUID fromAgentID, string fromAgentName, LLUUID toAgentID, uint parentEstateID, LLUUID regionID, LLVector3 position, MainAvatar.InstantMessageDialog dialog, bool groupIM, LLUUID imSessionID, DateTime timestamp, string message, MainAvatar.InstantMessageOnline offline, byte[] binaryBucket)
+        void Self_OnInstantMessage(LLUUID fromAgentID, string fromAgentName, LLUUID toAgentID, uint parentEstateID, LLUUID regionID, LLVector3 position, MainAvatar.InstantMessageDialog dialog, bool groupIM, LLUUID imSessionID, DateTime timestamp, string message, MainAvatar.InstantMessageOnline offline, byte[] binaryBucket, Simulator simulator)
         {
 
             if (dialog == MainAvatar.InstantMessageDialog.RequestTeleport)
@@ -274,16 +274,18 @@ namespace ghetto
             Session.Client.Network.CurrentSim.Estate.OnGetTopColliders += new EstateTools.GetTopCollidersReply(Estate_OnGetTopColliders);
         }
 
-        void Inventory_OnInventoryItemReceived(LLUUID fromAgentID, string fromAgentName, uint parentEstateID, LLUUID regionID, LLVector3 position, DateTime timestamp, libsecondlife.InventorySystem.InventoryItem item)
+        bool Inventory_OnInventoryObjectReceived(LLUUID fromAgentID, string fromAgentName, uint parentEstateID, LLUUID regionID, LLVector3 position, DateTime timestamp, AssetType type, LLUUID objectID, bool fromTask)
         {
-            Display.InventoryItemReceived(Session.SessionNumber, fromAgentID, fromAgentName, parentEstateID, regionID, position, timestamp, item);
+            InventoryObject obj = Session.Client.Inventory.Store[objectID];
+            Display.InventoryItemReceived(Session.SessionNumber, fromAgentID, fromAgentName, parentEstateID, regionID, position, timestamp, obj);
             Dictionary<string, string> identifiers = new Dictionary<string, string>();
             identifiers.Add("$name", fromAgentName);
             identifiers.Add("$id", fromAgentID.ToStringHyphenated());
-            identifiers.Add("$item", item.Name);
-            identifiers.Add("$itemid", item.ItemID.ToStringHyphenated());
-            identifiers.Add("$type", item.Type.ToString());
+            identifiers.Add("$item", obj.Name);
+            identifiers.Add("$itemid", objectID.ToStringHyphenated());
+            identifiers.Add("$type", type.ToString());
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.GetItem, identifiers);
+            return true;
         }
 
         void Self_OnScriptDialog(string message, string objectName, LLUUID imageID, LLUUID objectID, string firstName, string lastName, int chatChannel, List<string> buttons)

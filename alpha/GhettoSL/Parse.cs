@@ -26,7 +26,6 @@
 */
 
 using libsecondlife;
-using libsecondlife.InventorySystem;
 using libsecondlife.Packets;
 using System;
 using System.Collections.Generic;
@@ -892,17 +891,15 @@ namespace ghetto
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
 
-                if (!Session.Inventory.ContainsKey(itemid))
+                if (!Session.Client.Inventory.Store.Contains(itemid))
                 {
                     Display.Error(sessionNum, "Asset id not found in inventory cache");
                     return ScriptSystem.CommandResult.UnexpectedError;
                 }
 
-                InventoryItem item = Session.Inventory[itemid];
-
+                InventoryObject item = Session.Client.Inventory.Store[itemid];
                 string name = item.Name;
-                item.Delete();
-                Session.Inventory.Remove(itemid);
+                Session.Client.Inventory.Remove(item);
 
                 Display.InfoResponse(sessionNum, "Deleted item \"" + name + "\".");
             }
@@ -916,13 +913,13 @@ namespace ghetto
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
 
-                if (!Session.Inventory.ContainsKey(itemid))
+                if (!Session.Client.Inventory.Store.Contains(itemid))
                 {
                     Display.Error(sessionNum, "Asset id not found in inventory cache");
                     return ScriptSystem.CommandResult.UnexpectedError;
                 }
 
-                InventoryItem item = Session.Inventory[itemid];
+                InventoryObject item = Session.Client.Inventory.Store[itemid];
 
                 string name = item.Name;
                 item.Detach();
@@ -947,7 +944,6 @@ namespace ghetto
             {
                 //FIXME - remember folder and allow dir/ls without args
                 //FIXME - move DirList function to UserSession and move output to Display class
-                if (cmd.Length < 2) { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
                 ScriptSystem.DirList(sessionNum, details);
             }
 
@@ -1932,13 +1928,14 @@ namespace ghetto
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
 
-                if (!Session.Inventory.ContainsKey(itemid))
+                if (!Session.Client.Inventory.Store.Contains(itemid))
                 {
                     Display.Error(sessionNum, "Asset id not found in inventory cache");
                     return ScriptSystem.CommandResult.UnexpectedError;
                 }
 
-                InventoryItem item = Session.Inventory[itemid];
+                InventoryItem item = (InventoryItem)Session.Client.Inventory.Store[itemid];
+                item.Wear();
 
                 if (cmd.Length > 2)
                 {
@@ -1965,6 +1962,7 @@ namespace ghetto
                         Display.InfoResponse(sessionNum, "Unknown attachment point \"" + p + "\" - using object default");
                         point = ObjectManager.AttachmentPoint.Default;
                     }
+                    
                     item.Attach(point);
                 }
                 else item.Attach();

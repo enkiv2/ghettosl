@@ -30,8 +30,6 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using libsecondlife;
 using libsecondlife.Packets;
-using libsecondlife.AssetSystem;
-//using libsecondlife.Utilities;
 
 namespace ghetto
 {
@@ -55,7 +53,6 @@ namespace ghetto
             public Dictionary<uint, Avatar> Avatars;
             public Dictionary<uint, Primitive> Prims;
             public Dictionary<string, ScriptSystem.UserTimer> Timers;
-            public Dictionary<LLUUID, libsecondlife.InventorySystem.InventoryItem> Inventory;
             public LLUUID LastDialogID;
             public int LastDialogChannel;
             public int MoneySpent;
@@ -283,9 +280,7 @@ namespace ghetto
             {
                 if (!Client.Network.Connected) return;
                 Display.InfoResponse(SessionNumber, "Loading appearance from asset server...");
-                libsecondlife.AssetSystem.AppearanceManager aManager;
-                aManager = new libsecondlife.AssetSystem.AppearanceManager(Client);
-                aManager.BeginAgentSendAppearance();
+                Client.Appearance.SetPreviousAppearance();
             }
 
             /// <summary>
@@ -313,7 +308,6 @@ namespace ghetto
                 Friends = new Dictionary<LLUUID, Avatar>();
                 Groups = new Dictionary<LLUUID, libsecondlife.Group>();
                 IMSessions = new Dictionary<LLUUID, IMSession>();
-                Inventory = new Dictionary<LLUUID, libsecondlife.InventorySystem.InventoryItem>();
                 Prims = new Dictionary<uint, Primitive>();
                 Timers = new Dictionary<string, ScriptSystem.UserTimer>();
                 LastDialogChannel = -1;
