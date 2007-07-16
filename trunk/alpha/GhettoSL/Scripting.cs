@@ -27,7 +27,7 @@
 
 using libsecondlife;
 using libsecondlife.Packets;
-using libsecondlife.InventorySystem;
+
 //using libsecondlife.Utilities;
 using System;
 using System.IO;
@@ -370,48 +370,55 @@ namespace ghetto
         public static void DirList(uint sessionNum, string folder)
         {
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
-            InventoryFolder iFolder = Session.Client.Inventory.getFolder(folder);
+
+            //Session.Client.Inventory.RequestFolderContents();
+
+
+            InventoryFolder iFolder;
+            if (folder != "") iFolder = Session.Client.Inventory.getFolder(folder);
+            else iFolder = Session.Client.Inventory.Store.RootFolder;
             if (iFolder == null)
             {
                 Display.Error(Session.SessionNumber, "Folder not found: " + folder);
                 return;
             }
             iFolder.RequestDownloadContents(false, true, true).RequestComplete.WaitOne(15000, false);
-            foreach (InventoryBase inv in iFolder.GetContents())
+            foreach (InventoryObject inv in iFolder.GetContents())
             {
-                if (!(inv is InventoryItem)) return;
-
                 InventoryItem item = (InventoryItem)inv;
-
-                if (!Session.Inventory.ContainsKey(item.ItemID)) Session.Inventory.Add(item.ItemID, item);
-
                 string type;
 
-                if (inv is InventoryNotecard)
+                if (item.InventoryType == InventoryType.Folder)
+                {
+                    Display.SetColor(ConsoleColor.Yellow);
+                    type = "Folder";
+                }
+
+                if (item.InventoryType == InventoryType.Notecard)
                 {
                     Display.SetColor(ConsoleColor.Gray);
                     type = "Notecard";
                 }
 
-                else if (inv is InventoryImage)
+                else if (item.InventoryType == InventoryType.Texture)
                 {
                     Display.SetColor(ConsoleColor.Cyan);
-                    type = "Image";
+                    type = "Texture";
                 }
 
-                else if (inv is InventoryScript)
+                else if (item.InventoryType == InventoryType.LSL)
                 {
                     Display.SetColor(ConsoleColor.Magenta);
                     type = "Script";
                 }
 
-                else if (inv is InventoryWearable)
+                else if (item.InventoryType == InventoryType.Wearable)
                 {
                     Display.SetColor(ConsoleColor.Blue);
                     type = "Wearable";
                 }
 
-                else if (item.Type == 6)
+                else if (item.InventoryType == InventoryType.Object)
                 {
                     Display.SetColor(ConsoleColor.DarkYellow);
                     type = "Object";
@@ -420,7 +427,7 @@ namespace ghetto
                 else
                 {
                     Display.SetColor(ConsoleColor.DarkGray);
-                    int t = (int)(item.Type);
+                    int t = (int)(item.InventoryType);
                     type = t.ToString();
                 }
                 //FIXME - move to Display
@@ -430,7 +437,7 @@ namespace ghetto
                 if (iName.Length > 18) iName = iName.Substring(0, 18) + "...";
                 Console.Write(Display.Pad(iName, 22) + " ");
                 Display.SetColor(ConsoleColor.DarkGray);
-                Console.Write(Display.Pad(item.ItemID.ToStringHyphenated(), 34) + "\n");
+                Console.Write(Display.Pad(item.UUID.ToStringHyphenated(), 34) + "\n");
                 Display.SetColor(ConsoleColor.Gray);
             }
         }
