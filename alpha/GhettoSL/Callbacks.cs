@@ -43,6 +43,10 @@ namespace ghetto
             Session = session;
             Session.Client.Avatars.OnAvatarNames += new AvatarManager.AvatarNamesCallback(Avatars_OnAvatarNames);
             Session.Client.Directory.OnDirPeopleReply += new DirectoryManager.DirPeopleReplyCallback(Directory_OnDirPeopleReply);
+            Session.Client.Friends.OnFriendOnline += new FriendsManager.FriendOnlineEvent(Friends_OnFriendOnline);
+            Session.Client.Friends.OnFriendOffline += new FriendsManager.FriendOfflineEvent(Friends_OnFriendOffline);
+            Session.Client.Friends.OnFriendshipOffered += new FriendsManager.FriendshipOfferedEvent(Friends_OnFriendshipOffered);
+            Session.Client.Friends.OnFriendshipResponse += new FriendsManager.FriendshipResponseEvent(Friends_OnFriendshipResponse);
             Session.Client.Inventory.OnInventoryObjectReceived += new InventoryManager.InventoryObjectReceived(Inventory_OnInventoryObjectReceived);
             Session.Client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
             Session.Client.Network.OnCurrentSimChanged += new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
@@ -73,6 +77,16 @@ namespace ghetto
             Session.Client.Self.OnTeleport += new MainAvatar.TeleportCallback(Self_OnTeleport);
         }
 
+        void Friends_OnFriendshipOffered(LLUUID agentID, string agentName, LLUUID imSessionID)
+        {
+            Display.FriendshipOffered(agentID, agentName, imSessionID);
+        }
+
+        void Friends_OnFriendshipResponse(LLUUID agentID, string agentName, bool accepted)
+        {
+            Display.FriendshipResponse(agentID, agentName, accepted);
+        }
+
         void Directory_OnDirPeopleReply(LLUUID queryID, List<DirectoryManager.AgentSearchData> matchedPeople)
         {
             foreach (DirectoryManager.AgentSearchData av in matchedPeople)
@@ -98,6 +112,16 @@ namespace ghetto
             {
                 if (task.Score > 0.1) Console.WriteLine(Math.Round(task.Score, 5) + " - " + task.OwnerName.PadRight(20) + " - " + task.TaskName);
             }
+        }
+
+        void Friends_OnFriendOffline(FriendsManager.FriendInfo friend)
+        {
+            Display.FriendOffline(Session.SessionNumber, friend);
+        }
+
+        void Friends_OnFriendOnline(FriendsManager.FriendInfo friend)
+        {
+            Display.FriendOnline(Session.SessionNumber, friend);
         }
 
         void Self_OnScriptQuestion(LLUUID taskID, LLUUID itemID, string objectName, string objectOwner, MainAvatar.ScriptPermission questions)
@@ -276,7 +300,7 @@ namespace ghetto
 
         bool Inventory_OnInventoryObjectReceived(LLUUID fromAgentID, string fromAgentName, uint parentEstateID, LLUUID regionID, LLVector3 position, DateTime timestamp, AssetType type, LLUUID objectID, bool fromTask)
         {
-            InventoryObject obj = Session.Client.Inventory.Store[objectID];
+            InventoryBase obj = Session.Client.Inventory.Store[objectID];
             Display.InventoryItemReceived(Session.SessionNumber, fromAgentID, fromAgentName, parentEstateID, regionID, position, timestamp, obj);
             Dictionary<string, string> identifiers = new Dictionary<string, string>();
             identifiers.Add("$name", fromAgentName);

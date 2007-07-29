@@ -897,7 +897,7 @@ namespace ghetto
                     return ScriptSystem.CommandResult.UnexpectedError;
                 }
 
-                InventoryObject item = Session.Client.Inventory.Store[itemid];
+                InventoryBase item = Session.Client.Inventory.Store[itemid];
                 string name = item.Name;
                 Session.Client.Inventory.Remove(item);
 
@@ -919,10 +919,10 @@ namespace ghetto
                     return ScriptSystem.CommandResult.UnexpectedError;
                 }
 
-                InventoryObject item = Session.Client.Inventory.Store[itemid];
+                InventoryItem item = (InventoryItem)Session.Client.Inventory.Store[itemid];
 
                 string name = item.Name;
-                item.Detach();
+                Session.Client.Appearance.Detach(item);
 
                 Display.InfoResponse(sessionNum, "Detached item \"" + name + "\".");
             }
@@ -944,7 +944,10 @@ namespace ghetto
             {
                 //FIXME - remember folder and allow dir/ls without args
                 //FIXME - move DirList function to UserSession and move output to Display class
-                ScriptSystem.DirList(sessionNum, details);
+                LLUUID folder;
+                if (cmd.Length == 1) ScriptSystem.DirList(sessionNum, LLUUID.Zero);
+                else if (!LLUUID.TryParse(cmd[1], out folder)) { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
+                else ScriptSystem.DirList(sessionNum, folder);
             }
 
             else if (command == "dwell")
@@ -1073,12 +1076,12 @@ namespace ghetto
                 if (cmd.Length > 1 && cmd[1] == "-r")
                 {
                     if (cmd.Length < 3 || !LLUUID.TryParse(cmd[2], out targetID)) { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
-                    Session.Client.Friends.RemoveFriend(targetID);
+                    Session.Client.Friends.TerminateFriendship(targetID);
                 }
                 else
                 {
                     if (cmd.Length < 2 || !LLUUID.TryParse(cmd[1], out targetID)) { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
-                    Session.Client.Friends.RequestFriendship(targetID);
+                    Session.Client.Friends.OfferFriendship(targetID);
                 }
             }
 
@@ -1935,11 +1938,9 @@ namespace ghetto
                 }
 
                 InventoryItem item = (InventoryItem)Session.Client.Inventory.Store[itemid];
-                item.Wear();
-
+                ObjectManager.AttachmentPoint point = ObjectManager.AttachmentPoint.Default;
                 if (cmd.Length > 2)
                 {
-                    ObjectManager.AttachmentPoint point = ObjectManager.AttachmentPoint.RightHand;
                     string p = cmd[2].ToLower();
                     if (p == "skull") point = ObjectManager.AttachmentPoint.Skull;
                     else if (p == "chest") point = ObjectManager.AttachmentPoint.Chest;
@@ -1956,16 +1957,13 @@ namespace ghetto
                     else if (p == "hudtop") point = ObjectManager.AttachmentPoint.HUDTop;
                     else if (p == "hudbottom") point = ObjectManager.AttachmentPoint.HUDBottom;
                     //FIXME - support all other points
-
                     else
                     {
                         Display.InfoResponse(sessionNum, "Unknown attachment point \"" + p + "\" - using object default");
-                        point = ObjectManager.AttachmentPoint.Default;
                     }
-                    
-                    item.Attach(point);
                 }
-                else item.Attach();
+                
+                Session.Client.Appearance.Attach(item, point);
                 Display.InfoResponse(sessionNum, "Attached: " + item.Name + " (" + item.Description + ")");
             }
 
