@@ -367,79 +367,77 @@ namespace ghetto
             return ret.Replace("\"", "");
         }
 
-        public static void DirList(uint sessionNum, string folder)
+        public static void DirList(uint sessionNum, LLUUID folder)
         {
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
 
             //Session.Client.Inventory.RequestFolderContents();
 
-
             InventoryFolder iFolder;
-            if (folder != "") iFolder = Session.Client.Inventory.getFolder(folder);
-            else iFolder = Session.Client.Inventory.Store.RootFolder;
-            if (iFolder == null)
+            if (folder == LLUUID.Zero) iFolder = Session.Client.Inventory.Store.RootFolder;
+            else if (!Session.Client.Inventory.Store.Contains(folder))
             {
                 Display.Error(Session.SessionNumber, "Folder not found: " + folder);
                 return;
             }
-            iFolder.RequestDownloadContents(false, true, true).RequestComplete.WaitOne(15000, false);
-            foreach (InventoryObject inv in iFolder.GetContents())
-            {
-                InventoryItem item = (InventoryItem)inv;
-                string type;
+            else iFolder = (InventoryFolder)Session.Client.Inventory.Store[folder];
 
-                if (item.InventoryType == InventoryType.Folder)
+            Session.Client.Inventory.RequestFolderContents(folder, Session.Client.Network.AgentID, true, true, false, InventorySortOrder.ByDate);
+
+            /*
+            foreach (InventoryBase inv in Session.Client.Inventory.Store)
+            {
+                if (inv.ParentUUID != iFolder.UUID) continue;
+
+                InventoryItem item;
+
+                if (inv is InventoryFolder)
                 {
                     Display.SetColor(ConsoleColor.Yellow);
-                    type = "Folder";
                 }
+                else item = (InventoryItem)inv;
 
                 if (item.InventoryType == InventoryType.Notecard)
                 {
                     Display.SetColor(ConsoleColor.Gray);
-                    type = "Notecard";
                 }
 
                 else if (item.InventoryType == InventoryType.Texture)
                 {
                     Display.SetColor(ConsoleColor.Cyan);
-                    type = "Texture";
                 }
 
                 else if (item.InventoryType == InventoryType.LSL)
                 {
                     Display.SetColor(ConsoleColor.Magenta);
-                    type = "Script";
                 }
 
                 else if (item.InventoryType == InventoryType.Wearable)
                 {
                     Display.SetColor(ConsoleColor.Blue);
-                    type = "Wearable";
                 }
 
                 else if (item.InventoryType == InventoryType.Object)
                 {
                     Display.SetColor(ConsoleColor.DarkYellow);
-                    type = "Object";
                 }
 
                 else
                 {
                     Display.SetColor(ConsoleColor.DarkGray);
-                    int t = (int)(item.InventoryType);
-                    type = t.ToString();
                 }
                 //FIXME - move to Display
-                Console.Write(Display.Pad(type, 9) + " ");
+                if (inv is InventoryFolder) Console.Write(Display.Pad("Folder", 9) + " ");
+                else Console.Write(Display.Pad(item.AssetType.ToString(), 9) + " ");
                 Display.SetColor(ConsoleColor.DarkCyan);
-                string iName = item.Name;
+                string iName = inv.Name;
                 if (iName.Length > 18) iName = iName.Substring(0, 18) + "...";
                 Console.Write(Display.Pad(iName, 22) + " ");
                 Display.SetColor(ConsoleColor.DarkGray);
                 Console.Write(Display.Pad(item.UUID.ToStringHyphenated(), 34) + "\n");
                 Display.SetColor(ConsoleColor.Gray);
             }
+            */
         }
 
     }
