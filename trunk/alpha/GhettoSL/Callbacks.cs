@@ -279,7 +279,7 @@ namespace ghetto
 
         void Client_OnLogMessage(string message, Helpers.LogLevel level)
         {
-            Display.LogMessage(Session.SessionNumber, message, level);
+            if (Session.Debug > 0) Display.LogMessage(Session.SessionNumber, message, level);
         }
 
         void Objects_OnAvatarSitChanged(Simulator simulator, uint sittingOn)
@@ -292,6 +292,10 @@ namespace ghetto
         void Network_OnCurrentSimChanged(Simulator PreviousSimulator)
         {
             //FIXME - add event?
+            if (Session.SessionNumber == Interface.CurrentSession)
+            {
+                Console.Title = Session.Client.Self.FirstName + " " + Session.Client.Self.LastName + " @ " + Session.Client.Network.CurrentSim.Name + " - GhettoSL";
+            }
             Display.SimChanged(Session.SessionNumber, PreviousSimulator, Session.Client.Network.CurrentSim);
             Session.Avatars = new Dictionary<uint, Avatar>();
             Session.Client.Network.CurrentSim.Estate.OnGetTopScripts += new EstateTools.GetTopScriptsReply(Estate_OnGetTopScripts);
