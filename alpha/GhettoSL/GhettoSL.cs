@@ -54,6 +54,7 @@ namespace ghetto
             public Dictionary<uint, Primitive> Prims;
             public Dictionary<string, ScriptSystem.UserTimer> Timers;
             public LLUUID LastDialogID;
+            public int Debug;
             public int LastDialogChannel;
             public int MoneySpent;
             public int MoneyReceived;
@@ -312,6 +313,7 @@ namespace ghetto
                 IMSessions = new Dictionary<LLUUID, IMSession>();
                 Prims = new Dictionary<uint, Primitive>();
                 Timers = new Dictionary<string, ScriptSystem.UserTimer>();
+                Debug = 0;
                 LastDialogChannel = -1;
                 LastDialogID = LLUUID.Zero;
                 MoneySpent = 0;

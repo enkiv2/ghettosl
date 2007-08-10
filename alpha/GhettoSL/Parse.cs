@@ -743,6 +743,17 @@ namespace ghetto
                 Session.Client.Network.CurrentSim.Estate.CancelRestart();
             }
 
+            else if (command == "debug")
+            {
+                int mode = Session.Debug;
+                if (!int.TryParse(cmd[1], out mode))
+                {
+                    if (cmd[1].ToLower() == "on") mode = 1;
+                    else if (cmd[1].ToLower() == "off") mode = 0;
+                }
+                Session.Debug = mode;
+                Display.InfoResponse(sessionNum, "Debug level: " + mode);
+            }
 
             else if (command == "detachall")
             {
@@ -952,7 +963,7 @@ namespace ghetto
 
             else if (command == "dwell")
             {
-                
+
             }
 
             else if (command == "echo")
@@ -1585,7 +1596,7 @@ namespace ghetto
                         Interface.CurrentSession = switchTo;
                         string name = Interface.Sessions[switchTo].Name;
                         Display.InfoResponse(switchTo, "Switched to " + name);
-                        Console.Title = name + " - GhettoSL";
+                        Console.Title = name + " @ " + Session.Client.Network.CurrentSim.Name + " - GhettoSL";
                     }
                     else
                     {
@@ -1962,7 +1973,7 @@ namespace ghetto
                         Display.InfoResponse(sessionNum, "Unknown attachment point \"" + p + "\" - using object default");
                     }
                 }
-                
+
                 Session.Client.Appearance.Attach(item, point);
                 Display.InfoResponse(sessionNum, "Attached: " + item.Name + " (" + item.Description + ")");
             }
