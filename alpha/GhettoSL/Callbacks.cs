@@ -352,9 +352,8 @@ namespace ghetto
         void Callback_AlertMessage(Packet packet, Simulator sim)
         {
             AlertMessagePacket p = (AlertMessagePacket)packet;
-            StringBuilder sb = new StringBuilder();
-            Helpers.FieldToUTF8String(p.AlertData.Message);
-            Display.AlertMessage(Session.SessionNumber, sb.ToString());
+            string message = Helpers.FieldToUTF8String(p.AlertData.Message);
+            Display.AlertMessage(Session.SessionNumber, message);
         }
 
         void Callback_HealthMessage(Packet packet, Simulator sim)

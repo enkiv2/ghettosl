@@ -296,6 +296,7 @@ namespace ghetto
                 Client = new SecondLife();
                 Client.Settings.DEBUG = false;
                 Client.Settings.LOGIN_TIMEOUT = 480 * 1000;
+                Client.Settings.SEND_AGENT_UPDATES = true;
 
                 Client.Self.Status.Camera.Far = 96.0f;
                 Client.Self.Status.Camera.CameraAtAxis = LLVector3.Zero;

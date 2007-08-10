@@ -1204,15 +1204,27 @@ namespace ghetto
             {
                 if (cmd.Length == 1 || cmd[1].ToLower() == "on")
                 {
-                    Session.Client.Self.Status.UpPos = true;
-                    Session.Client.Self.Status.SendUpdate();
+                    Session.Client.Self.StartJump();
                 }
                 else if (cmd.Length > 1 && cmd[1].ToLower() == "off")
                 {
-                    Session.Client.Self.Status.UpPos = false;
-                    Session.Client.Self.Status.FinishAnim = true;
-                    Session.Client.Self.Status.SendUpdate();
-                    Session.Client.Self.Status.FinishAnim = false;
+                    Session.Client.Self.StopJump();
+                }
+                else
+                {
+                    Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage;
+                }
+            }
+
+            else if (command == "crouch")
+            {
+                if (cmd.Length == 1 || cmd[1].ToLower() == "on")
+                {
+                    Session.Client.Self.StartCrouch();
+                }
+                else if (cmd.Length > 1 && cmd[1].ToLower() == "off")
+                {
+                    Session.Client.Self.StopCrouch();
                 }
                 else
                 {
@@ -1682,9 +1694,7 @@ namespace ghetto
 
             else if (command == "sitg")
             {
-                Session.Client.Self.Status.SitOnGround = true;
-                Session.Client.Self.Status.SendUpdate();
-                Session.Client.Self.Status.SitOnGround = false;
+                Session.Client.Self.SitOnGround();
             }
 
             /*
@@ -1917,13 +1927,15 @@ namespace ghetto
                 string toggle = cmd[1].ToLower();
                 if (toggle == "on")
                 {
-                    Display.InfoResponse(sessionNum, "Update timer ON");
+                    Session.Client.Settings.SEND_AGENT_UPDATES = true;
                     Session.Client.Self.Status.UpdateTimer.Start();
+                    Display.InfoResponse(sessionNum, "Update timer ON");
                 }
                 else if (toggle == "off")
                 {
-                    Display.InfoResponse(sessionNum, "Update timer OFF");
+                    Session.Client.Settings.SEND_AGENT_UPDATES = false;
                     Session.Client.Self.Status.UpdateTimer.Stop();
+                    Display.InfoResponse(sessionNum, "Update timer OFF");
                 }
                 else { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
             }
