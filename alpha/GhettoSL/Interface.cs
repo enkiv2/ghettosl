@@ -39,7 +39,7 @@ namespace ghetto
     {
         public static Dictionary<string, ScriptSystem.UserScript> Scripts;
         public static Dictionary<uint, GhettoSL.UserSession> Sessions;
-        public static SocketServer HTTPServer;
+        public static SimpleTCP.TCPServer HTTPServer;
         public static uint CurrentSession;
         public static bool Exit;
         public static bool NoColor;
@@ -47,7 +47,11 @@ namespace ghetto
         //Main void
         static void Main(string[] args)
         {
-            HTTPServer = new SocketServer();
+            HTTPServer = new SimpleTCP.TCPServer();
+            HTTPServer.OnConnect += new SimpleTCP.TCPServer.OnConnectCallback(HTTPServer_OnConnect);
+            HTTPServer.OnReceiveLine += new SimpleTCP.TCPServer.OnReceiveLineCallback(HTTPServer_OnReceiveLine);
+            HTTPServer.OnDisconnect += new SimpleTCP.TCPServer.OnDisconnectCallback(HTTPServer_OnDisconnect);
+
             Exit = false; 
             string platform = System.Convert.ToString(Environment.OSVersion.Platform);
             Console.WriteLine(Environment.NewLine + "Running on platform " + platform);
@@ -101,9 +105,27 @@ namespace ghetto
             Thread.Sleep(1000);
             //Exit application
 
-        } //End of Main void
+        }
 
+        static void HTTPServer_OnReceiveLine(string line)
+        {
+            Console.WriteLine("< " + line);
+        }
 
+        static void HTTPServer_OnDisconnect(System.Net.EndPoint localEndPoint, System.Net.EndPoint remoteEndPoint)
+        {
+            Display.InfoResponse(0, "HTTP client disconnected (" + remoteEndPoint.ToString() + ")");
+        }
+
+        static void HTTPServer_OnConnect(System.Net.EndPoint localEndPoint, System.Net.EndPoint remoteEndPoint)
+        {
+            Display.InfoResponse(0, "HTTP connection (" + remoteEndPoint.ToString() + ")");
+        }
+
+        static void HTTPServer_OnConnect()
+        {
+            Console.WriteLine("Remote connection requested...");
+        }
 
         /// <summary>
         /// Parse command-line arguments

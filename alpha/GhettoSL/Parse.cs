@@ -681,7 +681,7 @@ namespace ghetto
 
             if (!Session.Client.Network.Connected)
             {
-                string[] okIfNotConnected = { "clear", "echo", "exit", "login", "inc", "quit", "relog", "return", "s", "session", "sessions", "set", "script", "scripts", "stats", "timer", "timers" };
+                string[] okIfNotConnected = { "clear", "echo", "exit", "http", "login", "inc", "quit", "relog", "return", "s", "session", "sessions", "set", "script", "scripts", "stats", "timer", "timers" };
                 int ok;
                 for (ok = 0; ok < okIfNotConnected.Length; ok++)
                 {
@@ -1167,20 +1167,28 @@ namespace ghetto
 
             else if (command == "http")
             {
-                string flag = cmd[1].ToLower();
-                if (cmd.Length < 2 || (flag != "on" && flag != "off"))
+                if (cmd.Length < 2)
                 {
-                    Display.Help(command);
-                    return ScriptSystem.CommandResult.InvalidUsage;
+                    if (!Interface.HTTPServer.Listening) Display.InfoResponse(0, "HTTPServer is disabled");
+                    else Display.InfoResponse(0, "HTTPServer is enabled");
                 }
+                string flag = cmd[1].ToLower();
                 if (flag == "off")
                 {
-                    Interface.HTTPServer.DisableServer();
+                    Interface.HTTPServer.Close();
+                    Display.InfoResponse(0, "HTTP server disabled");
                 }
                 else if (flag == "on")
                 {
                     //FIXME - add port number argument
-                    Interface.HTTPServer.Listen(8066);
+                    int port = 8066;
+                    Interface.HTTPServer.Listen(port);
+                    Display.InfoResponse(0, "HTTP server enabled on port " + port);
+                }
+                else
+                {
+                    Display.Help(command);
+                    return ScriptSystem.CommandResult.InvalidUsage;
                 }
             }
 

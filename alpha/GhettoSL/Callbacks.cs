@@ -79,12 +79,12 @@ namespace ghetto
 
         void Friends_OnFriendshipOffered(LLUUID agentID, string agentName, LLUUID imSessionID)
         {
-            Display.FriendshipOffered(agentID, agentName, imSessionID);
+            Display.FriendshipOffered(Session.SessionNumber, agentID, agentName, imSessionID);
         }
 
         void Friends_OnFriendshipResponse(LLUUID agentID, string agentName, bool accepted)
         {
-            Display.FriendshipResponse(agentID, agentName, accepted);
+            Display.FriendshipResponse(Session.SessionNumber, agentID, agentName, accepted);
         }
 
         void Directory_OnDirPeopleReply(LLUUID queryID, List<DirectoryManager.AgentSearchData> matchedPeople)
