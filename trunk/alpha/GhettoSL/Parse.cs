@@ -1172,23 +1172,26 @@ namespace ghetto
                     if (!Interface.HTTPServer.Listening) Display.InfoResponse(0, "HTTPServer is disabled");
                     else Display.InfoResponse(0, "HTTPServer is enabled");
                 }
-                string flag = cmd[1].ToLower();
-                if (flag == "off")
-                {
-                    Interface.HTTPServer.Close();
-                    Display.InfoResponse(0, "HTTP server disabled");
-                }
-                else if (flag == "on")
-                {
-                    //FIXME - add port number argument
-                    int port = 8066;
-                    Interface.HTTPServer.Listen(port);
-                    Display.InfoResponse(0, "HTTP server enabled on port " + port);
-                }
                 else
                 {
-                    Display.Help(command);
-                    return ScriptSystem.CommandResult.InvalidUsage;
+                    string flag = cmd[1].ToLower();
+                    if (flag == "off")
+                    {
+                        Interface.HTTPServer.Close();
+                        Display.InfoResponse(0, "HTTP server disabled");
+                    }
+                    else if (flag == "on")
+                    {
+                        //FIXME - add port number argument
+                        int port = 8066;
+                        Interface.HTTPServer.Listen(port);
+                        Display.InfoResponse(0, "HTTP server enabled on port " + port);
+                    }
+                    else
+                    {
+                        Display.Help(command);
+                        return ScriptSystem.CommandResult.InvalidUsage;
+                    }
                 }
             }
 
