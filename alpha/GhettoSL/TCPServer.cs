@@ -11,18 +11,19 @@ namespace SimpleTCP
 
         private Socket ListenerSocket;
         private int BUFFER_SIZE = 1024;
+        private const string LINE_TERMINATOR = "\r\n";
         private byte[] buffer;
         private bool _Listening;
 
-        public delegate void OnReceiveLineCallback(string line);
+        public delegate void OnReceiveLineCallback(Socket socket, string line);
         public event OnReceiveLineCallback OnReceiveLine;
 
-        public delegate void OnConnectCallback(EndPoint localEndPoint, EndPoint remoteEndPoint);
+        public delegate void OnConnectCallback(Socket socket);
         public event OnConnectCallback OnConnect;
 
-        public delegate void OnDisconnectCallback(EndPoint localEndPoint, EndPoint remoteEndPoint);
+        public delegate void OnDisconnectCallback(Socket socket);
         public event OnDisconnectCallback OnDisconnect;
-        
+
         /// <summary>
         /// Default TCPServer constructor (requires Listen() to be called)
         /// </summary>
@@ -88,6 +89,18 @@ namespace SimpleTCP
         }
 
         /// <summary>
+        /// Send a message to the specified socket
+        /// </summary>
+        /// <param name="socket"></param>
+        /// <param name="message"></param>
+        public void SendLine(Socket socket, string message)
+        {
+            byte[] data = Encoding.ASCII.GetBytes(message + LINE_TERMINATOR);
+            socket.BeginSend(data, 0, data.Length, SocketFlags.None,
+                  new AsyncCallback(SentLine), socket);
+        }
+
+        /// <summary>
         /// Returns whether or not ListenerSocket is listening
         /// </summary>
         public bool Listening
@@ -95,32 +108,43 @@ namespace SimpleTCP
             get { return _Listening; }
         }
 
+
+
         private void ReceiveNextConnection()
         {
-            ListenerSocket.BeginAccept(new AsyncCallback(ReceiveConnection), ListenerSocket);
+            ListenerSocket.BeginAccept(new AsyncCallback(ReceivedConnection), ListenerSocket);
         }
 
-        private void ReceiveNextData(Socket sock)
+        private void ReceiveNextData(Socket socket)
         {
-            sock.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, new AsyncCallback(ReceiveData), sock);
+            if (socket.Connected)
+            {
+                socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, new AsyncCallback(ReceivedData), socket);
+            }
         }
 
-        void ReceiveConnection(IAsyncResult result)
+        private void ReceivedConnection(IAsyncResult result)
         {
             Socket previous = (Socket)result.AsyncState;
-            Socket sock = previous.EndAccept(result);
-            OnConnect(sock.LocalEndPoint, sock.RemoteEndPoint);
-            ReceiveNextData(sock);
+            Socket socket = previous.EndAccept(result);
+            OnConnect(socket);
+            ReceiveNextData(socket);
             ReceiveNextConnection();
         }
 
-        void ReceiveData(IAsyncResult result)
+        private void SentLine(IAsyncResult result)
+        {
+            Socket socket = (Socket)result.AsyncState;
+            int sent = socket.EndSend(result);
+        }
+
+        private void ReceivedData(IAsyncResult result)
         {
             Socket socket = (Socket)result.AsyncState;
             int len = socket.EndReceive(result);
             if (len == 0)
             {
-                OnDisconnect(socket.LocalEndPoint, socket.RemoteEndPoint);
+                OnDisconnect(socket);
                 socket.Close();
                 return;
             }
@@ -134,7 +158,7 @@ namespace SimpleTCP
                 int i;
                 for (i = 0; i < lines.Length - 1; i++)
                 {
-                    if (lines[i].Trim().Length > 0) OnReceiveLine(lines[i]);
+                    if (lines[i].Trim().Length > 0) OnReceiveLine(socket, lines[i]);
                 }
                 //buffer = Encoding.ASCII.GetBytes(lines[i]);
             }

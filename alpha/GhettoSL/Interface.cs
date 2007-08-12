@@ -107,24 +107,27 @@ namespace ghetto
 
         }
 
-        static void HTTPServer_OnReceiveLine(string line)
+        static void HTTPServer_OnConnect(System.Net.Sockets.Socket socket)
         {
-            Console.WriteLine("< " + line);
+            Console.WriteLine("HTTP connection (" + socket.RemoteEndPoint.ToString() + ")");
         }
 
-        static void HTTPServer_OnDisconnect(System.Net.EndPoint localEndPoint, System.Net.EndPoint remoteEndPoint)
+        static void HTTPServer_OnDisconnect(System.Net.Sockets.Socket socket)
         {
-            Display.InfoResponse(0, "HTTP client disconnected (" + remoteEndPoint.ToString() + ")");
+            Display.InfoResponse(0, "HTTP client disconnected (" + socket.RemoteEndPoint.ToString() + ")");
         }
 
-        static void HTTPServer_OnConnect(System.Net.EndPoint localEndPoint, System.Net.EndPoint remoteEndPoint)
+        static void HTTPServer_OnReceiveLine(System.Net.Sockets.Socket socket, string line)
         {
-            Display.InfoResponse(0, "HTTP connection (" + remoteEndPoint.ToString() + ")");
-        }
-
-        static void HTTPServer_OnConnect()
-        {
-            Console.WriteLine("Remote connection requested...");
+            string[] splitChar = { " " };
+            string[] args = line.Split(splitChar, StringSplitOptions.RemoveEmptyEntries);
+            if (args.Length < 2 || (args[0] != "GET" && args[0] != "POST"))
+            {
+                Display.InfoResponse(0, "Invalid HTTP request (" + socket.RemoteEndPoint.ToString() + ")");
+                socket.Close();
+                return;
+            }
+            Display.InfoResponse(0, "HTTP request (" + socket.RemoteEndPoint.ToString() + "): " + args[1]);
         }
 
         /// <summary>
