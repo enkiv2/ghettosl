@@ -1169,22 +1169,22 @@ namespace ghetto
             {
                 if (cmd.Length < 2)
                 {
-                    if (!Interface.HTTPServer.Listening) Display.InfoResponse(0, "HTTPServer is disabled");
-                    else Display.InfoResponse(0, "HTTPServer is enabled");
+                    if (!Interface.HTTPServer.Server.Listening) Display.InfoResponse(0, "HTTPServer is disabled (" + Interface.HTTPServer.Server.Clients.Count + " client(s) connected)");
+                    else Display.InfoResponse(0, "HTTPServer is enabled (" + Interface.HTTPServer.Server.Clients.Count + " client(s) connected)");
                 }
                 else
                 {
                     string flag = cmd[1].ToLower();
                     if (flag == "off")
                     {
-                        Interface.HTTPServer.Close();
-                        Display.InfoResponse(0, "HTTP server disabled");
+                        Interface.HTTPServer.Server.StopListening();
+                        Display.InfoResponse(0, "HTTP server disabled (" + Interface.HTTPServer.Server.Clients.Count + " client(s) remaining)");
                     }
                     else if (flag == "on")
                     {
-                        //FIXME - add port number argument
-                        int port = 8066;
-                        Interface.HTTPServer.Listen(port);
+                        int port;
+                        if (cmd.Length < 3 || !int.TryParse(cmd[2], out port)) port = 8066;
+                        Interface.HTTPServer.Server.Listen(port);
                         Display.InfoResponse(0, "HTTP server enabled on port " + port);
                     }
                     else

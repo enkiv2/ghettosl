@@ -39,7 +39,7 @@ namespace ghetto
     {
         public static Dictionary<string, ScriptSystem.UserScript> Scripts;
         public static Dictionary<uint, GhettoSL.UserSession> Sessions;
-        public static SimpleTCP.TCPServer HTTPServer;
+        public static HTTPServer HTTPServer = new HTTPServer();
         public static uint CurrentSession;
         public static bool Exit;
         public static bool NoColor;
@@ -47,11 +47,6 @@ namespace ghetto
         //Main void
         static void Main(string[] args)
         {
-            HTTPServer = new SimpleTCP.TCPServer();
-            HTTPServer.OnConnect += new SimpleTCP.TCPServer.OnConnectCallback(HTTPServer_OnConnect);
-            HTTPServer.OnReceiveLine += new SimpleTCP.TCPServer.OnReceiveLineCallback(HTTPServer_OnReceiveLine);
-            HTTPServer.OnDisconnect += new SimpleTCP.TCPServer.OnDisconnectCallback(HTTPServer_OnDisconnect);
-
             Exit = false; 
             string platform = System.Convert.ToString(Environment.OSVersion.Platform);
             Console.WriteLine(Environment.NewLine + "Running on platform " + platform);
@@ -105,29 +100,6 @@ namespace ghetto
             Thread.Sleep(1000);
             //Exit application
 
-        }
-
-        static void HTTPServer_OnConnect(System.Net.Sockets.Socket socket)
-        {
-            Console.WriteLine("HTTP connection (" + socket.RemoteEndPoint.ToString() + ")");
-        }
-
-        static void HTTPServer_OnDisconnect(System.Net.Sockets.Socket socket)
-        {
-            Display.InfoResponse(0, "HTTP client disconnected (" + socket.RemoteEndPoint.ToString() + ")");
-        }
-
-        static void HTTPServer_OnReceiveLine(System.Net.Sockets.Socket socket, string line)
-        {
-            string[] splitChar = { " " };
-            string[] args = line.Split(splitChar, StringSplitOptions.RemoveEmptyEntries);
-            if (args.Length < 2 || (args[0] != "GET" && args[0] != "POST"))
-            {
-                Display.InfoResponse(0, "Invalid HTTP request (" + socket.RemoteEndPoint.ToString() + ")");
-                socket.Close();
-                return;
-            }
-            Display.InfoResponse(0, "HTTP request (" + socket.RemoteEndPoint.ToString() + "): " + args[1]);
         }
 
         /// <summary>

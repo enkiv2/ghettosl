@@ -75,6 +75,19 @@ namespace ghetto
 
             //Session.Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(Callback_TeleportFinish));
             Session.Client.Self.OnTeleport += new MainAvatar.TeleportCallback(Self_OnTeleport);
+
+            Interface.HTTPServer.OnHTTPRequest += new HTTPServer.OnHTTPRequestCallback(HTTPServer_OnHTTPRequest);            
+        }
+
+        void HTTPServer_OnHTTPRequest(string method, string path, string host, string userAgent, string contentType, Dictionary<string, string> getVars)
+        {
+            Console.WriteLine(method + " " + path);
+            Console.WriteLine("Host: " + host);
+            Console.WriteLine("User-agent: " + userAgent);
+            foreach (KeyValuePair<string, string> var in getVars)
+            {
+                Console.WriteLine(var.Key + " = " + var.Value);
+            }
         }
 
         void Friends_OnFriendshipOffered(LLUUID agentID, string agentName, LLUUID imSessionID)
