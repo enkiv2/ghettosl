@@ -38,6 +38,7 @@
   </Target>
   -->
   <ItemGroup>
+    <Compile Include="HTTPServer.cs" />
     <Compile Include="Parse.cs" />
     <Compile Include="Display.cs" />
     <Compile Include="Callbacks.cs" />

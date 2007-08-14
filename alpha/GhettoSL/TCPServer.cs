@@ -9,14 +9,50 @@ namespace SimpleTCP
     public class TCPServer
     {
 
-        private Socket ListenerSocket;
-        private int BUFFER_SIZE = 1024;
         private const string LINE_TERMINATOR = "\r\n";
-        private byte[] buffer;
+
+        private Socket _ListenerSocket;
         private bool _Listening;
+
+        /// <summary>
+        /// Indexed by Socket.Handle
+        /// </summary>
+        public Dictionary<IntPtr, ClientUser> Clients = new Dictionary<IntPtr, ClientUser>();
+
+        /// <summary>
+        /// The dictionary entry for each client's Socket.Handle
+        /// </summary>
+        public class ClientUser
+        {
+            private Socket Socket;
+            public byte[] Buffer = new byte[1024];
+            public DateTime ConnectTime;
+            public int BytesReceived;
+            public int LinesReceived;
+
+            public ClientUser(Socket socket)
+            {
+                Socket = socket;
+                ConnectTime = DateTime.Now;
+            }
+
+            public void Disconnect()
+            {
+                Socket.Close();
+            }
+
+            public bool Connected
+            {
+                get { return Socket.Connected; }
+            }
+
+        }
 
         public delegate void OnReceiveLineCallback(Socket socket, string line);
         public event OnReceiveLineCallback OnReceiveLine;
+
+        public delegate void OnReceiveDataCallback(Socket socket, string line);
+        public event OnReceiveDataCallback OnReceiveData;
 
         public delegate void OnConnectCallback(Socket socket);
         public event OnConnectCallback OnConnect;
@@ -29,7 +65,7 @@ namespace SimpleTCP
         /// </summary>
         public TCPServer()
         {
-            buffer = new byte[BUFFER_SIZE];
+
         }
 
         /// <summary>
@@ -38,7 +74,6 @@ namespace SimpleTCP
         /// <param name="port">Port number to listen on for incoming connections</param>
         public TCPServer(int port)
         {
-            buffer = new byte[BUFFER_SIZE];
             Listen(IPAddress.Any, port);
         }
 
@@ -49,17 +84,7 @@ namespace SimpleTCP
         /// <param name="port">Port number to listen on for incoming connections</param>
         public TCPServer(IPAddress bindIP, int port)
         {
-            buffer = new byte[BUFFER_SIZE];
             Listen(bindIP, port);
-        }
-
-        /// <summary>
-        /// Close the listening socket
-        /// </summary>
-        public void Close()
-        {
-            ListenerSocket.Close();
-            _Listening = false;
         }
 
         /// <summary>
@@ -78,18 +103,45 @@ namespace SimpleTCP
         /// <param name="port">Port number to listen on for incoming connections</param>
         public void Listen(IPAddress bindIP, int port)
         {
-            if (_Listening) ListenerSocket.Close();
-            ListenerSocket = new Socket(AddressFamily.InterNetwork,
+            if (_Listening) _ListenerSocket.Close();
+            _ListenerSocket = new Socket(AddressFamily.InterNetwork,
                           SocketType.Stream, ProtocolType.Tcp);
             IPEndPoint ip = new IPEndPoint(bindIP, port);
-            ListenerSocket.Bind(ip);
-            ListenerSocket.Listen(5);
+            _ListenerSocket.Bind(ip);
+            _ListenerSocket.Listen(5);
             ReceiveNextConnection();
             _Listening = true;
         }
 
         /// <summary>
-        /// Send a message to the specified socket
+        /// Close the listening socket
+        /// </summary>
+        public void StopListening()
+        {
+            _ListenerSocket.Close();
+            _Listening = false;
+        }
+
+        /// <summary>
+        /// Returns whether or not ListenerSocket is listening
+        /// </summary>
+        public bool Listening
+        {
+            get { return _Listening; }
+        }
+
+        /// <summary>
+        /// Disconnect and remove Clients entry for the specified socket.Handle
+        /// </summary>
+        /// <param name="handle"></param>
+        public void KillUser(IntPtr handle)
+        {
+            if (Clients[handle].Connected) Clients[handle].Disconnect();
+            Clients.Remove(handle);
+        }
+
+        /// <summary>
+        /// Send a line of text to the specified socket
         /// </summary>
         /// <param name="socket"></param>
         /// <param name="message"></param>
@@ -101,66 +153,86 @@ namespace SimpleTCP
         }
 
         /// <summary>
-        /// Returns whether or not ListenerSocket is listening
+        /// Start waiting for a new connection
         /// </summary>
-        public bool Listening
-        {
-            get { return _Listening; }
-        }
-
-
-
         private void ReceiveNextConnection()
         {
-            ListenerSocket.BeginAccept(new AsyncCallback(ReceivedConnection), ListenerSocket);
+            _ListenerSocket.BeginAccept(new AsyncCallback(ReceivedConnection), _ListenerSocket);
         }
 
-        private void ReceiveNextData(Socket socket)
-        {
-            if (socket.Connected)
-            {
-                socket.BeginReceive(buffer, 0, BUFFER_SIZE, SocketFlags.None, new AsyncCallback(ReceivedData), socket);
-            }
-        }
-
+        /// <summary>
+        /// Triggered when a new connection is received
+        /// </summary>
+        /// <param name="result"></param>
         private void ReceivedConnection(IAsyncResult result)
         {
             Socket previous = (Socket)result.AsyncState;
             Socket socket = previous.EndAccept(result);
-            OnConnect(socket);
+
+            Clients.Add(socket.Handle, new ClientUser(socket));
+
+            if (OnConnect != null) OnConnect(socket);
             ReceiveNextData(socket);
             ReceiveNextConnection();
         }
 
+        /// <summary>
+        /// Triggered when text is successfully sent
+        /// </summary>
+        /// <param name="result"></param>
         private void SentLine(IAsyncResult result)
         {
             Socket socket = (Socket)result.AsyncState;
-            int sent = socket.EndSend(result);
+            int sent;
+            if (socket.Connected) sent = socket.EndSend(result);
         }
 
+        /// <summary>
+        /// Wait for new data to arrive from the specified socket
+        /// </summary>
+        /// <param name="socket"></param>
+        private void ReceiveNextData(Socket socket)
+        {
+            if (socket.Connected)
+            {
+                ClientUser client = Clients[socket.Handle];
+                socket.BeginReceive(client.Buffer, 0, client.Buffer.Length, SocketFlags.None, new AsyncCallback(ReceivedData), socket);
+            }
+        }
+
+        /// <summary>
+        /// Triggered when data is received
+        /// </summary>
+        /// <param name="result"></param>
         private void ReceivedData(IAsyncResult result)
         {
             Socket socket = (Socket)result.AsyncState;
+            ClientUser client = Clients[socket.Handle];
             int len = socket.EndReceive(result);
             if (len == 0)
             {
                 OnDisconnect(socket);
+                Clients.Remove(socket.Handle);
                 socket.Close();
                 return;
             }
-            string data = Encoding.ASCII.GetString(buffer, 0, len);
+            string data = Encoding.ASCII.GetString(client.Buffer, 0, len);
+            if (OnReceiveData != null) OnReceiveData(socket, data);
+            client.BytesReceived += client.Buffer.Length;
 
             string[] splitLines = { "\r\n", "\r", "\n" };
-            string oldbuffer = Encoding.ASCII.GetString(buffer);
+            string oldbuffer = Encoding.ASCII.GetString(client.Buffer);
             string[] lines = oldbuffer.Split(splitLines, StringSplitOptions.None);
             if (lines.Length > 1)
             {
                 int i;
                 for (i = 0; i < lines.Length - 1; i++)
                 {
-                    if (lines[i].Trim().Length > 0) OnReceiveLine(socket, lines[i]);
+                    if (OnReceiveLine != null) OnReceiveLine(socket, lines[i]);
+                    client.LinesReceived++;
                 }
-                //buffer = Encoding.ASCII.GetBytes(lines[i]);
+                //FIXME (testing needed): what happens with large packets?
+                //client.Buffer = Encoding.ASCII.GetBytes(lines[i]);
             }
 
             ReceiveNextData(socket);
