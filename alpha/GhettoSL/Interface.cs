@@ -169,7 +169,7 @@ namespace ghetto
             else if (read.Substring(0, 1) == "/")
                 Parse.Command(CurrentSession, "", read.Substring(1), false, false);
             else
-                Sessions[CurrentSession].Client.Self.Chat(read, 0, MainAvatar.ChatType.Normal);
+                Sessions[CurrentSession].Client.Self.Chat(read, 0, ChatType.Normal);
 
             return true;
         }

@@ -408,12 +408,6 @@ namespace ghetto
                 //Session.Client = new SecondLife(); //FIXME - clear client data when relogging
             }
 
-            //FIXME - move this to a callback for login-failed and add login-failed event
-            if (!Session.Login())
-            {
-                Display.Error(Session.SessionNumber, "Login failed");
-            }
-
             return true;
 
         }
@@ -699,7 +693,7 @@ namespace ghetto
             int chatChannel;
             if (int.TryParse(cmd[0], out chatChannel))
             {
-                Session.Client.Self.Chat(details, chatChannel, MainAvatar.ChatType.Normal);
+                Session.Client.Self.Chat(details, chatChannel, ChatType.Normal);
                 Display.SendMessage(sessionNum, chatChannel, LLUUID.Zero, details);
             }
 
@@ -1136,7 +1130,7 @@ namespace ghetto
                     Display.Help(command);
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
-                Session.Client.Groups.BeginGetGroupRoles(groupID);
+                Session.Client.Groups.RequestGroupRoles(groupID);
             }
 
             else if (command == "groupinvite")
@@ -1583,7 +1577,7 @@ namespace ghetto
 
             else if (command == "say")
             {
-                Session.Client.Self.Chat(details, 0, MainAvatar.ChatType.Normal);
+                Session.Client.Self.Chat(details, 0, ChatType.Normal);
             }
 
             else if (command == "script")
@@ -1680,7 +1674,7 @@ namespace ghetto
 
             else if (command == "shout")
             {
-                Session.Client.Self.Chat(details, 0, MainAvatar.ChatType.Shout);
+                Session.Client.Self.Chat(details, 0, ChatType.Shout);
             }
 
             else if (command == "simmessage")
@@ -1722,38 +1716,15 @@ namespace ghetto
             }
             */
 
-            else if (command == "spooftouch")
+            else if (command == "spoofim")
             {
-                LLUUID from;
-                LLUUID findID;
-                if (cmd.Length < 3 || !LLUUID.TryParse(cmd[1], out from) || !LLUUID.TryParse(cmd[2], out findID))
+                LLUUID target;
+                if (cmd.Length < 4 || !LLUUID.TryParse(cmd[1], out target))
                 {
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
-                lock (Session.Prims)
-                {
-                    foreach (Primitive prim in Session.Prims.Values)
-                    {
-                        if (prim.ID != findID) continue;
-
-                        ObjectGrabPacket grab = new ObjectGrabPacket();
-                        grab.AgentData.AgentID = from;
-                        grab.AgentData.SessionID = LLUUID.Zero;
-                        grab.ObjectData.LocalID = prim.LocalID;
-                        grab.ObjectData.GrabOffset = new LLVector3(0, 0, 0);
-                        Session.Client.Network.SendPacket(grab);
-
-                        ObjectDeGrabPacket degrab = new ObjectDeGrabPacket();
-                        degrab.AgentData.AgentID = from;
-                        degrab.AgentData.SessionID = LLUUID.Zero;
-                        degrab.ObjectData.LocalID = prim.LocalID;
-                        Session.Client.Network.SendPacket(degrab);
-
-                        Display.InfoResponse(sessionNum, "You touch an object...");
-                        return ScriptSystem.CommandResult.NoError;
-                    }
-                }
-                Display.Error(sessionNum, "Object not found");
+                string fromName = cmd[2] + " " + cmd[3];
+                Session.Client.Self.InstantMessage(fromName, target, cmd[4], LLUUID.Random(), new LLUUID[0]);
             }
 
             else if (command == "stand")
@@ -2003,7 +1974,7 @@ namespace ghetto
 
             else if (command == "whisper")
             {
-                Session.Client.Self.Chat(details, 0, MainAvatar.ChatType.Whisper);
+                Session.Client.Self.Chat(details, 0, ChatType.Whisper);
             }
 
             else if (command == "who")

@@ -8,7 +8,7 @@ namespace ghetto
     class HTTPServer
     {
 
-        public delegate void OnHTTPRequestCallback(string method, string path, string host, string userAgent, string contentType, Dictionary<string, string> GetVars);
+        public delegate void OnHTTPRequestCallback(string method, string path, string host, string userAgent, string contentType, int contentLength, Dictionary<string, string> GetVars);
         public event OnHTTPRequestCallback OnHTTPRequest;
 
         public TCPServer Server;
@@ -102,7 +102,7 @@ namespace ghetto
                 if (args.Length == 0)
                 {
                     request.Status = ClientStatus.Complete;
-                    OnHTTPRequest(request.Method, request.Path, request.Host, request.UserAgent, request.ContentType, request.GetVars);
+                    OnHTTPRequest(request.Method, request.Path, request.Host, request.UserAgent, request.ContentType, request.ContentLength, request.GetVars);
                 }
                 else if (args.Length > 1)
                 {
