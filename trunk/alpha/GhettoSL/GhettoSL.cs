@@ -281,7 +281,7 @@ namespace ghetto
             {
                 if (!Client.Network.Connected) return;
                 Display.InfoResponse(SessionNumber, "Loading appearance from asset server...");
-                Client.Appearance.SetPreviousAppearance();
+                Client.Appearance.SetPreviousAppearance(false);
                 //Console.WriteLine("FIXME: SetPreviousAppearance");
                 Avatar a = new Avatar();
             }

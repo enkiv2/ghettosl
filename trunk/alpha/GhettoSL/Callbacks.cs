@@ -79,7 +79,7 @@ namespace ghetto
             Interface.HTTPServer.OnHTTPRequest += new HTTPServer.OnHTTPRequestCallback(HTTPServer_OnHTTPRequest);            
         }
 
-        void HTTPServer_OnHTTPRequest(string method, string path, string host, string userAgent, string contentType, Dictionary<string, string> getVars)
+        void HTTPServer_OnHTTPRequest(string method, string path, string host, string userAgent, string contentType, int contentLength, Dictionary<string, string> getVars)
         {
             Console.WriteLine(method + " " + path);
             Console.WriteLine("Host: " + host);
@@ -137,7 +137,7 @@ namespace ghetto
             Display.FriendOnline(Session.SessionNumber, friend);
         }
 
-        void Self_OnScriptQuestion(LLUUID taskID, LLUUID itemID, string objectName, string objectOwner, MainAvatar.ScriptPermission questions)
+        void Self_OnScriptQuestion(LLUUID taskID, LLUUID itemID, string objectName, string objectOwner, ScriptPermission questions)
         {
             //FIXME - move to display
             Console.WriteLine(objectName + " owned by " + objectOwner + " has requested the following permissions: " + questions.ToString());
@@ -153,42 +153,42 @@ namespace ghetto
             Session.Groups = groups;
         }
 
-        void Self_OnInstantMessage(LLUUID fromAgentID, string fromAgentName, LLUUID toAgentID, uint parentEstateID, LLUUID regionID, LLVector3 position, MainAvatar.InstantMessageDialog dialog, bool groupIM, LLUUID imSessionID, DateTime timestamp, string message, MainAvatar.InstantMessageOnline offline, byte[] binaryBucket, Simulator simulator)
-        {
 
-            if (dialog == MainAvatar.InstantMessageDialog.RequestTeleport)
+        void Self_OnInstantMessage(InstantMessage im, Simulator simulator)
+        {
+            if (im.Dialog == InstantMessageDialog.RequestTeleport)
             {
-                Display.InfoResponse(Session.SessionNumber, "Teleport lure received from " + fromAgentID + ": " + message);
-                if (fromAgentID == Session.Settings.MasterID || (message.Length > 0 && message == Session.Settings.PassPhrase))
+                Display.InfoResponse(Session.SessionNumber, "Teleport lure received from " + im.FromAgentID + ": " + im.Message);
+                if (im.FromAgentID == Session.Settings.MasterID || (im.Message.Length > 0 && im.Message == Session.Settings.PassPhrase))
                 {
-                    Session.Client.Self.TeleportLureRespond(fromAgentID, true);
+                    Session.Client.Self.TeleportLureRespond(im.FromAgentID, true);
                 }
             }
-            else if (dialog == MainAvatar.InstantMessageDialog.MessageFromObject)
+            else if (im.Dialog == InstantMessageDialog.MessageFromObject)
             {
-                Display.InstantMessage(Session.SessionNumber, dialog, fromAgentName, message);
+                Display.InstantMessage(Session.SessionNumber, im.Dialog, im.FromAgentName, im.Message);
             }
-            else if (dialog == MainAvatar.InstantMessageDialog.TaskInventoryOffered)
+            else if (im.Dialog == InstantMessageDialog.TaskInventoryOffered)
             {
-                Console.WriteLine("POSSIBLE SPAM: " + fromAgentName + " gave you: " + message);
-                Session.Client.Avatars.RequestAvatarName(fromAgentID);
+                Console.WriteLine("POSSIBLE SPAM: " + im.FromAgentName + " gave you: " + im.Message);
+                Session.Client.Avatars.RequestAvatarName(im.FromAgentID);
             }
             else
             {
-                if (!Session.IMSessions.ContainsKey(fromAgentID))
+                if (!Session.IMSessions.ContainsKey(im.FromAgentID))
                 {
-                    Session.IMSessions.Add(fromAgentID, new GhettoSL.IMSession(imSessionID, fromAgentName));
+                    Session.IMSessions.Add(im.FromAgentID, new GhettoSL.IMSession(im.IMSessionID, im.FromAgentName));
                 }
-                Display.InstantMessage(Session.SessionNumber, dialog, fromAgentName, message);
-                if (fromAgentID == Session.Settings.MasterID) Parse.Command(Session.SessionNumber, "", message, false, true);
+                Display.InstantMessage(Session.SessionNumber, im.Dialog, im.FromAgentName, im.Message);
+                if (im.FromAgentID == Session.Settings.MasterID) Parse.Command(Session.SessionNumber, "", im.Message, false, true);
             }
 
             Dictionary<string, string> identifiers = new Dictionary<string, string>();
-            identifiers.Add("$name", fromAgentName);
-            identifiers.Add("$message", message);
-            identifiers.Add("$id", fromAgentID.ToStringHyphenated());
-            identifiers.Add("$dialog", dialog.ToString());
-            identifiers.Add("$pos", position.ToString());
+            identifiers.Add("$name", im.FromAgentName);
+            identifiers.Add("$message", im.Message);
+            identifiers.Add("$id", im.FromAgentID.ToStringHyphenated());
+            identifiers.Add("$dialog", im.Dialog.ToString());
+            identifiers.Add("$pos", im.Position.ToString());
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.IM, identifiers);
 
         }
@@ -201,9 +201,9 @@ namespace ghetto
             }
         }
 
-        void Self_OnChat(string message, MainAvatar.ChatAudibleLevel audible, MainAvatar.ChatType type, MainAvatar.ChatSourceType sourceType, string fromName, LLUUID id, LLUUID ownerid, LLVector3 position)
+        void Self_OnChat(string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourceType, string fromName, LLUUID id, LLUUID ownerid, LLVector3 position)
         {
-            if (type == MainAvatar.ChatType.StartTyping || type == MainAvatar.ChatType.StopTyping || audible != MainAvatar.ChatAudibleLevel.Fully) return;
+            if (type == ChatType.StartTyping || type == ChatType.StopTyping || audible != ChatAudibleLevel.Fully) return;
 
             if (!Session.Settings.DisplayChat) return;
 
