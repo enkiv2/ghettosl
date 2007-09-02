@@ -48,6 +48,7 @@ namespace ghetto
             Session.Client.Friends.OnFriendshipOffered += new FriendsManager.FriendshipOfferedEvent(Friends_OnFriendshipOffered);
             Session.Client.Friends.OnFriendshipResponse += new FriendsManager.FriendshipResponseEvent(Friends_OnFriendshipResponse);
             Session.Client.Inventory.OnInventoryObjectReceived += new InventoryManager.InventoryObjectReceived(Inventory_OnInventoryObjectReceived);
+            Session.Client.Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);
             Session.Client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
             Session.Client.Network.OnCurrentSimChanged += new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
             //Session.Client.Network.OnSimDisconnected += new NetworkManager.SimDisconnectCallback(Network_OnSimDisconnected);
@@ -77,6 +78,19 @@ namespace ghetto
             Session.Client.Self.OnTeleport += new MainAvatar.TeleportCallback(Self_OnTeleport);
 
             Interface.HTTPServer.OnHTTPRequest += new HTTPServer.OnHTTPRequestCallback(HTTPServer_OnHTTPRequest);            
+        }
+
+        void Network_OnLogin(NetworkManager.LoginStatus login, string message)
+        {
+            if (login == NetworkManager.LoginStatus.Failed)
+            {
+                Display.Error(Session.SessionNumber, "Login failed (" + message + ")");
+            }
+            else if (login == NetworkManager.LoginStatus.Success)
+            {
+                Display.InfoResponse(Session.SessionNumber, "Connected!");
+            }
+            else Display.InfoResponse(Session.SessionNumber, message);
         }
 
         void HTTPServer_OnHTTPRequest(string method, string path, string host, string userAgent, string contentType, int contentLength, Dictionary<string, string> getVars)
@@ -461,10 +475,7 @@ namespace ghetto
 
             //Retrieve offline IMs
             //FIXME - Add Client.Self.RetrieveInstantMessages() to core
-            RetrieveInstantMessagesPacket p = new RetrieveInstantMessagesPacket();
-            p.AgentData.AgentID = Session.Client.Network.AgentID;
-            p.AgentData.SessionID = Session.Client.Network.SessionID;
-            Session.Client.Network.SendPacket(p);
+            Session.Client.Self.RetrieveInstantMessages();
 
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.Connect, null);
 

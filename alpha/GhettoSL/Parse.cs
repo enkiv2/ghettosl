@@ -374,27 +374,27 @@ namespace ghetto
                     Session.Settings.PassPhrase = ScriptSystem.QuoteArg(cmd, index + 1);
                 else if (arg == "-home")
                 {
-                    Session.Settings.URI = "home";
+                    Session.Settings.StartLocation = "home";
                 }
                 else if (arg == "-here")
                 {
                     GhettoSL.UserSession fromSession = Interface.Sessions[sessionNum];
                     if (fromSession.Client.Network.Connected)
                     {
-                        Session.Settings.URI = "uri:" + fromSession.Client.Network.CurrentSim.Name
+                        Session.Settings.StartLocation = "uri:" + fromSession.Client.Network.CurrentSim.Name
                             + "&" + (int)fromSession.Client.Self.Position.X
                             + "&" + (int)fromSession.Client.Self.Position.Y
                             + "&" + (int)fromSession.Client.Self.Position.Z;
                     }
                     else
                     {
-                        Session.Settings.URI = fromSession.Settings.URI;
+                        Session.Settings.StartLocation = fromSession.Settings.StartLocation;
                     }
                 }
                 else if (arg.Length > 13 && arg.Substring(0, 13) == "secondlife://")
                 {
                     string url = ScriptSystem.QuoteArg(cmd, index);
-                    Session.Settings.URI = "uri:" + url.Substring(13, arg.Length - 13).Replace("%20", " ").ToLower().Replace("/", "&");
+                    Session.Settings.StartLocation = "uri:" + url.Substring(13, arg.Length - 13).Replace("%20", " ").ToLower().Replace("/", "&");
                 }
             }
 
@@ -1482,7 +1482,7 @@ namespace ghetto
 
             else if (command == "reseturi")
             {
-                Session.Settings.URI = "last";
+                Session.Settings.StartLocation = "last";
             }
 
             else if (command == "rez")
