@@ -185,7 +185,7 @@ namespace ghetto
                         TurnToward(target);
 
                         //Console.WriteLine(av.Position); //DEBUG
-                        if (Helpers.VecDist(Client.Self.Position, av.Position) > 3)
+                        if (LLVector3.Dist(Client.Self.Position, av.Position) > 3)
                         {
                             Client.Self.AutoPilotLocal((int)av.Position.X, (int)av.Position.Y, av.Position.Z);
                         }
@@ -241,7 +241,7 @@ namespace ghetto
                     }
                 }
                 //Console.WriteLine("Between " + myPos + " and " + target + " == " + Helpers.RotBetween(mypos, target)); //DEBUG
-                LLQuaternion newRot = Helpers.RotBetween(new LLVector3(1, 0, 0), Helpers.VecNorm(target - myPos));
+                LLQuaternion newRot = LLVector3.RotBetween(new LLVector3(1, 0, 0), LLVector3.Norm(target - myPos));
                 Client.Self.Status.Camera.BodyRotation = newRot;
 
                 //experimental aimbot shizzle
