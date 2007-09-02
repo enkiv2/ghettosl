@@ -66,7 +66,7 @@ namespace ghetto
             public string FollowName;
             public System.Timers.Timer FollowTimer;
 
-            public bool Login()
+            public void Login()
             {
                 NetworkManager.LoginParams loginParams = Client.Network.DefaultLoginParams(
                     Settings.FirstName,
@@ -75,16 +75,19 @@ namespace ghetto
                     "GhettoSL",
                     "root66@gmail.com"
                 );
-                if (Settings.URI != "")
+                if (Settings.StartLocation != "")
                 {
-                    loginParams.URI = Settings.URI;
-                    Display.InfoResponse(SessionNumber, "Logging in as " + Settings.FirstName + " " + Settings.LastName + "... (Location: " + Settings.URI + ")");
-                    return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", Settings.URI, "root66@gmail.com");
+                    loginParams.Start = Settings.StartLocation;
+                    Display.InfoResponse(SessionNumber, "Logging in as " + Settings.FirstName + " " + Settings.LastName + "... (Location: " + Settings.StartLocation + ")");
+                    //return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", Settings.URI, "root66@gmail.com");
+                    Client.Network.BeginLogin(loginParams);
                 }
                 else
                 {
+                    loginParams.Start = "last";
                     Display.InfoResponse(SessionNumber, "Logging in as " + Settings.FirstName + " " + Settings.LastName + "...");
-                    return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", "root66@gmail.com");
+                    //return Client.Network.Login(Settings.FirstName, Settings.LastName, Settings.Password, "GhettoSL", "root66@gmail.com");
+                    Client.Network.BeginLogin(loginParams);
                 }
             }
 
@@ -377,7 +380,7 @@ namespace ghetto
             public bool SendUpdates;
             public string CampChairMatchText;
             public string FollowName;
-            public string URI;
+            public string StartLocation;
             public UserSessionSettings()
             {
                 FirstName = "";
@@ -387,7 +390,7 @@ namespace ghetto
                 MasterID = LLUUID.Zero;
                 DisplayChat = true;
                 SendUpdates = true;
-                URI = "last";
+                StartLocation = "last";
                 CampChairMatchText = "";
                 FollowName = "";
             }

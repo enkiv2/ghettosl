@@ -84,11 +84,7 @@ namespace ghetto
             }
 
             //Make initial connection
-            //FIXME - move this to a callback for login-failed and add login-failed event
-            if (!Sessions[CurrentSession].Login())
-            {
-                Display.Error(1, "Login failed");
-            }
+            Sessions[CurrentSession].Login();
 
             //Accept commands
 
@@ -146,7 +142,7 @@ namespace ghetto
                 else if (arg.Length > 13 && arg.Substring(0, 13) == "secondlife://")
                 {
                     string url = ScriptSystem.QuoteArg(args, i);
-                    ret.Value.URI = "uri:" + url.Substring(13, arg.Length - 13).Replace("%20", " ").ToLower().Replace("/", "&");
+                    ret.Value.StartLocation = "uri:" + url.Substring(13, arg.Length - 13).Replace("%20", " ").ToLower().Replace("/", "&");
                 }
 
             }
