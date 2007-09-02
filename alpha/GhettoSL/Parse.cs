@@ -214,7 +214,7 @@ namespace ghetto
                 }
                 else myPos = Session.Client.Self.Position;
                 ret = ret.Replace("$target", script.SetTarget.ToString());
-                ret = ret.Replace("$distance", Helpers.VecDist(myPos, script.SetTarget).ToString());
+                ret = ret.Replace("$distance", LLVector3.Dist(myPos, script.SetTarget).ToString());
             }
 
             if (Session.Client.Network.Connected && Session.Client.Self.SittingOn > 0 && Session.Prims.ContainsKey(Session.Client.Self.SittingOn))
@@ -675,7 +675,7 @@ namespace ghetto
 
             if (!Session.Client.Network.Connected)
             {
-                string[] okIfNotConnected = { "clear", "echo", "exit", "http", "login", "inc", "quit", "relog", "return", "s", "session", "sessions", "set", "script", "scripts", "stats", "timer", "timers" };
+                string[] okIfNotConnected = { "clear", "echo", "exit", "help", "http", "login", "inc", "quit", "relog", "return", "s", "session", "sessions", "set", "script", "scripts", "stats", "timer", "timers" };
                 int ok;
                 for (ok = 0; ok < okIfNotConnected.Length; ok++)
                 {
@@ -1268,7 +1268,7 @@ namespace ghetto
                     LLVector3 sunDirection = Session.Client.Grid.SunDirection;
                     string simName = Session.Client.Network.CurrentSim.Name;
                     string weather = Display.RPGWeather(sessionNum, simName, sunDirection);
-                    if (simName != "" && Helpers.VecMag(sunDirection) != 0)
+                    if (simName != "" && LLVector3.Mag(sunDirection) != 0)
                     {
                         Display.InfoResponse(sessionNum, weather);
                     }
@@ -1514,7 +1514,7 @@ namespace ghetto
                     Display.Help(command);
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
-                Session.Client.Self.Status.Camera.BodyRotation = Helpers.Axis2Rot(target);
+                Session.Client.Self.Status.Camera.BodyRotation = LLVector3.Axis2Rot(target);
                 Session.Client.Self.Status.SendUpdate();
             }
             else if (command == "hrot")
@@ -1525,7 +1525,7 @@ namespace ghetto
                     Display.Help(command);
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
-                Session.Client.Self.Status.Camera.HeadRotation = Helpers.Axis2Rot(target);
+                Session.Client.Self.Status.Camera.HeadRotation = LLVector3.Axis2Rot(target);
                 Session.Client.Self.Status.SendUpdate();
             }
             else if (command == "cam")

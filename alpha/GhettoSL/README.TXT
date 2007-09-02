@@ -48,12 +48,14 @@ CONTENTS
  eunban <userID>          Estate unban (requires manager access)
  fly [on|off]             Toggles avatar flying
  follow <name|off|on>     Follow the specified avatar, or toggle following
+ friend [-r] <userID>     Request friendship, or remove an existing friend
  go <x,y,z>               Move to the specified coordinates using autopilot
  groups                   Lists information about groups you are in
  home                     Teleport to your home location
  hrot <x,y,z>             rotate your avatar's head (does this do anything?)
  land                     Disable flying
  listen                   Same as /quiet off
+ lure <userID> [reason]   Send a teleport lure request
  look [text]              Display info about area, or searches by prim text
  particles                Show the ID and location of prims with particles
  pay <amount> <uuid>      Pay the specified avatar or object
