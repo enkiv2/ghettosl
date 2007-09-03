@@ -228,7 +228,6 @@ namespace ghetto
 
             public void TurnToward(LLVector3 target)
             {
-                if (!Client.Network.Connected) return;
                 LLVector3 myPos = Client.Self.Position;
                 uint sittingOn = Client.Self.SittingOn;
                 if (sittingOn > 0)
@@ -240,43 +239,23 @@ namespace ghetto
                         return;
                     }
                 }
-                //Console.WriteLine("Between " + myPos + " and " + target + " == " + Helpers.RotBetween(mypos, target)); //DEBUG
                 LLQuaternion newRot = LLVector3.RotBetween(new LLVector3(1, 0, 0), LLVector3.Norm(target - myPos));
                 Client.Self.Status.Camera.BodyRotation = newRot;
+                Client.Self.Status.Camera.HeadRotation = newRot;
 
-                //experimental aimbot shizzle
-                float x = 1 - 2 * newRot.Z * newRot.Z - 2 * newRot.Y * newRot.Y;
-                float y = -2 * newRot.Z * newRot.W + 2 * newRot.Y * newRot.X;
-                float z = 2 * newRot.Y * newRot.W + 2 * newRot.Z * newRot.X;
-                LLVector3 atAxis = new LLVector3(x, y, z);
-                x = 2 * newRot.X * newRot.Y + 2 * newRot.W * newRot.Z;
-                y = 1 - 2 * newRot.Z * newRot.Z - 2 * newRot.X * newRot.X;
-                z = 2 * newRot.Z * newRot.Y - 2 * newRot.X * newRot.W;
-                LLVector3 leftAxis = new LLVector3(x, y, z);
-                x = 2 * newRot.X * newRot.Z - 2 * newRot.W * newRot.Y;
-                y = 2 * newRot.Y * newRot.Z + 2 * newRot.W * newRot.X;
-                z = 1 - 2 * newRot.Y * newRot.Y - 2 * newRot.X * newRot.X;
-                LLVector3 upAxis = new LLVector3(x, y, z);
+                CoordinateFrame cf = new CoordinateFrame();
+                cf.LookAt(myPos, target);
 
+                Client.Self.Status.Camera.CameraCenter = myPos;
+                Client.Self.Status.Camera.CameraAtAxis = cf.XAxis;
+                Client.Self.Status.Camera.CameraLeftAxis = cf.YAxis;
+                Client.Self.Status.Camera.CameraUpAxis = cf.ZAxis;
 
-                    //float x = (1 - 2 * (newRot.Y * newRot.Y)) - (2 * (newRot.Z * newRot.Z));
-                    //float y = (2 * newRot.X * newRot.Y) - (2 * newRot.W * newRot.Z);
-                    //float z = (2 * newRot.X * newRot.Z) + (2 * newRot.W * newRot.Y);
-                    //LLVector3 atAxis = new LLVector3(x, y, z);
-                    //x = (2 * newRot.X * newRot.Y) + (2 * newRot.W * newRot.Z);
-                    //y = (1 - 2 * (newRot.X * newRot.X)) - (2 * (newRot.Z  * newRot.Z));
-                    //z = (2 * newRot.Y * newRot.Z) - (2 * newRot.W * newRot.X);
-                    //LLVector3 leftAxis = new LLVector3(x, y, z);
-                    //x = (2 * newRot.X * newRot.Z) - (2 * newRot.W * newRot.Y);
-                    //y = (2 * newRot.Y * newRot.Z) + (2 * newRot.W * newRot.X);
-                    //z = (1 - 2 * (newRot.Y * newRot.Y)) - (2 * (newRot.Y * newRot.Y));
-                    //LLVector3 upAxis = new LLVector3(x, y, z);
+                //Console.WriteLine("center = " + myPos);
+                //Console.WriteLine("at = " + cf.XAxis);
+                //Console.WriteLine("left = " + cf.YAxis);
+                //Console.WriteLine("up = " + cf.ZAxis);
 
-                Client.Self.Status.Camera.CameraCenter = Client.Self.Position;
-                Client.Self.Status.Camera.CameraAtAxis = atAxis;
-                Client.Self.Status.Camera.CameraLeftAxis = leftAxis;
-                Client.Self.Status.Camera.CameraUpAxis = upAxis;
-                
                 Client.Self.TurnToward(target);
             }
 

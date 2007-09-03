@@ -1345,18 +1345,12 @@ namespace ghetto
 
             else if (command == "shoot")
             {
-                bool inMouselook = Session.Client.Self.Status.Mouselook;
-                if (!inMouselook) Session.Client.Self.Status.Mouselook = true;
-                Session.Client.Self.Status.MLButtonDown = true;
-                Session.Client.Self.Status.FinishAnim = true;
-                Session.Client.Self.Status.SendUpdate();
-                Session.Client.Self.Status.MLButtonDown = false;
-                Session.Client.Self.Status.MLButtonUp = true;
-                Session.Client.Self.Status.SendUpdate();
-                Session.Client.Self.Status.MLButtonUp = false;
-                Session.Client.Self.Status.FinishAnim = false;
-                if (!inMouselook) Session.Client.Self.Status.Mouselook = false;
-                Session.Client.Self.Status.SendUpdate();
+                LLVector3 target;
+                if (cmd.Length == 1) Session.Client.Self.Shoot();
+                else if (LLVector3.TryParse(cmd[1], out target))
+                {
+                    Session.Client.Self.Shoot(target);
+                }
             }
 
             else if (command == "particles")

@@ -298,8 +298,14 @@ namespace ghetto
             {
                 if (Session.Avatars.ContainsKey(update.LocalID))
                 {
-                    Session.Avatars[update.LocalID].Position = update.Position;
-                    Session.Avatars[update.LocalID].Rotation = update.Rotation;
+                    Avatar av = Session.Avatars[update.LocalID];
+                    av.Position = update.Position;
+                    av.Rotation = update.Rotation;
+                    Dictionary<string, string> identifiers = new Dictionary<string,string>();
+                    identifiers.Add("$name", av.Name);
+                    identifiers.Add("$id", av.ID.ToStringHyphenated());
+                    identifiers.Add("$pos", av.Position.ToString());
+                    ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.Update, identifiers);
                 }
             }
         }
