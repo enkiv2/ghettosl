@@ -304,19 +304,19 @@ namespace ghetto
         {
             NULL = 0,
             Load = 1,
-            Connect,
-            Disconnect,
-            TeleportFinish,
-            Chat,
-            IM,
-            Update,
-            Sit,
-            Unsit,
-            GroupIM, //FIXME - still missing/incorrectly handled as IM
-            ScriptDialog,
-            GetMoney,
-            GiveMoney,
-            GetItem
+            Connect = 2,
+            Disconnect = 3,
+            TeleportFinish = 4,
+            Chat = 5,
+            IM = 6,
+            Update = 7,
+            Sit = 8,
+            Unsit = 9,
+            GroupIM = 10, //FIXME - still missing/incorrectly handled as IM
+            ScriptDialog = 11,
+            GetMoney = 12,
+            GiveMoney = 13,
+            GetItem = 14
         }
 
         public static EventTypes EventTypeByName(string typeString)
@@ -335,6 +335,8 @@ namespace ghetto
         public static void TriggerEvents(uint sessionNum, ScriptSystem.EventTypes eventType, Dictionary<string, string> identifiers)
         {
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
+            identifiers.Add("$me", Session.Client.Self.FirstName + " " + Session.Client.Self.LastName);
+            identifiers.Add("$myid", Session.Client.Self.ID.ToStringHyphenated());
             lock (Interface.Scripts)
             {
                 foreach (KeyValuePair<string, ScriptSystem.UserScript> s in Interface.Scripts)
