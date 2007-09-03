@@ -304,18 +304,19 @@ namespace ghetto
         {
             NULL = 0,
             Load = 1,
-            Connect = 2,
-            Disconnect = 3,
-            TeleportFinish = 4,
-            Chat = 5,
-            IM = 6,
-            Sit = 7,
-            Unsit = 8,
-            GroupIM = 9, //FIXME - still missing/incorrectly handled as IM
-            ScriptDialog = 10,
-            GetMoney = 11,
-            GiveMoney = 12,
-            GetItem = 13
+            Connect,
+            Disconnect,
+            TeleportFinish,
+            Chat,
+            IM,
+            Update,
+            Sit,
+            Unsit,
+            GroupIM, //FIXME - still missing/incorrectly handled as IM
+            ScriptDialog,
+            GetMoney,
+            GiveMoney,
+            GetItem
         }
 
         public static EventTypes EventTypeByName(string typeString)
