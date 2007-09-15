@@ -218,7 +218,7 @@ namespace ghetto
             }
         }
 
-        public class UserTimer
+        public class UserTimer : IDisposable
         {
             uint sessionNum;
             System.Timers.Timer Timer;
@@ -226,11 +226,16 @@ namespace ghetto
             public string Command;
             public int RepeatsRemaining;
 
+            public void Dispose()
+            {
+                Timer.AutoReset = false;
+                Timer.Stop();
+                Timer.Dispose();
+                Stop();
+            }
+
             public void Stop()
             {
-                Timer.Stop();
-                Timer.AutoReset = false;
-                Timer.Dispose();
                 Display.InfoResponse(sessionNum, "Timer \"" + Name + "\" halted");
             }
 
@@ -261,7 +266,7 @@ namespace ghetto
                 CommandResult result = Parse.Command(sessionNum, "", Command, true, false);
                 if ((limited && RepeatsRemaining == 0) || (result != CommandResult.NoError && result != CommandResult.ConditionFailed && result != CommandResult.Return))
                 {
-                    Interface.Sessions[sessionNum].Timers[Name].Stop();
+                    Interface.Sessions[sessionNum].Timers[Name].Dispose();
                     //System.Timers.Timer t = (System.Timers.Timer)sender;
                     Interface.Sessions[sessionNum].Timers[Name] = null;
                     Interface.Sessions[sessionNum].Timers.Remove(Name);
