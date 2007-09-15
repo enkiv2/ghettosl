@@ -803,7 +803,7 @@ namespace ghetto
 
                 if (localID > 0)
                 {
-                    Session.Client.Self.GiveMoney(uuid, amount, "");
+                    Session.Client.Self.GiveMoney(uuid, amount, "", MoneyTransactionType.Gift, TransactionFlags.None);
                     Display.InfoResponse(sessionNum, "Paid L$" + amount + " to " + uuid);
                 }
 
@@ -1379,7 +1379,7 @@ namespace ghetto
                     Display.Help(command);
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
-                Session.Client.Self.GiveMoney(id, amount, "");
+                Session.Client.Self.GiveMoney(id, amount, "", MoneyTransactionType.Gift, TransactionFlags.None);
             }
 
             else if (command == "payme")
@@ -1397,7 +1397,7 @@ namespace ghetto
                 }
                 else
                 {
-                    Session.Client.Self.GiveMoney(Session.Settings.MasterID, amount, "Payment to master");
+                    Session.Client.Self.GiveMoney(Session.Settings.MasterID, amount, "Payment to master", MoneyTransactionType.Gift, TransactionFlags.None);
                 }
             }
 
@@ -1804,7 +1804,7 @@ namespace ghetto
                 {
                     if (Session.Timers.ContainsKey(cmd[1]))
                     {
-                        Session.Timers[cmd[1]].Stop();
+                        Session.Timers[cmd[1]].Dispose();
                         Session.Timers.Remove(cmd[1]);
                     }
                 }
@@ -1853,7 +1853,7 @@ namespace ghetto
                     foreach (KeyValuePair<string, ScriptSystem.UserTimer> pair in Session.Timers)
                     {
                         //FIXME - move to Display
-                        if (arg == "off") pair.Value.Stop();
+                        if (arg == "off") pair.Value.Dispose();
                         else Display.InfoResponse(sessionNum, Display.Pad(pair.Key, 15) + " " + Display.Pad(pair.Value.RepeatsRemaining.ToString(), 3) + " " + pair.Value.Command);
                     }
                 }
