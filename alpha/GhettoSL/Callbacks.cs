@@ -47,7 +47,6 @@ namespace ghetto
             Session.Client.Friends.OnFriendOffline += new FriendsManager.FriendOfflineEvent(Friends_OnFriendOffline);
             Session.Client.Friends.OnFriendshipOffered += new FriendsManager.FriendshipOfferedEvent(Friends_OnFriendshipOffered);
             Session.Client.Friends.OnFriendshipResponse += new FriendsManager.FriendshipResponseEvent(Friends_OnFriendshipResponse);
-            Session.Client.Inventory.OnInventoryObjectReceived += new InventoryManager.ObjectReceivedCallback(Inventory_OnInventoryObjectReceived);
             Session.Client.Network.OnLogin += new NetworkManager.LoginCallback(Network_OnLogin);
             Session.Client.Network.OnConnected += new NetworkManager.ConnectedCallback(Network_OnConnected);
             Session.Client.Network.OnCurrentSimChanged += new NetworkManager.CurrentSimChangedCallback(Network_OnCurrentSimChanged);
@@ -151,7 +150,7 @@ namespace ghetto
             Display.FriendOnline(Session.SessionNumber, friend);
         }
 
-        void Self_OnScriptQuestion(LLUUID taskID, LLUUID itemID, string objectName, string objectOwner, ScriptPermission questions)
+        void Self_OnScriptQuestion(Simulator simulator, LLUUID taskID, LLUUID itemID, string objectName, string objectOwner, ScriptPermission questions)
         {
             //FIXME - move to display
             Console.WriteLine(objectName + " owned by " + objectOwner + " has requested the following permissions: " + questions.ToString());
@@ -315,10 +314,10 @@ namespace ghetto
             if (Session.Debug > 0) Display.LogMessage(Session.SessionNumber, message, level);
         }
 
-        void Objects_OnAvatarSitChanged(Simulator simulator, uint sittingOn)
+        void Objects_OnAvatarSitChanged(Simulator sim, Avatar av, uint localid, uint oldSeatID)
         {
-            Display.SitChanged(Session.SessionNumber, sittingOn);
-            if (sittingOn > 0) ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.Sit, null);
+            Display.SitChanged(Session.SessionNumber, av, localid);
+            if (localid > 0) ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.Sit, null);
             else ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.Unsit, null);
         }
 

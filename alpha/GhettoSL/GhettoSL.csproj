@@ -50,17 +50,13 @@
     <Compile Include="TCPServer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="LuaInterface, Version=1.5.3.0, Culture=neutral, PublicKeyToken=1e1fb15b02227b8a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\dev\lua\LuaInterface.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\libsecondlife\trunk\libsecondlife\libsecondlife.csproj">
+    <ProjectReference Include="..\..\..\..\dev\libsecondlife\branches\dev\libsecondlife\libsecondlife.csproj">
       <Project>{D9CDEDFB-8169-4B03-B57F-0DF638F044EC}</Project>
       <Name>libsecondlife</Name>
     </ProjectReference>

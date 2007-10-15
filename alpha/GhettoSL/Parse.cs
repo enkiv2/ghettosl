@@ -904,7 +904,8 @@ namespace ghetto
 
                 InventoryBase item = Session.Client.Inventory.Store[itemid];
                 string name = item.Name;
-                Session.Client.Inventory.Remove(item);
+                //FIXME - reimplement
+                //Session.Client.Inventory.Remove(item);
 
                 Display.InfoResponse(sessionNum, "Deleted item \"" + name + "\".");
             }

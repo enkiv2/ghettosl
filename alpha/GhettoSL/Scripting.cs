@@ -340,6 +340,7 @@ namespace ghetto
         public static void TriggerEvents(uint sessionNum, ScriptSystem.EventTypes eventType, Dictionary<string, string> identifiers)
         {
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
+            if (identifiers == null) identifiers = new Dictionary<string, string>();
             identifiers.Add("$me", Session.Client.Self.FirstName + " " + Session.Client.Self.LastName);
             identifiers.Add("$myid", Session.Client.Self.ID.ToStringHyphenated());
             lock (Interface.Scripts)
@@ -390,7 +391,8 @@ namespace ghetto
             }
             else iFolder = (InventoryFolder)Session.Client.Inventory.Store[folder];
 
-            Session.Client.Inventory.RequestFolderContents(folder, Session.Client.Network.AgentID, true, true, false, InventorySortOrder.ByDate);
+            //FIXME - reimplement
+            //Session.Client.Inventory.RequestFolderContents(folder, Session.Client.Network.AgentID, true, true, false, InventorySortOrder.ByDate);
 
             /*
             foreach (InventoryBase inv in Session.Client.Inventory.Store)
