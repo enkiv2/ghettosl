@@ -159,7 +159,8 @@ namespace ghetto
 
             void FollowTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
             {
-                Client.Self.Status.SendUpdate();
+                GhettoSL.UserSession Session = Interface.Sessions[SessionNumber];
+                Client.Self.Movement.SendUpdate();
                 foreach (Avatar av in Avatars.Values)
                 {
                     if (av.Name == FollowName)
@@ -182,7 +183,7 @@ namespace ghetto
                             target = av.Position;
                         }
 
-                        TurnToward(target);
+                        Session.Client.Self.Movement.TurnToward(target);
 
                         //Console.WriteLine(av.Position); //DEBUG
                         if (LLVector3.Dist(Client.Self.Position, av.Position) > 3)
@@ -217,46 +218,13 @@ namespace ghetto
             {
                 if (!Client.Network.Connected) return;
                 ScriptDialogReplyPacket reply = new ScriptDialogReplyPacket();
-                reply.AgentData.AgentID = Client.Network.AgentID;
+                reply.AgentData.AgentID = Client.Self.AgentID;
                 reply.AgentData.SessionID = Client.Network.SessionID;
                 reply.Data.ButtonIndex = 0;
                 reply.Data.ChatChannel = channel;
                 reply.Data.ObjectID = objectid;
                 reply.Data.ButtonLabel = Helpers.StringToField(message);
                 Client.Network.SendPacket(reply);
-            }
-
-            public void TurnToward(LLVector3 target)
-            {
-                LLVector3 myPos = Client.Self.Position;
-                uint sittingOn = Client.Self.SittingOn;
-                if (sittingOn > 0)
-                {
-                    if (Prims.ContainsKey(sittingOn)) myPos += Prims[sittingOn].Position;
-                    else
-                    {
-                        Display.Error(SessionNumber, "Missing object info for current seat");
-                        return;
-                    }
-                }
-                LLQuaternion newRot = LLVector3.RotBetween(new LLVector3(1, 0, 0), LLVector3.Norm(target - myPos));
-                Client.Self.Status.Camera.BodyRotation = newRot;
-                Client.Self.Status.Camera.HeadRotation = newRot;
-
-                CoordinateFrame cf = new CoordinateFrame();
-                cf.LookAt(myPos, target);
-
-                Client.Self.Status.Camera.CameraCenter = myPos;
-                Client.Self.Status.Camera.CameraAtAxis = cf.XAxis;
-                Client.Self.Status.Camera.CameraLeftAxis = cf.YAxis;
-                Client.Self.Status.Camera.CameraUpAxis = cf.ZAxis;
-
-                //Console.WriteLine("center = " + myPos);
-                //Console.WriteLine("at = " + cf.XAxis);
-                //Console.WriteLine("left = " + cf.YAxis);
-                //Console.WriteLine("up = " + cf.ZAxis);
-
-                Client.Self.TurnToward(target);
             }
 
             public void UpdateAppearance()
@@ -280,13 +248,13 @@ namespace ghetto
                 Client.Settings.LOGIN_TIMEOUT = 480 * 1000;
                 Client.Settings.SEND_AGENT_UPDATES = true;
 
-                Client.Self.Status.Camera.Far = 96.0f;
-                Client.Self.Status.Camera.CameraAtAxis = LLVector3.Zero;
-                Client.Self.Status.Camera.CameraCenter = LLVector3.Zero;
-                Client.Self.Status.Camera.CameraLeftAxis = LLVector3.Zero;
-                Client.Self.Status.Camera.CameraUpAxis = LLVector3.Zero;
-                Client.Self.Status.Camera.HeadRotation = LLQuaternion.Identity;
-                Client.Self.Status.Camera.BodyRotation = LLQuaternion.Identity;
+                Client.Self.Movement.Camera.Far = 96.0f;
+                Client.Self.Movement.Camera.AtAxis = LLVector3.Zero;
+                Client.Self.Movement.Camera.Position = LLVector3.Zero;
+                Client.Self.Movement.Camera.LeftAxis = LLVector3.Zero;
+                Client.Self.Movement.Camera.UpAxis = LLVector3.Zero;
+                Client.Self.Movement.HeadRotation = LLQuaternion.Identity;
+                Client.Self.Movement.BodyRotation = LLQuaternion.Identity;
 
                 Callbacks = new CallbackManager(this);
                 Avatars = new Dictionary<uint, Avatar>();

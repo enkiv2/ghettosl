@@ -225,7 +225,7 @@ namespace ghetto
             else ret = ret.Replace("$seattext", "$null").Replace("$seatid", LLUUID.Zero.ToStringHyphenated());
             if (Session.Client.Network.Connected)
             {
-                ret = ret.Replace("$myid", Session.Client.Network.AgentID.ToStringHyphenated());
+                ret = ret.Replace("$myid", Session.Client.Self.AgentID.ToStringHyphenated());
                 ret = ret.Replace("$connected", "$true");
                 ret = ret.Replace("$region", Session.Client.Network.CurrentSim.Name);
             }
@@ -237,10 +237,10 @@ namespace ghetto
                 ret = ret.Replace("$distance", "$null");
             }            
 
-            if (Session.Client.Self.Status.AlwaysRun) ret = ret.Replace("$flying", "$true");
+            if (Session.Client.Self.Movement.AlwaysRun) ret = ret.Replace("$flying", "$true");
             else ret = ret.Replace("$flying", "$false");
 
-            if (Session.Client.Self.Status.Fly) ret = ret.Replace("$flying", "$true");
+            if (Session.Client.Self.Movement.Fly) ret = ret.Replace("$flying", "$true");
             else ret = ret.Replace("$flying", "$false");
 
             if (Session.Client.Self.SittingOn > 0) ret = ret.Replace("$sitting", "$true");
@@ -842,10 +842,10 @@ namespace ghetto
                     Display.InfoResponse(sessionNum, "Match found. Sitting...");
                     Session.Client.Self.RequestSit(Session.Prims[localID].ID, LLVector3.Zero);
                     Session.Client.Self.Sit();
-                    //Session.Client.Self.Status.Controls.FinishAnim = false;
-                    Session.Client.Self.Status.SitOnGround = false;
-                    Session.Client.Self.Status.StandUp = false;
-                    Session.Client.Self.Status.SendUpdate();
+                    //Session.Client.Self.Movement.Controls.FinishAnim = false;
+                    Session.Client.Self.Movement.SitOnGround = false;
+                    Session.Client.Self.Movement.StandUp = false;
+                    Session.Client.Self.Movement.SendUpdate();
                 }
                 else Display.InfoResponse(sessionNum, "No matching objects found.");
             }
@@ -871,15 +871,15 @@ namespace ghetto
             {
                 if (cmd.Length == 1 || cmd[1].ToLower() == "on")
                 {
-                    Session.Client.Self.Status.UpNeg = true;
-                    Session.Client.Self.Status.SendUpdate();
+                    Session.Client.Self.Movement.UpNeg = true;
+                    Session.Client.Self.Movement.SendUpdate();
                 }
                 else if (cmd.Length > 1 && cmd[1].ToLower() == "off")
                 {
-                    Session.Client.Self.Status.UpNeg = false;
-                    Session.Client.Self.Status.FinishAnim = true;
-                    Session.Client.Self.Status.SendUpdate();
-                    Session.Client.Self.Status.FinishAnim = false;
+                    Session.Client.Self.Movement.UpNeg = false;
+                    Session.Client.Self.Movement.FinishAnim = true;
+                    Session.Client.Self.Movement.SendUpdate();
+                    Session.Client.Self.Movement.FinishAnim = false;
                 }
                 else
                 {
@@ -1020,21 +1020,21 @@ namespace ghetto
             {
                 if (cmd.Length == 1 || cmd[1].ToLower() == "on")
                 {
-                    if (Session.Client.Self.Status.Fly)
+                    if (Session.Client.Self.Movement.Fly)
                     {
                         Display.InfoResponse(sessionNum, "You are already flying.");
                     }
                     else
                     {
-                        Session.Client.Self.Status.Fly = true;
+                        Session.Client.Self.Movement.Fly = true;
                         Display.InfoResponse(sessionNum, "Suddenly, you feel weightless...");
                     }
                 }
                 else if (cmd[1].ToLower() == "off")
                 {
-                    if (Session.Client.Self.Status.Fly)
+                    if (Session.Client.Self.Movement.Fly)
                     {
-                        Session.Client.Self.Status.Fly = false;
+                        Session.Client.Self.Movement.Fly = false;
                         Display.InfoResponse(sessionNum, "You drop to the ground.");
                     }
                     else
@@ -1043,7 +1043,7 @@ namespace ghetto
                     }
                 }
                 //Send either way, for good measure                
-                Session.Client.Self.Status.SendUpdate();
+                Session.Client.Self.Movement.SendUpdate();
             }
 
             else if (command == "follow")
@@ -1066,7 +1066,7 @@ namespace ghetto
                     {
                         Session.FollowTimer.Stop();
                         Display.InfoResponse(sessionNum, "You stopped following " + Session.FollowName + ".");
-                        Session.Client.Self.Status.SendUpdate();
+                        Session.Client.Self.Movement.SendUpdate();
                     }
                     else
                     {
@@ -1105,10 +1105,10 @@ namespace ghetto
             else if (command == "fixme")
             {
                 Session.UpdateAppearance();
-                Session.Client.Self.Status.FinishAnim = true;
-                Session.Client.Self.Status.SendUpdate();
-                Session.Client.Self.Status.FinishAnim = false;
-                Session.Client.Self.Status.SendUpdate();
+                Session.Client.Self.Movement.FinishAnim = true;
+                Session.Client.Self.Movement.SendUpdate();
+                Session.Client.Self.Movement.FinishAnim = false;
+                Session.Client.Self.Movement.SendUpdate();
             }
 
             else if (command == "gc")
@@ -1240,11 +1240,11 @@ namespace ghetto
 
             else if (command == "land")
             {
-                Session.Client.Self.Status.Fly = false;
-                Session.Client.Self.Status.FinishAnim = true;
-                Session.Client.Self.Status.SendUpdate();
-                Session.Client.Self.Status.FinishAnim = false;
-                //Session.Client.Self.Status.SendUpdate();
+                Session.Client.Self.Movement.Fly = false;
+                Session.Client.Self.Movement.FinishAnim = true;
+                Session.Client.Self.Movement.SendUpdate();
+                Session.Client.Self.Movement.FinishAnim = false;
+                //Session.Client.Self.Movement.SendUpdate();
             }
 
             else if (command == "listen")
@@ -1329,12 +1329,12 @@ namespace ghetto
             {
                 if (cmd.Length < 2 || cmd[1].ToLower() == "on")
                 {
-                    Session.Client.Self.Status.Mouselook = true;
+                    Session.Client.Self.Movement.Mouselook = true;
                     Display.InfoResponse(sessionNum, "Mouselook enabled");
                 }
                 else if (cmd[1].ToLower() == "off")
                 {
-                    Session.Client.Self.Status.Mouselook = false;
+                    Session.Client.Self.Movement.Mouselook = false;
                     Display.InfoResponse(sessionNum, "Mouselook disabled");
                 }
                 else
@@ -1347,10 +1347,10 @@ namespace ghetto
             else if (command == "shoot")
             {
                 LLVector3 target;
-                if (cmd.Length == 1) Session.Client.Self.Shoot();
+                if (cmd.Length == 1) Session.Client.Self.Movement.Shoot();
                 else if (LLVector3.TryParse(cmd[1], out target))
                 {
-                    Session.Client.Self.Shoot(target);
+                    Session.Client.Self.Movement.Shoot(target);
                 }
             }
 
@@ -1498,7 +1498,7 @@ namespace ghetto
                     Display.Help(command);
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
-                Session.TurnToward(target);
+                Session.Client.Self.Movement.TurnToward(target);
             }
 
             else if (command == "brot")
@@ -1509,8 +1509,8 @@ namespace ghetto
                     Display.Help(command);
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
-                Session.Client.Self.Status.Camera.BodyRotation = LLVector3.Axis2Rot(target);
-                Session.Client.Self.Status.SendUpdate();
+                Session.Client.Self.Movement.BodyRotation = LLVector3.Axis2Rot(target);
+                Session.Client.Self.Movement.SendUpdate();
             }
             else if (command == "hrot")
             {
@@ -1520,8 +1520,8 @@ namespace ghetto
                     Display.Help(command);
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
-                Session.Client.Self.Status.Camera.HeadRotation = LLVector3.Axis2Rot(target);
-                Session.Client.Self.Status.SendUpdate();
+                Session.Client.Self.Movement.HeadRotation = LLVector3.Axis2Rot(target);
+                Session.Client.Self.Movement.SendUpdate();
             }
             else if (command == "cam")
             {
@@ -1542,12 +1542,12 @@ namespace ghetto
                 string vString = details.Replace("<", "").Replace(">", "").Replace(",", " ");
                 string[] v = vString.Split(space, StringSplitOptions.RemoveEmptyEntries);
 
-                if (arg == "center") Session.Client.Self.Status.Camera.CameraCenter = target;
-                else if (arg == "at") Session.Client.Self.Status.Camera.CameraAtAxis = target;
-                else if (arg == "left") Session.Client.Self.Status.Camera.CameraLeftAxis = target;
-                else if (arg == "up") Session.Client.Self.Status.Camera.CameraUpAxis = target;
+                if (arg == "center") Session.Client.Self.Movement.Camera.Position = target;
+                else if (arg == "at") Session.Client.Self.Movement.Camera.AtAxis = target;
+                else if (arg == "left") Session.Client.Self.Movement.Camera.LeftAxis = target;
+                else if (arg == "up") Session.Client.Self.Movement.Camera.UpAxis = target;
 
-                Session.Client.Self.Status.SendUpdate();
+                Session.Client.Self.Movement.SendUpdate();
                 Display.InfoResponse(sessionNum, "Camera settings updated");
             }
 
@@ -1555,12 +1555,12 @@ namespace ghetto
             {
                 if (cmd.Length == 1 || cmd[1].ToLower() == "on")
                 {
-                    Session.Client.Self.Status.AlwaysRun = true;
+                    Session.Client.Self.Movement.AlwaysRun = true;
                     Display.InfoResponse(sessionNum, "Running enabled.");
                 }
                 else if (cmd[1].ToLower() == "off")
                 {
-                    Session.Client.Self.Status.AlwaysRun = false;
+                    Session.Client.Self.Movement.AlwaysRun = false;
                     Display.InfoResponse(sessionNum, "Running disabled.");
                 }
                 else
@@ -1621,7 +1621,16 @@ namespace ghetto
             else if (command == "whois")
             {
                 //FIXME - add group, land, etc searching
-                Session.Client.Directory.StartPeopleSearch(DirectoryManager.DirFindFlags.People, details, 0);
+                if (cmd.Length < 2)
+                {
+                    Display.Help(command);
+                    return ScriptSystem.CommandResult.InvalidUsage;
+                }
+                LLUUID targetID;
+                bool isID = LLUUID.TryParse(cmd[1], out targetID);
+                if (isID) Session.Client.Avatars.RequestAvatarName(targetID);
+                else Session.Client.Directory.StartPeopleSearch(DirectoryManager.DirFindFlags.People, details, 0);
+                
             }
 
             else if (command == "inc" && scriptName != "")
@@ -1685,11 +1694,11 @@ namespace ghetto
                     Display.Help(command);
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
-                Session.Client.Self.Status.SitOnGround = false;
-                Session.Client.Self.Status.StandUp = false;
+                Session.Client.Self.Movement.SitOnGround = false;
+                Session.Client.Self.Movement.StandUp = false;
                 Session.Client.Self.RequestSit(target, LLVector3.Zero);
                 Session.Client.Self.Sit();
-                Session.Client.Self.Status.SendUpdate();
+                Session.Client.Self.Movement.SendUpdate();
             }
 
             else if (command == "sitg")
@@ -1724,10 +1733,10 @@ namespace ghetto
 
             else if (command == "stand")
             {
-                Session.Client.Self.Status.SitOnGround = false;
-                Session.Client.Self.Status.StandUp = true;
-                Session.Client.Self.Status.SendUpdate();
-                Session.Client.Self.Status.StandUp = false;
+                Session.Client.Self.Movement.SitOnGround = false;
+                Session.Client.Self.Movement.StandUp = true;
+                Session.Client.Self.Movement.SendUpdate();
+                Session.Client.Self.Movement.StandUp = false;
             }
 
             else if (command == "stats")
@@ -1905,13 +1914,11 @@ namespace ghetto
                 if (toggle == "on")
                 {
                     Session.Client.Settings.SEND_AGENT_UPDATES = true;
-                    Session.Client.Self.Status.UpdateTimer.Start();
                     Display.InfoResponse(sessionNum, "Update timer ON");
                 }
                 else if (toggle == "off")
                 {
                     Session.Client.Settings.SEND_AGENT_UPDATES = false;
-                    Session.Client.Self.Status.UpdateTimer.Stop();
                     Display.InfoResponse(sessionNum, "Update timer OFF");
                 }
                 else { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
@@ -1919,7 +1926,7 @@ namespace ghetto
 
             else if (command == "walk")
             {
-                Session.Client.Self.Status.AlwaysRun = false;
+                Session.Client.Self.Movement.AlwaysRun = false;
             }
 
             else if (command == "wear")
