@@ -59,10 +59,10 @@ namespace ghetto
             Session.Client.Objects.OnObjectKilled += new ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
             Session.Client.Objects.OnObjectUpdated += new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
             session.Client.OnLogMessage += new SecondLife.LogCallback(Client_OnLogMessage);
-            Session.Client.Self.OnChat += new MainAvatar.ChatCallback(Self_OnChat);
-            Session.Client.Self.OnScriptDialog += new MainAvatar.ScriptDialogCallback(Self_OnScriptDialog);
-            Session.Client.Self.OnScriptQuestion += new MainAvatar.ScriptQuestionCallback(Self_OnScriptQuestion);
-            Session.Client.Self.OnInstantMessage += new MainAvatar.InstantMessageCallback(Self_OnInstantMessage);
+            Session.Client.Self.OnChat += new AgentManager.ChatCallback(Self_OnChat);
+            Session.Client.Self.OnScriptDialog += new AgentManager.ScriptDialogCallback(Self_OnScriptDialog);
+            Session.Client.Self.OnScriptQuestion += new AgentManager.ScriptQuestionCallback(Self_OnScriptQuestion);
+            Session.Client.Self.OnInstantMessage += new AgentManager.InstantMessageCallback(Self_OnInstantMessage);
 
             Session.Client.Groups.OnCurrentGroups += new GroupManager.CurrentGroupsCallback(Groups_OnCurrentGroups);
             Session.Client.Groups.OnGroupRoles += new GroupManager.GroupRolesCallback(Groups_OnGroupRoles);
@@ -74,7 +74,7 @@ namespace ghetto
             Session.Client.Network.RegisterCallback(PacketType.HealthMessage, new NetworkManager.PacketCallback(Callback_HealthMessage));
 
             //Session.Client.Network.RegisterCallback(PacketType.TeleportFinish, new NetworkManager.PacketCallback(Callback_TeleportFinish));
-            Session.Client.Self.OnTeleport += new MainAvatar.TeleportCallback(Self_OnTeleport);
+            Session.Client.Self.OnTeleport += new AgentManager.TeleportCallback(Self_OnTeleport);
 
             Interface.HTTPServer.OnHTTPRequest += new HTTPServer.OnHTTPRequestCallback(HTTPServer_OnHTTPRequest);            
         }
@@ -180,6 +180,7 @@ namespace ghetto
             else if (im.Dialog == InstantMessageDialog.MessageFromObject)
             {
                 Display.InstantMessage(Session.SessionNumber, im.Dialog, im.FromAgentName, im.Message);
+                if (Session.Debug > 0) Display.InfoResponse(Session.SessionNumber, "Owner UUID: " + im.FromAgentID.ToStringHyphenated());
             }
             else if (im.Dialog == InstantMessageDialog.TaskInventoryOffered)
             {
@@ -233,7 +234,7 @@ namespace ghetto
 
             Display.Chat(Session.SessionNumber, fromName, message, action, type, sourceType);
 
-            if (id == Session.Client.Network.AgentID) return;
+            if (id == Session.Client.Self.AgentID) return;
 
             Dictionary<string, string> identifiers = new Dictionary<string, string>();
             identifiers.Add("$name", fromName);
@@ -268,9 +269,9 @@ namespace ghetto
             Session.Avatars = new Dictionary<uint, Avatar>();
         }
 
-        void Self_OnTeleport(string message, MainAvatar.TeleportStatus status, MainAvatar.TeleportFlags flags)
+        void Self_OnTeleport(string message, AgentManager.TeleportStatus status, AgentManager.TeleportFlags flags)
         {
-            if (status == MainAvatar.TeleportStatus.Finished)
+            if (status == AgentManager.TeleportStatus.Finished)
             {
                 Display.TeleportFinished(Session.SessionNumber);
                 Session.Prims = new Dictionary<uint, Primitive>();
@@ -373,7 +374,7 @@ namespace ghetto
         {
             AgentAnimationPacket reply = (AgentAnimationPacket)packet;
             //FIXME - add Animation event?
-            if (reply.AgentData.AgentID != Session.Client.Network.AgentID) return;
+            if (reply.AgentData.AgentID != Session.Client.Self.AgentID) return;
 
             foreach (AgentAnimationPacket.AnimationListBlock b in reply.AnimationList)
             {
@@ -475,8 +476,6 @@ namespace ghetto
             //Session.Client.Groups.BeginGetCurrentGroups(new GroupManager.CurrentGroupsCallback(GroupsUpdatedHandler));
 
             //Session.Client.Grid.RequestEstateSims(GridManager.MapLayerType.Terrain); //FIXME - get new function name frm jh?
-
-            Session.Client.Self.Status.UpdateTimer.Start();
 
             //Retrieve offline IMs
             //FIXME - Add Client.Self.RetrieveInstantMessages() to core

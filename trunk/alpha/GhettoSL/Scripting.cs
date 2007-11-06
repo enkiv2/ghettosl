@@ -342,7 +342,7 @@ namespace ghetto
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
             if (identifiers == null) identifiers = new Dictionary<string, string>();
             identifiers.Add("$me", Session.Client.Self.FirstName + " " + Session.Client.Self.LastName);
-            identifiers.Add("$myid", Session.Client.Self.ID.ToStringHyphenated());
+            identifiers.Add("$myid", Session.Client.Self.AgentID.ToStringHyphenated());
             lock (Interface.Scripts)
             {
                 foreach (KeyValuePair<string, ScriptSystem.UserScript> s in Interface.Scripts)
@@ -392,7 +392,7 @@ namespace ghetto
             else iFolder = (InventoryFolder)Session.Client.Inventory.Store[folder];
 
             //FIXME - reimplement
-            //Session.Client.Inventory.RequestFolderContents(folder, Session.Client.Network.AgentID, true, true, false, InventorySortOrder.ByDate);
+            //Session.Client.Inventory.RequestFolderContents(folder, Session.Client.Self.AgentID, true, true, false, InventorySortOrder.ByDate);
 
             /*
             foreach (InventoryBase inv in Session.Client.Inventory.Store)
