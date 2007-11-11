@@ -186,7 +186,7 @@ namespace ghetto
                         Session.Client.Self.Movement.TurnToward(target);
 
                         //Console.WriteLine(av.Position); //DEBUG
-                        if (LLVector3.Dist(Client.Self.Position, av.Position) > 3)
+                        if (LLVector3.Dist(Client.Self.SimPosition, av.Position) > 3)
                         {
                             Client.Self.AutoPilotLocal((int)av.Position.X, (int)av.Position.Y, av.Position.Z);
                         }
@@ -219,7 +219,7 @@ namespace ghetto
                 if (!Client.Network.Connected) return;
                 ScriptDialogReplyPacket reply = new ScriptDialogReplyPacket();
                 reply.AgentData.AgentID = Client.Self.AgentID;
-                reply.AgentData.SessionID = Client.Network.SessionID;
+                reply.AgentData.SessionID = Client.Self.SessionID;
                 reply.Data.ButtonIndex = 0;
                 reply.Data.ChatChannel = channel;
                 reply.Data.ObjectID = objectid;

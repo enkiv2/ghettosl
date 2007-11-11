@@ -191,10 +191,10 @@ namespace ghetto
             ret = ret.Replace("$myfirst", Session.Settings.FirstName);
             ret = ret.Replace("$mylast", Session.Settings.LastName);
             ret = ret.Replace("$myname", Session.Name);
-            ret = ret.Replace("$mypos", Session.Client.Self.Position.ToString());
-            ret = ret.Replace("$mypos.x", Session.Client.Self.Position.X.ToString());
-            ret = ret.Replace("$mypos.y", Session.Client.Self.Position.Y.ToString());
-            ret = ret.Replace("$mypos.z", Session.Client.Self.Position.Z.ToString());
+            ret = ret.Replace("$mypos", Session.Client.Self.SimPosition.ToString());
+            ret = ret.Replace("$mypos.x", Session.Client.Self.SimPosition.X.ToString());
+            ret = ret.Replace("$mypos.y", Session.Client.Self.SimPosition.Y.ToString());
+            ret = ret.Replace("$mypos.z", Session.Client.Self.SimPosition.Z.ToString());
             ret = ret.Replace("$session", Session.SessionNumber.ToString());
             ret = ret.Replace("$master", Session.Settings.MasterID.ToStringHyphenated());
             ret = ret.Replace("$balance", Session.Balance.ToString());
@@ -207,12 +207,7 @@ namespace ghetto
                 uint elapsed = Helpers.GetUnixTime() - script.SetTime;
                 ret = ret.Replace("$elapsed", elapsed.ToString());
                 uint sittingOn = Session.Client.Self.SittingOn;
-                LLVector3 myPos;
-                if (sittingOn > 0 && Session.Prims.ContainsKey(sittingOn))
-                {
-                    myPos = Session.Prims[sittingOn].Position + Session.Client.Self.Position;
-                }
-                else myPos = Session.Client.Self.Position;
+                LLVector3 myPos = Session.Client.Self.SimPosition;
                 ret = ret.Replace("$target", script.SetTarget.ToString());
                 ret = ret.Replace("$distance", LLVector3.Dist(myPos, script.SetTarget).ToString());
             }
@@ -382,9 +377,9 @@ namespace ghetto
                     if (fromSession.Client.Network.Connected)
                     {
                         Session.Settings.StartLocation = "uri:" + fromSession.Client.Network.CurrentSim.Name
-                            + "&" + (int)fromSession.Client.Self.Position.X
-                            + "&" + (int)fromSession.Client.Self.Position.Y
-                            + "&" + (int)fromSession.Client.Self.Position.Z;
+                            + "&" + (int)fromSession.Client.Self.SimPosition.X
+                            + "&" + (int)fromSession.Client.Self.SimPosition.Y
+                            + "&" + (int)fromSession.Client.Self.SimPosition.Z;
                     }
                     else
                     {
@@ -951,14 +946,14 @@ namespace ghetto
                 //FIXME - remember folder and allow dir/ls without args
                 //FIXME - move DirList function to UserSession and move output to Display class
                 LLUUID folder;
-                if (cmd.Length == 1) ScriptSystem.DirList(sessionNum, LLUUID.Zero);
+                if (cmd.Length == 1) ScriptSystem.DirList(sessionNum, Session.Client.Inventory.Store.RootFolder.UUID);
                 else if (!LLUUID.TryParse(cmd[1], out folder)) { Display.Help(command); return ScriptSystem.CommandResult.InvalidUsage; }
                 else ScriptSystem.DirList(sessionNum, folder);
             }
 
             else if (command == "dwell")
             {
-
+                
             }
 
             else if (command == "echo")
