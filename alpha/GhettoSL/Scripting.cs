@@ -379,75 +379,38 @@ namespace ghetto
         public static void DirList(uint sessionNum, LLUUID folder)
         {
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
-
-            //Session.Client.Inventory.RequestFolderContents();
-
-            InventoryFolder iFolder;
-            if (folder == LLUUID.Zero) iFolder = Session.Client.Inventory.Store.RootFolder;
-            else if (!Session.Client.Inventory.Store.Contains(folder))
+            List<InventoryBase> contents = Session.Client.Inventory.FolderContents(folder, Session.Client.Self.AgentID, true, true, InventorySortOrder.ByDate, 1000);
+            foreach (InventoryBase inv in contents)
             {
-                Display.Error(Session.SessionNumber, "Folder not found: " + folder);
-                return;
-            }
-            else iFolder = (InventoryFolder)Session.Client.Inventory.Store[folder];
+                //Console.WriteLine(inv.UUID.ToStringHyphenated() + " - " + inv.Name);
+                InventoryItem item = null;
 
-            //FIXME - reimplement
-            //Session.Client.Inventory.RequestFolderContents(folder, Session.Client.Self.AgentID, true, true, false, InventorySortOrder.ByDate);
-
-            /*
-            foreach (InventoryBase inv in Session.Client.Inventory.Store)
-            {
-                if (inv.ParentUUID != iFolder.UUID) continue;
-
-                InventoryItem item;
-
+                //FIXME - move to Display
                 if (inv is InventoryFolder)
                 {
                     Display.SetColor(ConsoleColor.Yellow);
                 }
-                else item = (InventoryItem)inv;
-
-                if (item.InventoryType == InventoryType.Notecard)
-                {
-                    Display.SetColor(ConsoleColor.Gray);
-                }
-
-                else if (item.InventoryType == InventoryType.Texture)
-                {
-                    Display.SetColor(ConsoleColor.Cyan);
-                }
-
-                else if (item.InventoryType == InventoryType.LSL)
-                {
-                    Display.SetColor(ConsoleColor.Magenta);
-                }
-
-                else if (item.InventoryType == InventoryType.Wearable)
-                {
-                    Display.SetColor(ConsoleColor.Blue);
-                }
-
-                else if (item.InventoryType == InventoryType.Object)
-                {
-                    Display.SetColor(ConsoleColor.DarkYellow);
-                }
-
                 else
                 {
-                    Display.SetColor(ConsoleColor.DarkGray);
+                    item = (InventoryItem)inv;
+                    if (item.InventoryType == InventoryType.Notecard) Display.SetColor(ConsoleColor.Gray);
+                    else if (item.InventoryType == InventoryType.Texture) Display.SetColor(ConsoleColor.Cyan);
+                    else if (item.InventoryType == InventoryType.LSL) Display.SetColor(ConsoleColor.Magenta);
+                    else if (item.InventoryType == InventoryType.Wearable) Display.SetColor(ConsoleColor.Blue);
+                    else if (item.InventoryType == InventoryType.Object || item.InventoryType == InventoryType.Attachment) Display.SetColor(ConsoleColor.DarkYellow);
+                    else Display.SetColor(ConsoleColor.DarkGray);
                 }
-                //FIXME - move to Display
                 if (inv is InventoryFolder) Console.Write(Display.Pad("Folder", 9) + " ");
                 else Console.Write(Display.Pad(item.AssetType.ToString(), 9) + " ");
+                Display.SetColor(ConsoleColor.DarkGray);
+                Console.Write(inv.UUID.ToStringHyphenated() + "  ");
                 Display.SetColor(ConsoleColor.DarkCyan);
                 string iName = inv.Name;
-                if (iName.Length > 18) iName = iName.Substring(0, 18) + "...";
-                Console.Write(Display.Pad(iName, 22) + " ");
-                Display.SetColor(ConsoleColor.DarkGray);
-                Console.Write(Display.Pad(item.UUID.ToStringHyphenated(), 34) + "\n");
+                if (iName.Length > 20) iName = iName.Substring(0, 20) + "...";
+                Console.Write(Display.Pad(iName, 24) + " ");
+                Console.Write("\n");
                 Display.SetColor(ConsoleColor.Gray);
             }
-            */
         }
 
     }
