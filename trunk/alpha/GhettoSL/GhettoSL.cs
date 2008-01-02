@@ -68,7 +68,7 @@ namespace ghetto
 
             public void Login()
             {
-                NetworkManager.LoginParams loginParams = Client.Network.DefaultLoginParams(
+                LoginParams loginParams = Client.Network.DefaultLoginParams(
                     Settings.FirstName,
                     Settings.LastName,
                     Settings.Password,

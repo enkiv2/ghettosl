@@ -196,7 +196,7 @@ namespace ghetto
             ret = ret.Replace("$mypos.y", Session.Client.Self.SimPosition.Y.ToString());
             ret = ret.Replace("$mypos.z", Session.Client.Self.SimPosition.Z.ToString());
             ret = ret.Replace("$session", Session.SessionNumber.ToString());
-            ret = ret.Replace("$master", Session.Settings.MasterID.ToStringHyphenated());
+            ret = ret.Replace("$master", Session.Settings.MasterID.ToString());
             ret = ret.Replace("$balance", Session.Balance.ToString());
             ret = ret.Replace("$earned", Session.MoneyReceived.ToString());
             ret = ret.Replace("$spent", Session.MoneySpent.ToString());
@@ -215,12 +215,12 @@ namespace ghetto
             if (Session.Client.Network.Connected && Session.Client.Self.SittingOn > 0 && Session.Prims.ContainsKey(Session.Client.Self.SittingOn))
             {
                 ret = ret.Replace("$seattext", Session.Prims[Session.Client.Self.SittingOn].Text);
-                ret = ret.Replace("$seatid", Session.Prims[Session.Client.Self.SittingOn].ID.ToStringHyphenated());
+                ret = ret.Replace("$seatid", Session.Prims[Session.Client.Self.SittingOn].ID.ToString());
             }
-            else ret = ret.Replace("$seattext", "$null").Replace("$seatid", LLUUID.Zero.ToStringHyphenated());
+            else ret = ret.Replace("$seattext", "$null").Replace("$seatid", LLUUID.Zero.ToString());
             if (Session.Client.Network.Connected)
             {
-                ret = ret.Replace("$myid", Session.Client.Self.AgentID.ToStringHyphenated());
+                ret = ret.Replace("$myid", Session.Client.Self.AgentID.ToString());
                 ret = ret.Replace("$connected", "$true");
                 ret = ret.Replace("$region", Session.Client.Network.CurrentSim.Name);
             }
@@ -623,7 +623,7 @@ namespace ghetto
             //For example, in the command "im some-uuid-here Hi there!", details = "Hi there!"
             string details = "";
             int detailsStart = 1;
-            if (command == "cam" || command == "estate" || command == "im" || command == "lure" || command == "re" || command == "s" || command == "session" || command == "paybytext" || command == "paybyname") detailsStart++;
+            if (command == "cam" || command == "estate" || command == "popup" || command == "busyim" || command == "im" || command == "lure" || command == "re" || command == "s" || command == "session" || command == "paybytext" || command == "paybyname") detailsStart++;
             else if (command == "dialog") detailsStart += 2;
             else if (command == "timer" && cmd.Length > 1)
             {
@@ -670,7 +670,7 @@ namespace ghetto
 
             if (!Session.Client.Network.Connected)
             {
-                string[] okIfNotConnected = { "clear", "echo", "exit", "help", "http", "login", "inc", "quit", "relog", "return", "s", "session", "sessions", "set", "script", "scripts", "stats", "timer", "timers" };
+                string[] okIfNotConnected = { "clear", "debug", "echo", "exit", "help", "http", "login", "inc", "quit", "relog", "return", "s", "session", "sessions", "set", "script", "scripts", "stats", "timer", "timers" };
                 int ok;
                 for (ok = 0; ok < okIfNotConnected.Length; ok++)
                 {
@@ -1205,11 +1205,11 @@ namespace ghetto
             {
                 if (cmd.Length == 1 || cmd[1].ToLower() == "on")
                 {
-                    Session.Client.Self.StartJump();
+                    Session.Client.Self.Jump();
                 }
                 else if (cmd.Length > 1 && cmd[1].ToLower() == "off")
                 {
-                    Session.Client.Self.StopJump();
+                    Session.Client.Self.Jump();
                 }
                 else
                 {
@@ -1221,11 +1221,11 @@ namespace ghetto
             {
                 if (cmd.Length == 1 || cmd[1].ToLower() == "on")
                 {
-                    Session.Client.Self.StartCrouch();
+                    Session.Client.Self.Crouch(true);
                 }
                 else if (cmd.Length > 1 && cmd[1].ToLower() == "off")
                 {
-                    Session.Client.Self.StopCrouch();
+                    Session.Client.Self.Crouch(false);
                 }
                 else
                 {
@@ -1357,7 +1357,7 @@ namespace ghetto
                     {
                         if (obj.Value.ParticleSys.Pattern != Primitive.ParticleSystem.SourcePattern.None)
                         {
-                            Console.WriteLine(obj.Value.ID.ToStringHyphenated() + " "
+                            Console.WriteLine(obj.Value.ID.ToString() + " "
                                 + Display.VectorString(obj.Value.Position) + " "
                                 + obj.Value.ParentID
                             );
@@ -1504,9 +1504,9 @@ namespace ghetto
                     Display.Help(command);
                     return ScriptSystem.CommandResult.InvalidUsage;
                 }
-                Session.Client.Self.Movement.BodyRotation = LLVector3.Axis2Rot(target);
-                Session.Client.Self.Movement.SendUpdate();
+                Session.Client.Self.Movement.TurnToward(target);
             }
+            /*
             else if (command == "hrot")
             {
                 LLVector3 target;
@@ -1518,6 +1518,7 @@ namespace ghetto
                 Session.Client.Self.Movement.HeadRotation = LLVector3.Axis2Rot(target);
                 Session.Client.Self.Movement.SendUpdate();
             }
+            */
             else if (command == "cam")
             {
                 LLVector3 target;
@@ -1940,24 +1941,24 @@ namespace ghetto
                 }
 
                 InventoryItem item = (InventoryItem)Session.Client.Inventory.Store[itemid];
-                ObjectManager.AttachmentPoint point = ObjectManager.AttachmentPoint.Default;
+                AttachmentPoint point = AttachmentPoint.Default;
                 if (cmd.Length > 2)
                 {
                     string p = cmd[2].ToLower();
-                    if (p == "skull") point = ObjectManager.AttachmentPoint.Skull;
-                    else if (p == "chest") point = ObjectManager.AttachmentPoint.Chest;
-                    else if (p == "lhand") point = ObjectManager.AttachmentPoint.LeftHand;
-                    else if (p == "lhip") point = ObjectManager.AttachmentPoint.LeftHip;
-                    else if (p == "llleg") point = ObjectManager.AttachmentPoint.LeftLowerLeg;
-                    else if (p == "mouth") point = ObjectManager.AttachmentPoint.Mouth;
-                    else if (p == "nose") point = ObjectManager.AttachmentPoint.Nose;
-                    else if (p == "pelvis") point = ObjectManager.AttachmentPoint.Pelvis;
-                    else if (p == "rhand") point = ObjectManager.AttachmentPoint.RightHand;
-                    else if (p == "rhip") point = ObjectManager.AttachmentPoint.RightHip;
-                    else if (p == "rlleg") point = ObjectManager.AttachmentPoint.RightLowerLeg;
-                    else if (p == "spine") point = ObjectManager.AttachmentPoint.Spine;
-                    else if (p == "hudtop") point = ObjectManager.AttachmentPoint.HUDTop;
-                    else if (p == "hudbottom") point = ObjectManager.AttachmentPoint.HUDBottom;
+                    if (p == "skull") point = AttachmentPoint.Skull;
+                    else if (p == "chest") point = AttachmentPoint.Chest;
+                    else if (p == "lhand") point = AttachmentPoint.LeftHand;
+                    else if (p == "lhip") point = AttachmentPoint.LeftHip;
+                    else if (p == "llleg") point = AttachmentPoint.LeftLowerLeg;
+                    else if (p == "mouth") point = AttachmentPoint.Mouth;
+                    else if (p == "nose") point = AttachmentPoint.Nose;
+                    else if (p == "pelvis") point = AttachmentPoint.Pelvis;
+                    else if (p == "rhand") point = AttachmentPoint.RightHand;
+                    else if (p == "rhip") point = AttachmentPoint.RightHip;
+                    else if (p == "rlleg") point = AttachmentPoint.RightLowerLeg;
+                    else if (p == "spine") point = AttachmentPoint.Spine;
+                    else if (p == "hudtop") point = AttachmentPoint.HUDTop;
+                    else if (p == "hudbottom") point = AttachmentPoint.HUDBottom;
                     //FIXME - support all other points
                     else
                     {

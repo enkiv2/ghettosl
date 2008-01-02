@@ -56,7 +56,7 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\dev\libsecondlife\branches\dev\libsecondlife\libsecondlife.csproj">
+    <ProjectReference Include="..\..\..\..\libsecondlife\trunk\libsecondlife\libsecondlife.csproj">
       <Project>{D9CDEDFB-8169-4B03-B57F-0DF638F044EC}</Project>
       <Name>libsecondlife</Name>
     </ProjectReference>
