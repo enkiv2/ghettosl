@@ -342,7 +342,7 @@ namespace ghetto
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
             if (identifiers == null) identifiers = new Dictionary<string, string>();
             identifiers.Add("$me", Session.Client.Self.FirstName + " " + Session.Client.Self.LastName);
-            identifiers.Add("$myid", Session.Client.Self.AgentID.ToStringHyphenated());
+            identifiers.Add("$myid", Session.Client.Self.AgentID.ToString());
             lock (Interface.Scripts)
             {
                 foreach (KeyValuePair<string, ScriptSystem.UserScript> s in Interface.Scripts)
@@ -382,7 +382,7 @@ namespace ghetto
             List<InventoryBase> contents = Session.Client.Inventory.FolderContents(folder, Session.Client.Self.AgentID, true, true, InventorySortOrder.ByDate, 1000);
             foreach (InventoryBase inv in contents)
             {
-                //Console.WriteLine(inv.UUID.ToStringHyphenated() + " - " + inv.Name);
+                //Console.WriteLine(inv.UUID.ToString() + " - " + inv.Name);
                 InventoryItem item = null;
 
                 //FIXME - move to Display
@@ -403,7 +403,7 @@ namespace ghetto
                 if (inv is InventoryFolder) Console.Write(Display.Pad("Folder", 9) + " ");
                 else Console.Write(Display.Pad(item.AssetType.ToString(), 9) + " ");
                 Display.SetColor(ConsoleColor.DarkGray);
-                Console.Write(inv.UUID.ToStringHyphenated() + "  ");
+                Console.Write(inv.UUID.ToString() + "  ");
                 Display.SetColor(ConsoleColor.DarkCyan);
                 string iName = inv.Name;
                 if (iName.Length > 20) iName = iName.Substring(0, 20) + "...";

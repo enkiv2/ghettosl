@@ -79,13 +79,13 @@ namespace ghetto
             Interface.HTTPServer.OnHTTPRequest += new HTTPServer.OnHTTPRequestCallback(HTTPServer_OnHTTPRequest);            
         }
 
-        void Network_OnLogin(NetworkManager.LoginStatus login, string message)
+        void Network_OnLogin(LoginStatus login, string message)
         {
-            if (login == NetworkManager.LoginStatus.Failed)
+            if (login == LoginStatus.Failed)
             {
                 Display.Error(Session.SessionNumber, "Login failed (" + message + ")");
             }
-            else if (login == NetworkManager.LoginStatus.Success)
+            else if (login == LoginStatus.Success)
             {
                 Display.InfoResponse(Session.SessionNumber, "Connected!");
             }
@@ -118,7 +118,7 @@ namespace ghetto
             foreach (DirectoryManager.AgentSearchData av in matchedPeople)
             {
                 string name = av.FirstName + " " + av.LastName;
-                Console.WriteLine(name.PadRight(20) + " " + av.AgentID.ToStringHyphenated());
+                Console.WriteLine(name.PadRight(20) + " " + av.AgentID.ToString());
             }
         }
 
@@ -140,12 +140,12 @@ namespace ghetto
             }
         }
 
-        void Friends_OnFriendOffline(FriendsManager.FriendInfo friend)
+        void Friends_OnFriendOffline(FriendInfo friend)
         {
             Display.FriendOffline(Session.SessionNumber, friend);
         }
 
-        void Friends_OnFriendOnline(FriendsManager.FriendInfo friend)
+        void Friends_OnFriendOnline(FriendInfo friend)
         {
             Display.FriendOnline(Session.SessionNumber, friend);
         }
@@ -180,7 +180,7 @@ namespace ghetto
             else if (im.Dialog == InstantMessageDialog.MessageFromObject)
             {
                 Display.InstantMessage(Session.SessionNumber, im.Dialog, im.FromAgentName, im.Message);
-                if (Session.Debug > 0) Display.InfoResponse(Session.SessionNumber, "Owner UUID: " + im.FromAgentID.ToStringHyphenated());
+                if (Session.Debug > 0) Display.InfoResponse(Session.SessionNumber, "Owner UUID: " + im.FromAgentID.ToString());
             }
             else if (im.Dialog == InstantMessageDialog.TaskInventoryOffered)
             {
@@ -200,7 +200,7 @@ namespace ghetto
             Dictionary<string, string> identifiers = new Dictionary<string, string>();
             identifiers.Add("$name", im.FromAgentName);
             identifiers.Add("$message", im.Message);
-            identifiers.Add("$id", im.FromAgentID.ToStringHyphenated());
+            identifiers.Add("$id", im.FromAgentID.ToString());
             identifiers.Add("$dialog", im.Dialog.ToString());
             identifiers.Add("$pos", im.Position.ToString());
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.IM, identifiers);
@@ -211,7 +211,7 @@ namespace ghetto
         {
             foreach (KeyValuePair<LLUUID, string> pair in names)
             {
-                Console.WriteLine(pair.Key.ToStringHyphenated() + " = " + pair.Value);
+                Console.WriteLine(pair.Key.ToString() + " = " + pair.Value);
             }
         }
 
@@ -239,8 +239,8 @@ namespace ghetto
             Dictionary<string, string> identifiers = new Dictionary<string, string>();
             identifiers.Add("$name", fromName);
             identifiers.Add("$message", message);
-            identifiers.Add("$id", id.ToStringHyphenated());
-            identifiers.Add("$ownerid", ownerid.ToStringHyphenated());
+            identifiers.Add("$id", id.ToString());
+            identifiers.Add("$ownerid", ownerid.ToString());
             identifiers.Add("$ctype", type.ToString());
             identifiers.Add("$stype", sourceType.ToString());
             identifiers.Add("$pos", position.ToString());
@@ -303,7 +303,7 @@ namespace ghetto
                     av.Rotation = update.Rotation;
                     Dictionary<string, string> identifiers = new Dictionary<string,string>();
                     identifiers.Add("$name", av.Name);
-                    identifiers.Add("$id", av.ID.ToStringHyphenated());
+                    identifiers.Add("$id", av.ID.ToString());
                     identifiers.Add("$pos", av.Position.ToString());
                     ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.Update, identifiers);
                 }
@@ -341,9 +341,9 @@ namespace ghetto
             Display.InventoryItemReceived(Session.SessionNumber, fromAgentID, fromAgentName, parentEstateID, regionID, position, timestamp, obj);
             Dictionary<string, string> identifiers = new Dictionary<string, string>();
             identifiers.Add("$name", fromAgentName);
-            identifiers.Add("$id", fromAgentID.ToStringHyphenated());
+            identifiers.Add("$id", fromAgentID.ToString());
             identifiers.Add("$item", obj.Name);
-            identifiers.Add("$itemid", objectID.ToStringHyphenated());
+            identifiers.Add("$itemid", objectID.ToString());
             identifiers.Add("$type", type.ToString());
             ScriptSystem.TriggerEvents(Session.SessionNumber, ScriptSystem.EventTypes.GetItem, identifiers);
             return true;
@@ -357,7 +357,7 @@ namespace ghetto
 
             Dictionary<string, string> identifiers = new Dictionary<string, string>();
             identifiers.Add("$name", objectName);
-            identifiers.Add("$id", objectID.ToStringHyphenated());
+            identifiers.Add("$id", objectID.ToString());
             identifiers.Add("$channel", chatChannel.ToString());
             identifiers.Add("$message", message);
 
