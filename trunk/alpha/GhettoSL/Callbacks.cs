@@ -25,8 +25,8 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-using libsecondlife;
-using libsecondlife.Packets;
+using OpenMetaverse;
+using OpenMetaverse.Packets;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -58,7 +58,6 @@ namespace ghetto
             Session.Client.Objects.OnNewPrim += new ObjectManager.NewPrimCallback(Objects_OnNewPrim);
             Session.Client.Objects.OnObjectKilled += new ObjectManager.KillObjectCallback(Objects_OnObjectKilled);
             Session.Client.Objects.OnObjectUpdated += new ObjectManager.ObjectUpdatedCallback(Objects_OnObjectUpdated);
-            session.Client.OnLogMessage += new SecondLife.LogCallback(Client_OnLogMessage);
             Session.Client.Self.OnChat += new AgentManager.ChatCallback(Self_OnChat);
             Session.Client.Self.OnScriptDialog += new AgentManager.ScriptDialogCallback(Self_OnScriptDialog);
             Session.Client.Self.OnScriptQuestion += new AgentManager.ScriptQuestionCallback(Self_OnScriptQuestion);
@@ -103,17 +102,17 @@ namespace ghetto
             }
         }
 
-        void Friends_OnFriendshipOffered(LLUUID agentID, string agentName, LLUUID imSessionID)
+        void Friends_OnFriendshipOffered(UUID agentID, string agentName, UUID imSessionID)
         {
             Display.FriendshipOffered(Session.SessionNumber, agentID, agentName, imSessionID);
         }
 
-        void Friends_OnFriendshipResponse(LLUUID agentID, string agentName, bool accepted)
+        void Friends_OnFriendshipResponse(UUID agentID, string agentName, bool accepted)
         {
             Display.FriendshipResponse(Session.SessionNumber, agentID, agentName, accepted);
         }
 
-        void Directory_OnDirPeopleReply(LLUUID queryID, List<DirectoryManager.AgentSearchData> matchedPeople)
+        void Directory_OnDirPeopleReply(UUID queryID, List<DirectoryManager.AgentSearchData> matchedPeople)
         {
             foreach (DirectoryManager.AgentSearchData av in matchedPeople)
             {
@@ -150,18 +149,18 @@ namespace ghetto
             Display.FriendOnline(Session.SessionNumber, friend);
         }
 
-        void Self_OnScriptQuestion(Simulator simulator, LLUUID taskID, LLUUID itemID, string objectName, string objectOwner, ScriptPermission questions)
+        void Self_OnScriptQuestion(Simulator simulator, UUID taskID, UUID itemID, string objectName, string objectOwner, ScriptPermission questions)
         {
             //FIXME - move to display
             Console.WriteLine(objectName + " owned by " + objectOwner + " has requested the following permissions: " + questions.ToString());
         }
 
-        void Groups_OnGroupRoles(Dictionary<LLUUID, GroupRole> roles)
+        void Groups_OnGroupRoles(Dictionary<UUID, GroupRole> roles)
         {
             Display.GroupRoles(roles);
         }
 
-        void Groups_OnCurrentGroups(Dictionary<LLUUID, Group> groups)
+        void Groups_OnCurrentGroups(Dictionary<UUID, Group> groups)
         {
             Session.Groups = groups;
         }
@@ -207,15 +206,15 @@ namespace ghetto
 
         }
 
-        void Avatars_OnAvatarNames(Dictionary<LLUUID, string> names)
+        void Avatars_OnAvatarNames(Dictionary<UUID, string> names)
         {
-            foreach (KeyValuePair<LLUUID, string> pair in names)
+            foreach (KeyValuePair<UUID, string> pair in names)
             {
                 Console.WriteLine(pair.Key.ToString() + " = " + pair.Value);
             }
         }
 
-        void Self_OnChat(string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourceType, string fromName, LLUUID id, LLUUID ownerid, LLVector3 position)
+        void Self_OnChat(string message, ChatAudibleLevel audible, ChatType type, ChatSourceType sourceType, string fromName, UUID id, UUID ownerid, Vector3 position)
         {
             if (type == ChatType.StartTyping || type == ChatType.StopTyping || audible != ChatAudibleLevel.Fully) return;
 
@@ -310,11 +309,6 @@ namespace ghetto
             }
         }
 
-        void Client_OnLogMessage(string message, Helpers.LogLevel level)
-        {
-            if (Session.Debug > 0) Display.LogMessage(Session.SessionNumber, message, level);
-        }
-
         void Objects_OnAvatarSitChanged(Simulator sim, Avatar av, uint localid, uint oldSeatID)
         {
             Display.SitChanged(Session.SessionNumber, av, localid);
@@ -335,7 +329,7 @@ namespace ghetto
             Session.Client.Network.CurrentSim.Estate.OnGetTopColliders += new EstateTools.GetTopCollidersReply(Estate_OnGetTopColliders);
         }
 
-        bool Inventory_OnInventoryObjectReceived(LLUUID fromAgentID, string fromAgentName, uint parentEstateID, LLUUID regionID, LLVector3 position, DateTime timestamp, AssetType type, LLUUID objectID, bool fromTask)
+        bool Inventory_OnInventoryObjectReceived(UUID fromAgentID, string fromAgentName, uint parentEstateID, UUID regionID, Vector3 position, DateTime timestamp, AssetType type, UUID objectID, bool fromTask)
         {
             InventoryBase obj = Session.Client.Inventory.Store[objectID];
             Display.InventoryItemReceived(Session.SessionNumber, fromAgentID, fromAgentName, parentEstateID, regionID, position, timestamp, obj);
@@ -349,7 +343,7 @@ namespace ghetto
             return true;
         }
 
-        void Self_OnScriptDialog(string message, string objectName, LLUUID imageID, LLUUID objectID, string firstName, string lastName, int chatChannel, List<string> buttons)
+        void Self_OnScriptDialog(string message, string objectName, UUID imageID, UUID objectID, string firstName, string lastName, int chatChannel, List<string> buttons)
         {
             Session.LastDialogID = objectID;
             Session.LastDialogChannel = chatChannel;
@@ -385,7 +379,7 @@ namespace ghetto
         void Callback_AlertMessage(Packet packet, Simulator sim)
         {
             AlertMessagePacket p = (AlertMessagePacket)packet;
-            string message = Helpers.FieldToUTF8String(p.AlertData.Message);
+            string message = Utils.BytesToString(p.AlertData.Message);
             Display.AlertMessage(Session.SessionNumber, message);
         }
 
@@ -398,7 +392,7 @@ namespace ghetto
         void Callback_MoneyBalanceReply(Packet packet, Simulator sim)
         {
             MoneyBalanceReplyPacket reply = (MoneyBalanceReplyPacket)packet;
-            string desc = Helpers.FieldToUTF8String(reply.MoneyData.Description);
+            string desc = Utils.BytesToString(reply.MoneyData.Description);
             string name = "";
             int amount = 0;
 

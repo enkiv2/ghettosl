@@ -25,8 +25,8 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-using libsecondlife;
-using libsecondlife.Packets;
+using OpenMetaverse;
+using OpenMetaverse.Packets;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -126,8 +126,8 @@ namespace ghetto
                     ret.Value.DisplayChat = false;
                 else if (!lastArg && (arg == "-m" || arg == "-master" || arg == "-masterid"))
                 {
-                    LLUUID master;
-                    if (LLUUID.TryParse(args[i + 1], out master)) ret.Value.MasterID = master;
+                    UUID master;
+                    if (UUID.TryParse(args[i + 1], out master)) ret.Value.MasterID = master;
                 }
                 else if (arg == "-n" || arg == "-noupdates")
                     ret.Value.SendUpdates = false;
