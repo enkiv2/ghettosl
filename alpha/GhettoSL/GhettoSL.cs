@@ -28,8 +28,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using libsecondlife;
-using libsecondlife.Packets;
+using OpenMetaverse;
+using OpenMetaverse.Packets;
 
 namespace ghetto
 {
@@ -46,19 +46,19 @@ namespace ghetto
             //public AvatarTracker Avatars;
             public CallbackManager Callbacks;
             public int Balance;
-            public SecondLife Client;
-            public Dictionary<LLUUID, Avatar> Friends;
-            public Dictionary<LLUUID, libsecondlife.Group> Groups;
-            public Dictionary<LLUUID, IMSession> IMSessions;
+            public GridClient Client;
+            public Dictionary<UUID, Avatar> Friends;
+            public Dictionary<UUID, OpenMetaverse.Group> Groups;
+            public Dictionary<UUID, IMSession> IMSessions;
             public Dictionary<uint, Avatar> Avatars;
             public Dictionary<uint, Primitive> Prims;
             public Dictionary<string, ScriptSystem.UserTimer> Timers;
-            public LLUUID LastDialogID;
+            public UUID LastDialogID;
             public int Debug;
             public int LastDialogChannel;
             public int MoneySpent;
             public int MoneyReceived;
-            public LLUUID MasterIMSession;
+            public UUID MasterIMSession;
             public int RegionX;
             public int RegionY;
             public UserSessionSettings Settings;
@@ -165,12 +165,12 @@ namespace ghetto
                 {
                     if (av.Name == FollowName)
                     {
-                        LLVector3 target;
-                        if (av.SittingOn > 0)
+                        Vector3 target;
+                        if (av.ParentID > 0)
                         {
-                            if (Prims.ContainsKey(av.SittingOn))
+                            if (Prims.ContainsKey(av.ParentID))
                             {
-                                target = Prims[av.SittingOn].Position + av.Position;
+                                target = Prims[av.ParentID].Position + av.Position;
                             }
                             else
                             {
@@ -186,7 +186,7 @@ namespace ghetto
                         Session.Client.Self.Movement.TurnToward(target);
 
                         //Console.WriteLine(av.Position); //DEBUG
-                        if (LLVector3.Dist(Client.Self.SimPosition, av.Position) > 3)
+                        if (Vector3.Distance(Client.Self.SimPosition, av.Position) > 3)
                         {
                             Client.Self.AutoPilotLocal((int)av.Position.X, (int)av.Position.Y, av.Position.Z);
                         }
@@ -203,18 +203,18 @@ namespace ghetto
                 if (!Client.Network.Connected) return false;
                 uint localID = FindAgentByName(name);
                 if (localID < 1) Display.InfoResponse(SessionNumber, "Avatar not found matching \"" + name + "\"");
-                else if (Avatars[localID].SittingOn < 1) Display.InfoResponse(SessionNumber, Avatars[localID].Name + " is not sitting.");
-                else if (!Prims.ContainsKey(Avatars[localID].SittingOn)) Display.Error(SessionNumber, "Object info missing for local ID " + localID);
+                else if (Avatars[localID].ParentID < 1) Display.InfoResponse(SessionNumber, Avatars[localID].Name + " is not sitting.");
+                else if (!Prims.ContainsKey(Avatars[localID].ParentID)) Display.Error(SessionNumber, "Object info missing for local ID " + localID);
                 else
                 {
-                    Client.Self.RequestSit(Prims[Avatars[localID].SittingOn].ID, LLVector3.Zero);
+                    Client.Self.RequestSit(Prims[Avatars[localID].ParentID].ID, Vector3.Zero);
                     Client.Self.Sit();
                     return true;
                 }
                 return false;
             }
 
-            public void ScriptDialogReply(int channel, LLUUID objectid, string message)
+            public void ScriptDialogReply(int channel, UUID objectid, string message)
             {
                 if (!Client.Network.Connected) return;
                 ScriptDialogReplyPacket reply = new ScriptDialogReplyPacket();
@@ -223,7 +223,7 @@ namespace ghetto
                 reply.Data.ButtonIndex = 0;
                 reply.Data.ChatChannel = channel;
                 reply.Data.ObjectID = objectid;
-                reply.Data.ButtonLabel = Helpers.StringToField(message);
+                reply.Data.ButtonLabel = Utils.StringToBytes(message);
                 Client.Network.SendPacket(reply);
             }
 
@@ -243,37 +243,37 @@ namespace ghetto
             {
                 SessionNumber = newSessionNumber;
 
-                Client = new SecondLife();
-                Client.Settings.DEBUG = false;
+                Client = new GridClient();
+                OpenMetaverse.Settings.LOG_LEVEL = Helpers.LogLevel.Error;
                 Client.Settings.LOGIN_TIMEOUT = 480 * 1000;
                 Client.Settings.SEND_AGENT_UPDATES = true;
 
                 Client.Self.Movement.Camera.Far = 96.0f;
-                Client.Self.Movement.Camera.AtAxis = LLVector3.Zero;
-                Client.Self.Movement.Camera.Position = LLVector3.Zero;
-                Client.Self.Movement.Camera.LeftAxis = LLVector3.Zero;
-                Client.Self.Movement.Camera.UpAxis = LLVector3.Zero;
-                Client.Self.Movement.HeadRotation = LLQuaternion.Identity;
-                Client.Self.Movement.BodyRotation = LLQuaternion.Identity;
+                Client.Self.Movement.Camera.AtAxis = Vector3.Zero;
+                Client.Self.Movement.Camera.Position = Vector3.Zero;
+                Client.Self.Movement.Camera.LeftAxis = Vector3.Zero;
+                Client.Self.Movement.Camera.UpAxis = Vector3.Zero;
+                Client.Self.Movement.HeadRotation = Quaternion.Identity;
+                Client.Self.Movement.BodyRotation = Quaternion.Identity;
 
                 Callbacks = new CallbackManager(this);
                 Avatars = new Dictionary<uint, Avatar>();
                 Balance = -1;
-                Friends = new Dictionary<LLUUID, Avatar>();
-                Groups = new Dictionary<LLUUID, libsecondlife.Group>();
-                IMSessions = new Dictionary<LLUUID, IMSession>();
+                Friends = new Dictionary<UUID, Avatar>();
+                Groups = new Dictionary<UUID, OpenMetaverse.Group>();
+                IMSessions = new Dictionary<UUID, IMSession>();
                 Prims = new Dictionary<uint, Primitive>();
                 Timers = new Dictionary<string, ScriptSystem.UserTimer>();
                 Debug = 0;
                 LastDialogChannel = -1;
-                LastDialogID = LLUUID.Zero;
+                LastDialogID = UUID.Zero;
                 MoneySpent = 0;
                 MoneyReceived = 0;
-                MasterIMSession = LLUUID.Zero;
+                MasterIMSession = UUID.Zero;
                 RegionX = 0;
                 RegionY = 0;
                 Settings = new UserSessionSettings();
-                StartTime = Helpers.GetUnixTime();
+                StartTime = Utils.GetUnixTime();
                 FollowName = "";
                 FollowTimer = new System.Timers.Timer(500);
                 FollowTimer.Enabled = false;
@@ -293,16 +293,16 @@ namespace ghetto
         /// </summary>
         public class IMSession
         {
-            LLUUID imSession;
+            UUID imSession;
             string name;
 
-            public IMSession(LLUUID imSessionID, string fromName)
+            public IMSession(UUID imSessionID, string fromName)
             {
                 imSession = imSessionID; 
                 name = fromName;
             }
 
-            public LLUUID IMSessionID
+            public UUID IMSessionID
             {
                 get { return imSession; }
             }
@@ -322,7 +322,7 @@ namespace ghetto
             public string LastName;
             public string Password;
             public string PassPhrase;
-            public LLUUID MasterID;
+            public UUID MasterID;
             public bool DisplayChat;
             public bool SendUpdates;
             public string CampChairMatchText;
@@ -334,7 +334,7 @@ namespace ghetto
                 LastName = "";
                 Password = "";
                 PassPhrase = "";
-                MasterID = LLUUID.Zero;
+                MasterID = UUID.Zero;
                 DisplayChat = true;
                 SendUpdates = true;
                 StartLocation = "last";

@@ -25,8 +25,8 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-using libsecondlife;
-using libsecondlife.Packets;
+using OpenMetaverse;
+using OpenMetaverse.Packets;
 
 //using libsecondlife.Utilities;
 using System;
@@ -62,7 +62,7 @@ namespace ghetto
             /// <summary>
             /// Vector supplied by /settarget
             /// </summary>
-            public LLVector3 SetTarget;
+            public Vector3 SetTarget;
             /// <summary>
             /// Dictionary of scripted aliases
             /// </summary>
@@ -206,14 +206,14 @@ namespace ghetto
 
             public UserScript(uint sessionNum, string scriptFile)
             {
-                SetTarget = LLVector3.Zero;
-                SetTime = Helpers.GetUnixTime();
+                SetTarget = Vector3.Zero;
+                SetTime = Utils.GetUnixTime();
                 Aliases = new Dictionary<string, string[]>();
                 Events = new Dictionary<EventTypes, ScriptEvent>();
                 SessionNumber = sessionNum;
                 ScriptName = scriptFile;
                 CurrentStep = 0;
-                SetTime = Helpers.GetUnixTime();
+                SetTime = Utils.GetUnixTime();
                 Variables = new Dictionary<string, string>();
             }
         }
@@ -376,7 +376,7 @@ namespace ghetto
             return ret.Replace("\"", "");
         }
 
-        public static void DirList(uint sessionNum, LLUUID folder)
+        public static void DirList(uint sessionNum, UUID folder)
         {
             GhettoSL.UserSession Session = Interface.Sessions[sessionNum];
             List<InventoryBase> contents = Session.Client.Inventory.FolderContents(folder, Session.Client.Self.AgentID, true, true, InventorySortOrder.ByDate, 1000);
